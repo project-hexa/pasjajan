@@ -1,0 +1,36 @@
+{
+  "name": "shadcn-ui-monorepo",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "build:web": "turbo build --filter=web",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:api": "turbo dev --filter=api",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "test:web": "turbo test --filter=web",
+    "test:api": "turbo test -filter=api",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx,php}\"",
+    "shadcn:add": "pnpm dlx shadcn@canary add -c apps/web"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.8",
+    "typescript": "5.7.3"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
+      "core-js-pure",
+      "sharp"
+    ]
+  }
+}
