@@ -2,9 +2,6 @@
 
 Dokumentasi untuk menjalankan dan mengembangkan proyek monorepo ini secara lokal.
 
-## ini adalah testing
-oke
-
 ## Isi singkat
 - [Quick start (install & run)](#quick-start)
 - [Struktur proyek](#struktur-proyek)
@@ -13,6 +10,7 @@ oke
 - [Build & produksi](#build--produksi)
 - [Lint / format / test](#lint--format--test)
 - [Troubleshooting](#troubleshooting)
+- [Gitflow](#gitflow)
 
 ## Quick start
 1. Pastikan prasyarat terpasang (lihat bagian selanjutnya).
@@ -143,3 +141,8 @@ pnpm install
 
 - Masalah Laravel: jalankan `php artisan key:generate`, cek `storage/` permission, jalankan migrasi `php artisan migrate`.
 - Cache Turbo: hapus direktori `.turbo` di root jika build/CI aneh.
+
+## Gitflow
+- [Guide Video](https://youtu.be/FJ8q4YdMDiA?si=R58R6OlYnv_h2k2g)
+- [Dokumentasi Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
+- [Dokumentasi Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
