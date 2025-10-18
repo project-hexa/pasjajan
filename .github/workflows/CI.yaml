@@ -28,9 +28,6 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Setup FE and BE
-        run: pnpm init
-
       - name: Build
         run: pnpm build
 
