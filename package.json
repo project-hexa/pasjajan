@@ -1,5 +1,5 @@
 {
-  "name": "shadcn-ui-monorepo",
+  "name": "pasjajan-mart",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -13,7 +13,11 @@
     "test:web": "turbo test --filter=web",
     "test:api": "turbo test -filter=api",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx,php}\"",
-    "shadcn:add": "pnpm dlx shadcn@canary add -c apps/web"
+    "shadcn:add": "pnpm dlx shadcn add -c apps/web",
+    "init": "pnpm install && cd apps/api && composer setup && cd ../..",
+    "init:web": "cd apps/web && pnpm install && cd ../..",
+    "init:backend": "cd apps/api && composer setup && cd ../..",
+    "radix:add": "pnpm add --filter=ui"
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
