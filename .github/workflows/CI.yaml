@@ -29,7 +29,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Setup FE and BE
-        run: pnpm init
+        run: pnpm init:all
 
       - name: Build
         run: pnpm build
