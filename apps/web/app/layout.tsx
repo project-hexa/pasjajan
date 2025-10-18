@@ -1,24 +1,32 @@
-import { ThemeProviders } from "@/components/theme-providers"
-import "@workspace/ui/globals.css"
-import { Poppins } from "next/font/google"
+import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navigation-bar";
+import { ThemeProviders } from "@/components/theme-providers";
+import "@workspace/ui/globals.css";
+import { Poppins } from "next/font/google";
 
 const fontSans = Poppins({
   weight: ["300"],
-  variable: "--font-sans"
-})
+  variable: "--font-sans",
+});
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-      className={`font-sans ${fontSans.variable}`}
+        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen container mx-auto overflow-y-auto`}
       >
-        <ThemeProviders>{children}</ThemeProviders>
+        <ThemeProviders>
+          <Navbar />
+          <main>
+            {children}
+            <Footer />
+          </main>
+        </ThemeProviders>
       </body>
     </html>
-  )
+  );
 }
