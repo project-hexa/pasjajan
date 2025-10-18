@@ -7,6 +7,8 @@ import { Poppins } from "next/font/google";
 const fontSans = Poppins({
   weight: ["300"],
   variable: "--font-sans",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export default function RootLayout({

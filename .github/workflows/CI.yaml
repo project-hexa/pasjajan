@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
   pull_request:
     types: [opened, synchronize]
 
@@ -28,8 +27,8 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup FE and BE
+        run: pnpm init:all
 
       - name: Build
         run: pnpm build
