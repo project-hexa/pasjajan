@@ -3,7 +3,6 @@
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { Input } from "@workspace/ui/components/input";
 import { ModeToggle } from "@workspace/ui/components/mode-toggle";
 import { Separator } from "@workspace/ui/components/separator";
 import Link from "next/link";
