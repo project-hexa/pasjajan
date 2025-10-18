@@ -5,11 +5,6 @@
     "paths": {
       "@workspace/ui/*": ["./src/*"]
     },
-    "jsx": "react-jsx",
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "dist",
-    "rootDir": "./"
   },
   "include": ["."],
   "exclude": ["node_modules", "dist"]
