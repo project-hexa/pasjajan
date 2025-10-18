@@ -6,17 +6,12 @@ import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import { ModeToggle } from "@workspace/ui/components/mode-toggle";
 import { Separator } from "@workspace/ui/components/separator";
 import Link from "next/link";
-import { use, useState } from "react";
+import { useState } from "react";
 
-export default function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id: string; slug: string }>;
-}) {
+export default function HomePage() {
   const [count, setCount] = useState<number>(0);
   const handleClickMinus = () => setCount(count - 1);
   const handleClickPlus = () => setCount(count + 1);
-  const params = use(searchParams);
 
   return (
     <div className="min-h-[calc(100vh-80px)]">
@@ -43,36 +38,6 @@ export default function HomePage({
             <div className="flex flex-col gap-2 items-center">
               <span>Test Button Clicked dengan Mode Toggle Theme</span>
               <ModeToggle />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent>
-            <span>Coba gunakan search params untuk id & slug</span>
-            <p>
-              contoh: /?id=123 , /?id=123&slug=hello , /?slug=hello ,
-              /?slug=hello&id=123
-            </p>
-            <div className="flex flex-col gap-1">
-              <span>id: {params.id}</span>
-              <span>slug: {params.slug}</span>
-            </div>
-            <p className="text-muted-foreground">
-              Note: coba ubah di url, atau klik dibawah
-            </p>
-            <div className="flex gap-2">
-              <Link href="/?id=1">
-                <Button variant={"secondary"}>/?id=1</Button>
-              </Link>
-              <Link href="/?id=1&slug=hello">
-                <Button variant={"secondary"}>/?id=1&slug=hello</Button>
-              </Link>
-              <Link href="/?slug=hello">
-                <Button variant={"secondary"}>/?slug=hello</Button>
-              </Link>
-              <Link href="/?slug=hello&id=1">
-                <Button variant={"secondary"}>/?slug=hello&id=1</Button>
-              </Link>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +115,9 @@ export default function HomePage({
                   <Button variant={"secondary"}>/employee/123/abc</Button>
                 </Link>
               </div>
-              <p className="text-muted-foreground">ini ada di folder app/employee/[[...employee]]/</p>
+              <p className="text-muted-foreground">
+                ini ada di folder app/employee/[[...employee]]/
+              </p>
             </div>
           </CardContent>
         </Card>
