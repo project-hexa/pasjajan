@@ -2,12 +2,12 @@ import { Button } from "@workspace/ui/components/button";
 import Link from "next/link";
 import React from "react";
 
-export default function EmployeePage({
+export default async function EmployeePage({
   params,
 }: {
-  params: { employee?: string[] };
+  params: Promise<{ employee?: string[] }>;
 }) {
-  const p = params.employee ?? [];
+  const p = (await params).employee ?? [];
 
   return (
     <div className="border">
