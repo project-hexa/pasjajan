@@ -1,11 +1,132 @@
-import React from 'react'
+import { Button } from "@workspace/ui/components/button";
+import { ButtonGroup } from "@workspace/ui/components/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu";
+import { Input } from "@workspace/ui/components/input";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemGroup,
+  ItemHeader,
+  ItemMedia,
+  ItemTitle,
+} from "@workspace/ui/components/item";
+import { Separator } from "@workspace/ui/components/separator";
+import { Grid2X2, Search, ShoppingBasket } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export const Navbar = () => {
   return (
-    <header className='w-full h-20 border-2 bg-background sticky top-0 z-50'>
-      <nav>
-        Navbar
+    <header className="w-full h-20 border-2 bg-primary">
+      <nav className="h-full flex items-center justify-between px-10">
+        <div className="flex gap-2 items-center">
+          <Image src={"/logo.png"} alt="logo" width={64} height={64} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="p-0">
+                <Grid2X2 />
+                Kategori
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>Category 1</DropdownMenuItem>
+              <DropdownMenuItem>Category 2</DropdownMenuItem>
+              <DropdownMenuItem>Category 3</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <ButtonGroup>
+            <Input
+              placeholder="Cari produk yang anda inginkan disini"
+              className="bg-popover w-96"
+            />
+            <Button className="bg-popover-foreground" size={"icon"}>
+              <Search />
+            </Button>
+          </ButtonGroup>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <div className="flex items-center">
+            <Link href="/promo">
+              <Button variant={"link"} className="text-white">
+                Promo
+              </Button>
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size={"icon"}
+                  className="p-0 text-white"
+                  variant={"ghost"}
+                >
+                  <ShoppingBasket />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel className="text-muted-foreground">
+                  Keranjang Belanja
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="overflow-y-auto h-80">
+                  {[...Array.from({ length: 5 })].map((_, index) => (
+                    <DropdownMenuItem key={index}>
+                      <Link href={`/detail/produk-${index + 1}`}>
+                        <Item>
+                          <ItemMedia>
+                            <Image
+                              src={`https://placehold.co/100?text=Produk${index + 1}`}
+                              alt={`gambar produk ${index + 1}`}
+                              width={100}
+                              height={100}
+                              unoptimized
+                            />
+                          </ItemMedia>
+                          <ItemContent className="w-60">
+                            <ItemTitle className="w-36 line-clamp-2">
+                              Produk {index + 1}
+                            </ItemTitle>
+                            <ItemDescription>
+                              Deskripsi produk {index + 1}
+                            </ItemDescription>
+                            <ItemFooter className="text-muted-foreground">
+                              Rp 10.000
+                            </ItemFooter>
+                          </ItemContent>
+                          <ItemContent>
+                            <ItemDescription>Qty: 1</ItemDescription>
+                          </ItemContent>
+                          <ItemActions>
+                            <Button>Checkout</Button>
+                          </ItemActions>
+                        </Item>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+                <DropdownMenuSeparator />
+                <Button variant={"link"}>
+                  Lihat semua keranjang
+                </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <Separator orientation="vertical" />
+          <ButtonGroup>
+            <Button variant={"outline"}>Daftar</Button>
+            <Button variant={"secondary"}>Masuk</Button>
+          </ButtonGroup>
+        </div>
       </nav>
     </header>
-  )
-}
+  );
+};

@@ -19,11 +19,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen container mx-auto overflow-y-auto`}
+        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
         <ThemeProviders>
           <Navbar />
-          <main>
+          <main className="flex-1 overflow-y-auto">
             {children}
             <Footer />
           </main>

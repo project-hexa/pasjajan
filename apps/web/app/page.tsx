@@ -14,7 +14,7 @@ export default function HomePage() {
   const handleClickPlus = () => setCount(count + 1);
 
   return (
-    <div className="min-h-[calc(100vh-80px)]">
+    <div className="min-h-[calc(100vh-80px)] border">
       <div className="flex flex-col justify-center items-center gap-5">
         <h1 className="text-2xl font-bold">Setup Proyek Pasjajan-Mart</h1>
         <Card>
