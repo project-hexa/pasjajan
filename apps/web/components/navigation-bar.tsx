@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import {
@@ -24,8 +26,11 @@ import { Separator } from "@workspace/ui/components/separator";
 import { Grid2X2, Search, ShoppingBasket } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export const Navbar = () => {
+  const router = useRouter()
+  
   return (
     <header className="w-full h-20 border-2 bg-primary">
       <nav className="h-full flex items-center justify-between px-10">
@@ -82,7 +87,7 @@ export const Navbar = () => {
                     <DropdownMenuItem key={index}>
                       <Link href={`/detail/produk-${index + 1}`}>
                         <Item>
-                          <ItemMedia>
+                          <ItemMedia variant={"image"}>
                             <Image
                               src={`https://placehold.co/100?text=Produk${index + 1}`}
                               alt={`gambar produk ${index + 1}`}
@@ -122,8 +127,8 @@ export const Navbar = () => {
           </div>
           <Separator orientation="vertical" />
           <ButtonGroup>
-            <Button variant={"outline"}>Daftar</Button>
-            <Button variant={"secondary"}>Masuk</Button>
+            <Button variant={"outline"} onClick={() => router.push('/register')}>Daftar</Button>
+            <Button variant={"secondary"} onClick={() => router.push('/login')}>Masuk</Button>
           </ButtonGroup>
         </div>
       </nav>

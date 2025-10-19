@@ -1,5 +1,3 @@
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
 import { ThemeProviders } from "@/components/theme-providers";
 import "@workspace/ui/globals.css";
 import { Poppins } from "next/font/google";
@@ -22,11 +20,7 @@ export default function RootLayout({
         className={`font-sans ${fontSans.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
       >
         <ThemeProviders>
-          <Navbar />
-          <main className="flex-1 overflow-y-auto">
-            {children}
-            <Footer />
-          </main>
+          {children}
         </ThemeProviders>
       </body>
     </html>
