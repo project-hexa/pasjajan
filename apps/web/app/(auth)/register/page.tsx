@@ -28,6 +28,7 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
+import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
@@ -58,7 +59,16 @@ export default function RegisterPage() {
       <Card className="p-0 w-2/3 h-2/3 overflow-hidden flex flex-col">
         <CardContent className="p-0 flex-1 min-h-0">
           <div className="flex h-full">
-            <div className="bg-primary flex justify-center flex-1 items-center">
+            <div className="bg-primary flex justify-center flex-1 items-center relative">
+              <Link href="/">
+                <Button
+                  variant="ghost"
+                  className="absolute top-4 left-4 text-accent"
+                  >
+                    <ChevronLeftCircle className="size-5" />
+                    <span>Kembali ke Beranda</span>
+                  </Button>
+              </Link>
               <div className="flex flex-col items-center text-white gap-5">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center">
