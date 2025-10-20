@@ -1,4 +1,72 @@
 import { z } from "zod";
+import { passwordStrength } from "check-password-strength";
+
+const usernameSchema = z
+  .string()
+  .min(3, "Username minimal 3 karakter")
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    "Username hanya boleh huruf, angka, dan underscore"
+  );
+
+const emailSchema = z.string().email("Format email tidak valid");
+
+const phoneSchema = z
+  .string()
+  .regex(/^(\+62|62|0)[0-9]{9,12}$/, "Format nomor telepon tidak valid");
+
+const passwordSchema = z.string().superRefine((val, ctx) => {
+  const strength = passwordStrength(val);
+
+  if (val.length < 8) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password minimal harus 8 karakter",
+    });
+  }
+
+  if (!strength.contains.includes("uppercase")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password harus mengandung huruf besar",
+    });
+  }
+
+  if (!strength.contains.includes("lowercase")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password harus mengandung huruf kecil",
+    });
+  }
+
+  if (!strength.contains.includes("number")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password harus mengandung angka",
+    });
+  }
+
+  if (!strength.contains.includes("symbol")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password harus mengandung simbol",
+    });
+  }
+
+  if (/\s/.test(val)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password tidak boleh mengandung spasi",
+    });
+  }
+
+  if (strength.id < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password masih terlalu lemah",
+    });
+  }
+});
 
 export const registerSchema = z
   .object({
@@ -11,89 +79,76 @@ export const registerSchema = z
       .min(2, "Nama belakang minimal harus 2 karakter")
       .max(20, "Nama belakang maksimal 20 karakter")
       .optional(),
-    userName: z
-      .string()
-      .min(3, "Username minimal harus 3 karakter")
-      .max(10, "Username maksimal 10 karakter"),
-    email: z.string().email("Email tidak valid").optional(),
-    noTelepon: z
-      .string()
-      .min(10, "Nomor telepon minimal harus 10 digit")
-      .max(15, "Nomor telepon maksimal 15 digit"),
+    userName: usernameSchema,
+    email: emailSchema.optional(),
+    noTelepon: phoneSchema,
     address: z
       .string()
       .min(10, "Alamat minimal harus 10 karakter")
       .max(200, "Alamat maksimal 200 karakter")
       .optional(),
-    password: z.string().superRefine((val, ctx) => {
-      const checks = [
-        {
-          condition: val.length >= 8,
-          message: "Password minimal harus 8 karakter",
-        },
-        {
-          condition: /[A-Z]/.test(val),
-          message: "Password harus mengandung minimal satu huruf besar",
-        },
-        {
-          condition: /[a-z]/.test(val),
-          message: "Password harus mengandung minimal satu huruf kecil",
-        },
-        {
-          condition: /[0-9]/.test(val),
-          message: "Password harus mengandung minimal satu angka",
-        },
-        {
-          condition: !/[^a-zA-Z0-9!@#$%^&*(),.?":{}|<>]/.test(val),
-          message:
-            "Tidak boleh memasukkan simbol selain simbol khusus yang diizinkan",
-        },
-        {
-          condition: /[!@#$%^&*(),.?":{}|<>]/.test(val),
-          message: "Password harus mengandung minimal satu simbol",
-        },
-        {
-          condition: !/\s/.test(val),
-          message: "Password tidak boleh mengandung spasi",
-        },
-        {
-          condition: !/(.)\1\1/.test(val),
-          message:
-            "Password tidak boleh mengandung karakter yang sama lebih dari dua kali berturut-turut",
-        },
-        {
-          condition:
-            !/(012|123|234|345|456|567|678|789|890|987|876|765|654|543|432|321|210)/.test(
-              val
-            ),
-          message: "Password tidak boleh mengandung urutan angka berurutan",
-        },
-      ];
-
-      checks.forEach((check) => {
-        if (!check.condition) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: check.message,
-          });
-        }
-      });
-    }),
+    password: passwordSchema,
     confirmPassword: z.string(),
   })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password dan konfirmasi password tidak sesuai",
+        message: "Konfirmasi password tidak sesuai dengan password sebelumnya.",
+        path: ["confirmPassword"],
       });
     }
   });
 
 export const loginSchema = z.object({
-  userName: z
+  UET: z
     .string()
-    .min(3, "Username minimal harus 3 karakter")
-    .max(10, "Username maksimal 10 karakter"),
-  password: z.string().min(8, "Password minimal harus 8 karakter"),
+    .min(1, "Field ini wajib diisi")
+    .superRefine((val, ctx) => {
+      const isValidUsername = usernameSchema.safeParse(val).success;
+      const isValidEmail = emailSchema.safeParse(val).success;
+      const isValidPhone = phoneSchema.safeParse(val).success;
+
+      const inValidUsername = usernameSchema.safeParse(val).error;
+      const inValidEmail = emailSchema.safeParse(val).error;
+      const inValidPhone = phoneSchema.safeParse(val).error;
+
+      if (isValidPhone || isValidUsername || isValidEmail) {
+        return;
+      }
+
+      if (val.includes("@")) {
+        if (inValidEmail) {
+          const issue = inValidEmail.issues?.[0];
+          if (issue) ctx.addIssue(issue);
+          return;
+        }
+      }
+
+      if (val.length > 0) {
+        const first = val[0] || "";
+
+        if (/[A-Za-z]/.test(first)) {
+          if (inValidUsername) {
+            const issue = inValidUsername.issues?.[0];
+            if (issue) ctx.addIssue(issue);
+          }
+          return;
+        }
+
+        if (/\d|\+/.test(first)) {
+          if (inValidPhone) {
+            const issue = inValidPhone.issues?.[0];
+            if (issue) ctx.addIssue(issue);
+          }
+          return;
+        }
+      }
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Masukkan username, email, atau nomor telepon yang valid",
+      });
+    }),
+  password: passwordSchema,
 });
