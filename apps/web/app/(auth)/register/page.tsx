@@ -1,6 +1,11 @@
 "use client";
 
-import { Password } from "@/components/password";
+import {
+  Password,
+  PasswordRequirements,
+  PasswordStrength,
+  PasswordStrengthBar,
+} from "@/components/password";
 import { registerSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
@@ -28,14 +33,24 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
-import { ChevronLeftCircle } from "lucide-react";
+import { passwordStrength } from "check-password-strength";
+import { Check, ChevronLeftCircle, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import z from "zod";
 
 export default function RegisterPage() {
+  const [passwordStrengthState, setPasswordStrengthState] =
+    useState<PasswordStrength>({
+      id: 0,
+      value: "Too weak",
+      contains: [],
+      length: 0,
+    });
+
   const registerForm = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -54,6 +69,22 @@ export default function RegisterPage() {
     console.log(data);
   };
 
+  const password = registerForm.watch("password");
+
+  useEffect(() => {
+    if (password && password.length > 0) {
+      const strength = passwordStrength(password);
+      setPasswordStrengthState(strength);
+    } else {
+      setPasswordStrengthState({
+        id: 0,
+        value: "Too weak",
+        contains: [],
+        length: 0,
+      });
+    }
+  }, [password]);
+
   return (
     <div className="h-screen w-screen flex items-center justify-center">
       <Card className="p-0 w-2/3 h-2/3 overflow-hidden flex flex-col">
@@ -64,10 +95,10 @@ export default function RegisterPage() {
                 <Button
                   variant="ghost"
                   className="absolute top-4 left-4 text-accent"
-                  >
-                    <ChevronLeftCircle className="size-5" />
-                    <span>Kembali ke Beranda</span>
-                  </Button>
+                >
+                  <ChevronLeftCircle className="size-5" />
+                  <span>Kembali ke Beranda</span>
+                </Button>
               </Link>
               <div className="flex flex-col items-center text-white gap-5">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
@@ -254,6 +285,19 @@ export default function RegisterPage() {
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
                         )}
+
+                        <div className="animate-fadeIn">
+                          <PasswordStrengthBar
+                            strength={passwordStrengthState}
+                          />
+                        </div>
+
+                        <div className="animate-fadeIn">
+                          <PasswordRequirements
+                            strength={passwordStrengthState}
+                            field={field}
+                          />
+                        </div>
                       </Field>
                     )}
                   />
