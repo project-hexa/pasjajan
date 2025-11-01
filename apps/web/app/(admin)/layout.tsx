@@ -1,8 +1,11 @@
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Topbar } from "@/components/dashboard/topbar";
-import { ReactElement } from "react";
 
-export default function AdminLayout({ children }: { children: ReactElement }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-4 bg-[#E9F4EE] p-4">
       <Topbar />
