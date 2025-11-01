@@ -1,11 +1,9 @@
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
 import { ThemeProviders } from "@/components/theme-providers";
 import "@workspace/ui/globals.css";
 import { Poppins } from "next/font/google";
 
 const fontSans = Poppins({
-  weight: ["300"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
@@ -19,15 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen container mx-auto overflow-y-auto`}
+        className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
-        <ThemeProviders>
-          <Navbar />
-          <main>
-            {children}
-            <Footer />
-          </main>
-        </ThemeProviders>
+        <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>
   );
