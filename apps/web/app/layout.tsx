@@ -1,5 +1,6 @@
 import { ThemeProviders } from "@/components/theme-providers";
 import "@workspace/ui/globals.css";
+import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 
 const fontSans = Poppins({
@@ -8,6 +9,11 @@ const fontSans = Poppins({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const metadata: Metadata = {
+  title: "Pasjajan",
+  description: "Aplikasi kasir untuk usaha makanan dan minuman.",
+};
 
 export default function RootLayout({
   children,
