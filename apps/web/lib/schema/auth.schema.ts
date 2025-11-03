@@ -6,10 +6,13 @@ const usernameSchema = z
   .min(3, "Username minimal 3 karakter")
   .regex(
     /^[a-zA-Z0-9_]+$/,
-    "Username hanya boleh huruf, angka, dan underscore"
+    "Username hanya boleh huruf, angka, dan underscore",
   );
 
-const emailSchema = z.string().email("Format email tidak valid");
+const emailSchema = z.union([
+  z.literal(""),
+  z.string().email("Email tidak Valid"),
+]);
 
 const phoneSchema = z
   .string()
@@ -74,13 +77,15 @@ export const registerSchema = z
       .string()
       .min(2, "Nama depan minimal harus 2 karakter")
       .max(20, "Nama depan maksimal 20 karakter"),
-    lastName: z
-      .string()
-      .min(2, "Nama belakang minimal harus 2 karakter")
-      .max(20, "Nama belakang maksimal 20 karakter")
-      .optional(),
+    lastName: z.union([
+      z.literal(""),
+      z
+        .string()
+        .min(2, "Nama belakang minimal harus 2 karakter")
+        .max(20, "Nama belakang maksimal 20 karakter"),
+    ]),
     userName: usernameSchema,
-    email: emailSchema.optional(),
+    email: emailSchema,
     noTelepon: phoneSchema,
     address: z
       .string()
