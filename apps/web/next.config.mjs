@@ -8,8 +8,12 @@ const nextConfig = {
         hostname: 'placehold.co',
         pathname: '/**',
       },
-    ]
-  }
-}
+      {
+        protocol: "https",
+        hostname: "dummyimage.com",
+      },
+    ],
+  },
+};
 
-export default nextConfig
+export default nextConfig;

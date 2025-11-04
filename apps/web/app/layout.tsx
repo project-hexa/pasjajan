@@ -4,7 +4,7 @@ import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 
 const fontSans = Poppins({
-  weight: ["300"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
@@ -23,11 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen overflow-hidden flex flex-col`}
+        className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
-        <ThemeProviders>
-          {children}
-        </ThemeProviders>
+        <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>
   );

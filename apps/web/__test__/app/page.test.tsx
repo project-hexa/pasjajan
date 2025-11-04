@@ -6,7 +6,7 @@ test("Renders a heading", () => {
   render(<HomePage />);
 
   const heading = screen.getByRole("heading", {
-    level: 1
+    level: 1,
   });
 
   expect(heading).toBeDefined();
