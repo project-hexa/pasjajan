@@ -43,7 +43,7 @@ export const Navbar = () => {
                 Kategori
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent className="bg-card text-accent-foreground">
               <DropdownMenuItem>Category 1</DropdownMenuItem>
               <DropdownMenuItem>Category 2</DropdownMenuItem>
               <DropdownMenuItem>Category 3</DropdownMenuItem>
@@ -52,9 +52,9 @@ export const Navbar = () => {
           <ButtonGroup>
             <Input
               placeholder="Cari produk yang anda inginkan disini"
-              className="bg-popover w-96"
+              className="bg-card w-96"
             />
-            <Button className="bg-popover-foreground" size={"icon"}>
+            <Button variant={"secondary"} size={"icon"}>
               <Search />
             </Button>
           </ButtonGroup>
@@ -77,7 +77,7 @@ export const Navbar = () => {
                   <ShoppingBasket />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="bg-card text-accent-foreground">
                 <DropdownMenuLabel className="text-muted-foreground">
                   Keranjang Belanja
                 </DropdownMenuLabel>
