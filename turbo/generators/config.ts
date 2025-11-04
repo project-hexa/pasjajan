@@ -2,7 +2,7 @@ import type { PlopTypes } from "@turbo/gen";
 
 const PATH_WEB_APP = "apps/web";
 
-const moduleChoices = [
+const moduleChoices: { id: string; name: string }[] = [
   { id: "auth", name: "User Management" },
   { id: "product", name: "Product & Shopping" },
   { id: "payment", name: "Payment & Checkout" },
@@ -55,52 +55,69 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
             validate: (value) => (value ? true : "Modul harus dipilih!"),
           },
           {
-            when: (answers) => answers.module,
-            type: "input",
+            when: (answer) => answer.module,
+            type: "confirm",
             name: "withLayout",
-            message: (answers) =>
-              `Apakah modul ${answers.module} menggunakan layout khusus? (ya/tidak)`,
-            default: "tidak",
-            validate,
+            message: (answer) =>
+              `Apakah modul ${answer.module} menggunakan layout khusus?`,
+            default: false,
           },
           {
-            when: (answers) => answers.module,
+            when: (answer) => answer.module,
             type: "input",
             name: "featureName",
-            message: (answers) =>
-              `Nama fitur apa? (contoh: ${featureChoices(answers.module).join(", ")}) `,
+            message: (answer) =>
+              `Nama fitur/halaman apa? (contoh: ${featureChoices(answer.module).join(", ")}) `,
             suffix:
-              "gunakan '/' untuk sub-fitur (misal: AdminPanel/UserManagement): ",
+              "gunakan '/' untuk sub-fitur/sub-halaman (misal: AdminPanel/UserManagement): ",
             validate: (value) =>
               value ? true : "Nama fitur tidak boleh kosong!",
           },
           {
-            when: (answers) => answers.module,
-            type: "input",
-            name: "withHooks",
-            message: (answers) =>
-              `Apakah fitur ${answers.featureName} menggunakan custom hooks? (ya/tidak)`,
-            default: "tidak",
-            validate,
+            when: (answer) => answer.module,
+            type: "confirm",
+            name: "withDetailPage",
+            message: (answer) =>
+              `Apakah fitur ${answer.featureName} memiliki halaman detail? (contoh: product/{id})`,
+            default: false,
           },
           {
-            when: (answers) => answers.module,
-            type: "input",
+            when: (answer) => answer.module,
+            type: "confirm",
+            name: "withParams",
+            message: (answer) =>
+              `Apakah fitur ${answer.featureName} memiliki parameter dinamis? (contoh: product?search=cokelat)`,
+            default: false,
+          },
+          {
+            when: (answer) => answer.module,
+            type: "confirm",
+            name: "withHooks",
+            message: (answer) =>
+              `Apakah fitur ${answer.featureName} menggunakan custom hooks?`,
+            default: false,
+          },
+          {
+            when: (answer) => answer.module,
+            type: "confirm",
             name: "withStateManagement",
-            message: (answers) =>
-              `Apakah fitur ${answers.featureName} menggunakan state management? (ya/tidak)`,
-            default: "tidak",
-            validate,
-          }
+            message: (answer) =>
+              `Apakah fitur ${answer.featureName} menggunakan state management?`,
+            default: false,
+          },
         ]);
 
         console.log("\nRingkasan pilihan:");
         console.log(`  Modul         : ${answers.module}`);
-        console.log(`  Layout Khusus : ${answers.withLayout ? "Ya" : "Tidak"}`);
+        console.log(`  Layout Khusus : ${answers.withLayout ? "Yes" : "No"}`);
         console.log(`  Fitur         : ${answers.featureName}`);
-        console.log(`  Custom Hooks  : ${answers.withHooks ? "Ya" : "Tidak"}`);
         console.log(
-          `  State Mgmt    : ${answers.withStateManagement ? "Ya" : `Tidak`}`
+          `  Detail Page   : ${answers.withDetailPage ? "Yes" : "No"}`
+        );
+        console.log(`  Dengan Params : ${answers.withParams ? "Yes" : "No"}`);
+        console.log(`  Custom Hooks  : ${answers.withHooks ? "Yes" : "No"}`);
+        console.log(
+          `  State Mgmt    : ${answers.withStateManagement ? "Yes" : `No`}`
         );
 
         const { confirm } = await inquirer.prompt({
@@ -121,7 +138,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
     actions: (data) => {
       const actions: PlopTypes.ActionType[] = [];
 
-      if (data?.withLayout.toLowerCase() === "ya") {
+      if (data?.withLayout) {
         const moduleId = moduleChoices.find(
           (mod) => mod.name === data?.module
         )?.id;
@@ -133,7 +150,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         });
       }
 
-      if (data?.withHooks.toLowerCase() === "ya") {
+      if (data?.withHooks) {
         const hooksPath = `${PATH_WEB_APP}/hooks`;
         actions.push({
           type: "add",
@@ -142,7 +159,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         });
       }
 
-      if (data?.withStateManagement.toLowerCase() === "ya") {
+      if (data?.withStateManagement) {
         const statePath = `${PATH_WEB_APP}/store`;
         actions.push({
           type: "add",
@@ -151,7 +168,9 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         });
       }
 
-      const featurePath = `${PATH_WEB_APP}/app/(${moduleChoices.find((mod) => mod.name === data?.module)?.id})/${data?.featureName}`;
+      const featurePath = data?.withDetailPage
+        ? `${PATH_WEB_APP}/app/(${moduleChoices.find((mod) => mod.name === data?.module)?.id})/${data?.featureName}/[id]`
+        : `${PATH_WEB_APP}/app/(${moduleChoices.find((mod) => mod.name === data?.module)?.id})/${data?.featureName}`;
       actions.push({
         type: "add",
         path: `${featurePath}/page.tsx`,

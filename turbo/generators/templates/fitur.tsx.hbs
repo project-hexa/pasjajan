@@ -1,11 +1,62 @@
-interface {{pascalCase featureName}}Props {
-    // Tambahkan properti jika diperlukan
-}
+{{#if withDetailPage}}
+"use client";
 
-const {{pascalCase featureName}} = () => {
+  {{#if withParams}}
+import { useParams, useSearchParams } from "next/navigation";
+
+const {{pascalCase featureName}}Page = () => {
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const myParam = searchParams.get("yourParamKey"); // Ganti dengan kunci yang diinginkan
+
+  return (
+    <div>
+      {{pascalCase featureName}} - Detail Page ID: {params.id} - params: {JSON.stringify(myParam)}
+    </div>
+  );
+};
+
+export default {{pascalCase featureName}}Page;
+  {{else}}
+import { useParams } from "next/navigation";
+
+const {{pascalCase featureName}}Page = () => {
+  const params = useParams<{ id: string }>();
+  
+  return (
+    <div>{{pascalCase featureName}} - Detail Page ID: {params.id}</div>
+  );
+};
+
+export default {{pascalCase featureName}}Page;
+  {{/if}}}
+
+{{else}}
+  {{#if withParams}}
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+const {{pascalCase featureName}}Page = () => {
+  const searchParams = useSearchParams();
+  const myParam = searchParams.get("yourParamKey"); // Ganti dengan kunci yang diinginkan
+  
+  return (
+    <div>
+      {{pascalCase featureName}} - params: {JSON.stringify(myParam)}
+    </div>
+  );
+};
+
+export default {{pascalCase featureName}}Page;
+  {{else}}
+
+const {{pascalCase featureName}}Page = () => {
   return (
     <div>{{pascalCase featureName}}</div>
-  )
-}
+  );
+};
 
-export default {{pascalCase featureName}}
+export default {{pascalCase featureName}}Page;
+  {{/if}}
+{{/if}}
