@@ -21,25 +21,25 @@ class DashboardController extends Controller
 
         $period = $request->input('period', 'weekly');
 
-        // Tentukan rentang tanggal default
+
         [$from, $to] = match ($period) {
             'monthly' => [Carbon::now()->subMonths(12)->startOfMonth(), Carbon::now()->endOfDay()],
             'yearly'  => [Carbon::now()->subYears(5)->startOfYear(),  Carbon::now()->endOfDay()],
             default   => [Carbon::now()->subWeeks(12)->startOfWeek(),  Carbon::now()->endOfDay()],
         };
 
-        // Override manual jika ada input from/to
+
         if ($request->filled('from')) $from = Carbon::parse($request->input('from'))->startOfDay();
         if ($request->filled('to'))   $to   = Carbon::parse($request->input('to'))->endOfDay();
 
-        // Tentukan ekspresi grouping berdasarkan period
+
         $groupByExpr = match ($period) {
             'monthly' => "DATE_FORMAT(sale_date, '%Y-%m-01')",
             'yearly'  => "DATE_FORMAT(sale_date, '%Y-01-01')",
             default   => "STR_TO_DATE(CONCAT(YEARWEEK(sale_date, 3), ' Monday'), '%X%V %W')",
         };
 
-        // Query dasar
+
         $base = Sale::query()
             ->whereBetween('sale_date', [$from->toDateString(), $to->toDateString()]);
 
@@ -47,7 +47,6 @@ class DashboardController extends Controller
             $base->where('branch_id', $request->integer('branch_id'));
         }
 
-        // Ringkasan utama
         $summary = (clone $base)
             ->selectRaw('
                 SUM(total_price) as total_revenue,
@@ -56,10 +55,10 @@ class DashboardController extends Controller
             ')
             ->first();
 
-        // Total unit terjual
+
         $totalUnitSold = (clone $base)->sum('quantity_sold');
 
-        // Penjualan per periode
+
         $periodicSales = (clone $base)
             ->groupBy(DB::raw($groupByExpr))
             ->orderBy(DB::raw($groupByExpr))
@@ -71,7 +70,6 @@ class DashboardController extends Controller
             ")
             ->get();
 
-        // Produk terlaris
         $topProduct = (clone $base)
             ->join('products', 'products.id', '=', 'sales.product_id')
             ->selectRaw('
