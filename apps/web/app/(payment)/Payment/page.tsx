@@ -1,6 +1,6 @@
 // app/checkout/page.tsx
 // Next.js App Router + TypeScript + TailwindCSS + shadcn/ui
-// Tampilan sesuai mockup gambar (navbar hijau, ringkasan kanan, daftar item kiri)
+// Tampilan sesuai mockup (navbar hijau, ringkasan kanan, daftar item kiri)
 
 "use client";
 
@@ -10,17 +10,9 @@ import { Button } from "@workspace/ui/components/button";
 import { Badge } from "@workspace/ui/components/badge";
 import { Separator } from "@workspace/ui/components/separator";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@workspace/ui/components/select";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import { MapPin, PencilLine, Smartphone, Wallet, CreditCard } from "lucide-react";
-
+import { MapPin, PencilLine } from "lucide-react";
+import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 
 // ---- helpers ----
 const currency = (n: number) =>
@@ -34,7 +26,8 @@ const items = [
     variant: "350 ML",
     price: 4000,
     qty: 2,
-    image: "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
   },
   {
     id: "2",
@@ -42,7 +35,8 @@ const items = [
     variant: "Baso",
     price: 6500,
     qty: 2,
-    image: "https://images.unsplash.com/photo-1610440042657-612c9f47d409?q=80&w=640&auto=format&fit=crop",
+    image:
+      "https://images.unsplash.com/photo-1610440042657-612c9f47d409?q=80&w=640&auto=format&fit=crop",
   },
 ];
 
@@ -53,9 +47,31 @@ export default function CheckoutPage() {
   const productTotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const grandTotal = productTotal + shipping + adminFee;
 
+  // ——— pilihan metode pembayaran (awal: belum pilih apa pun) ———
+type MethodKey = "ewallet" | "va" | "qris";
+type PayChoice = { method?: MethodKey; option?: string };
+
+const [payChoice, setPayChoice] = React.useState<PayChoice>({}); // ← kosong dulu
+
+const labelMaps = {
+  ewallet: { gopay: "Gopay", dana: "Dana", shopeepay: "Shopee Pay", ovo: "OVO" } as Record<string, string>,
+  va: { bca: "BCA", bni: "BNI", permata: "Permata Bank", bri: "BRI" } as Record<string, string>,
+};
+
+const paymentLabel = (() => {
+  if (!payChoice.method) return "Pilih Metode";           // ← default label
+  if (payChoice.method === "qris") return "QRIS";
+  if (payChoice.method === "ewallet") {
+    const name = payChoice.option ? labelMaps.ewallet[payChoice.option] : "Pilih E-Wallet";
+    return `E-Wallet — ${name}`;
+  }
+  const name = payChoice.option ? labelMaps.va[payChoice.option] : "Pilih Bank VA";
+  return `Virtual Account — ${name}`;
+})();
+
+
   return (
     <div className="min-h-screen bg-slate-200">
-
       {/* Navbar brand hijau */}
       <div className="w-full border-b bg-emerald-700 text-white">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
@@ -88,8 +104,7 @@ export default function CheckoutPage() {
                   <div>
                     <p className="font-medium">Rumah – John Doe</p>
                     <p className="text-sm text-slate-600">
-                      Jln. Setiabudhi No. 67K, Kec. Sukasari, Kota Bandung,
-                      Jawa Barat, 40636
+                      Jln. Setiabudhi No. 67K, Kec. Sukasari, Kota Bandung, Jawa Barat, 40636
                     </p>
                     <p className="text-sm text-slate-600">0888888888</p>
                   </div>
@@ -120,12 +135,16 @@ export default function CheckoutPage() {
                             <div>
                               <p className="font-medium leading-tight">{it.name}</p>
                               <div className="mt-1 flex items-center gap-2">
-                                <Badge variant="secondary" className="rounded-md">{it.variant}</Badge>
+                                <Badge variant="secondary" className="rounded-md">
+                                  {it.variant}
+                                </Badge>
                                 <span className="text-sm text-slate-600">x{it.qty}</span>
                               </div>
                               <p className="mt-1 text-sm text-slate-600">{currency(it.price)}</p>
                             </div>
-                            <div className="text-sm font-medium">Total 1 Produk {currency(it.price * it.qty)}</div>
+                            <div className="text-sm font-medium">
+                              Total 1 Produk {currency(it.price * it.qty)}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -144,17 +163,14 @@ export default function CheckoutPage() {
                 <CardTitle className="text-base">Metode Pembayaran</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Label htmlFor="method" className="text-sm">Pilih Metode</Label>
-                <Select defaultValue="qris">
-                  <SelectTrigger id="method">
-                    <SelectValue placeholder="Pilih metode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="qris"><div className="flex items-center gap-2"><Smartphone className="h-4 w-4" /> QRIS</div></SelectItem>
-                    <SelectItem value="ewallet"><div className="flex items-center gap-2"><Wallet className="h-4 w-4" /> E‑Wallet</div></SelectItem>
-                    <SelectItem value="card"><div className="flex items-center gap-2"><CreditCard className="h-4 w-4" /> Kartu Kredit/Debit</div></SelectItem>
-                  </SelectContent>
-                </Select>
+                <PaymentMethodDialog
+                  trigger={
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">{paymentLabel}</span>
+                    </Button>
+                  }
+                  onConfirm={(sel) => setPayChoice(sel)}
+                />
               </CardContent>
             </Card>
 
@@ -176,11 +192,23 @@ export default function CheckoutPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between"><span>Total Harga Pesanan</span><span>{currency(productTotal)}</span></div>
-                  <div className="flex items-center justify-between"><span>Biaya Pengiriman</span><span>{currency(shipping)}</span></div>
-                  <div className="flex items-center justify-between"><span>Biaya Admin</span><span>{currency(adminFee)}</span></div>
+                  <div className="flex items-center justify-between">
+                    <span>Total Harga Pesanan</span>
+                    <span>{currency(productTotal)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Biaya Pengiriman</span>
+                    <span>{currency(shipping)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Biaya Admin</span>
+                    <span>{currency(adminFee)}</span>
+                  </div>
                   <Separator />
-                  <div className="flex items-center justify-between font-semibold"><span>Total Pembayaran</span><span>{currency(grandTotal)}</span></div>
+                  <div className="flex items-center justify-between font-semibold">
+                    <span>Total Pembayaran</span>
+                    <span>{currency(grandTotal)}</span>
+                  </div>
                 </div>
 
                 <Button className="mt-4 w-full bg-emerald-700 hover:bg-emerald-800">
