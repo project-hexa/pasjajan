@@ -17,25 +17,26 @@ import {
   ItemContent,
   ItemDescription,
   ItemFooter,
-  ItemGroup,
-  ItemHeader,
   ItemMedia,
-  ItemTitle,
+  ItemTitle
 } from "@workspace/ui/components/item";
+import { ModeToggle } from "@workspace/ui/components/mode-toggle";
 import { Separator } from "@workspace/ui/components/separator";
 import { Grid2X2, Search, ShoppingBasket } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-export const Navbar = () => {
-  const router = useRouter()
-  
+export const Navbar = ({ className }: { className?: string }) => {
+  const router = useRouter();
+
   return (
-    <header className="w-full h-20 border-2 bg-primary">
-      <nav className="h-full flex items-center justify-between px-10">
-        <div className="flex gap-2 items-center">
-          <Image src={"/logo.png"} alt="logo" width={64} height={64} />
+    <header className={`bg-primary h-20 w-full border-2 ${className}`}>
+      <nav className="flex h-full items-center justify-between px-10">
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <Image src={"/logo.png"} alt="logo" width={64} height={64} />
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="p-0">
@@ -60,7 +61,8 @@ export const Navbar = () => {
           </ButtonGroup>
         </div>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex h-10 items-center gap-2">
+          <ModeToggle />
           <div className="flex items-center">
             <Link href="/promo">
               <Button variant={"link"} className="text-white">
@@ -82,7 +84,7 @@ export const Navbar = () => {
                   Keranjang Belanja
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <div className="overflow-y-auto h-80">
+                <div className="h-80 overflow-y-auto">
                   {[...Array.from({ length: 5 })].map((_, index) => (
                     <DropdownMenuItem key={index}>
                       <Link href={`/detail/produk-${index + 1}`}>
@@ -97,7 +99,7 @@ export const Navbar = () => {
                             />
                           </ItemMedia>
                           <ItemContent className="w-60">
-                            <ItemTitle className="w-36 line-clamp-2">
+                            <ItemTitle className="line-clamp-2 w-36">
                               Produk {index + 1}
                             </ItemTitle>
                             <ItemDescription>
@@ -119,16 +121,21 @@ export const Navbar = () => {
                   ))}
                 </div>
                 <DropdownMenuSeparator />
-                <Button variant={"link"}>
-                  Lihat semua keranjang
-                </Button>
+                <Button variant={"link"}>Lihat semua keranjang</Button>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <Separator orientation="vertical" />
           <ButtonGroup>
-            <Button variant={"outline"} onClick={() => router.push('/register')}>Daftar</Button>
-            <Button variant={"secondary"} onClick={() => router.push('/login')}>Masuk</Button>
+            <Button
+              variant={"outline"}
+              onClick={() => router.push("/register")}
+            >
+              Daftar
+            </Button>
+            <Button variant={"secondary"} onClick={() => router.push("/login")}>
+              Masuk
+            </Button>
           </ButtonGroup>
         </div>
       </nav>
