@@ -4,7 +4,8 @@
 @source "../**/*.{ts,tsx}";
 
 @import "tw-animate-css";
-@plugin 'tailwind-scrollbar' {
+@plugin "@tailwindcss/typography";
+@plugin "tailwind-scrollbar" {
   nocompatible: true;
   preferredstrategy: "pseudoelements";
 }
@@ -186,7 +187,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 box-border scrollbar scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-border scrollbar-w-3;
+    @apply border-border outline-ring/50 scrollbar scrollbar-thumb-rounded-full scrollbar-track-rounded-full scrollbar-thumb-border scrollbar-w-3 box-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -194,5 +195,21 @@
   a,
   button {
     @apply cursor-pointer;
+  }
+  .toaster-close-btn {
+    right: 10 !important;
+    left: unset !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--normal-text) !important;
+  }
+  .toaster {
+    @apply shadow;
+  }
+  .toaster-close-btn > svg {
+    width: 16px;
+    height: 16px;
   }
 }
