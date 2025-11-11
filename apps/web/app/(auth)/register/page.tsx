@@ -1,10 +1,7 @@
 "use client";
 
 import {
-  Password,
-  PasswordRequirements,
-  PasswordStrength,
-  PasswordStrengthBar,
+  Password
 } from "@/components/password";
 import { registerSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,29 +30,23 @@ import {
   InputGroupText,
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
-import { passwordStrength } from "check-password-strength";
-import { Check, ChevronLeftCircle, X } from "lucide-react";
+import { Label } from "@workspace/ui/components/label";
+import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
+import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
 
 export default function RegisterPage() {
-  const [passwordStrengthState, setPasswordStrengthState] =
-    useState<PasswordStrength>({
-      id: 0,
-      value: "Too weak",
-      contains: [],
-      length: 0,
-    });
+  const router = useRouter()
 
-  const registerForm = useForm({
+  const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
+      fullname: "",
       userName: "",
       email: "",
       noTelepon: "",
@@ -66,31 +57,26 @@ export default function RegisterPage() {
   });
 
   const handleOnSubmit = (data: z.infer<typeof registerSchema>) => {
+    if (data.noTelepon) {
+      data.noTelepon = '+62' + data.noTelepon.replace(/^(\+62|62|0)/, '');
+    }
+
+    toast.promise(new Promise<typeof registerForm>((resolve) => resolve(registerForm)), {
+      loading: "Loading...",
+      toasterId: "global",
+      success: () => "Akun berhasil dibuat!",
+      error: () => "Akun gagal dibuat",
+    })
+    router.push("/verification-code");
     console.log(data);
   };
 
-  const password = registerForm.watch("password");
-
-  useEffect(() => {
-    if (password && password.length > 0) {
-      const strength = passwordStrength(password);
-      setPasswordStrengthState(strength);
-    } else {
-      setPasswordStrengthState({
-        id: 0,
-        value: "Too weak",
-        contains: [],
-        length: 0,
-      });
-    }
-  }, [password]);
-
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
-      <Card className="p-0 w-2/3 h-2/3 overflow-hidden flex flex-col">
-        <CardContent className="p-0 flex-1 min-h-0">
+    <div className="flex items-center justify-center w-screen h-screen">
+      <Card className="flex flex-col w-2/3 p-0 overflow-hidden h-2/3">
+        <CardContent className="flex-1 min-h-0 p-0">
           <div className="flex h-full">
-            <div className="bg-primary flex justify-center flex-1 items-center relative">
+            <div className="relative flex items-center justify-center flex-1 bg-primary">
               <Link href="/">
                 <Button
                   variant="ghost"
@@ -100,7 +86,7 @@ export default function RegisterPage() {
                   <span>Kembali ke Beranda</span>
                 </Button>
               </Link>
-              <div className="flex flex-col items-center text-white gap-5">
+              <div className="flex flex-col items-center gap-5 text-white">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
                   <Image src="/logo.png" alt="Logo" width={128} height={128} />
@@ -112,66 +98,35 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="flex flex-col flex-1 items-center gap-4 overflow-y-auto py-4">
-              <div className="flex flex-col shrink-0 items-center gap-4">
-                <CardTitle className="text-2xl">Daftar</CardTitle>
-                <CardDescription>
-                  Sudah memiliki akun Pasjajan?{" "}
-                  <Link href="/login">
-                    <Button variant="link">Masuk</Button>
-                  </Link>
-                </CardDescription>
-              </div>
-
+            <div className="flex flex-col items-center flex-1 gap-4 py-4 overflow-y-auto">
+              <CardTitle className="text-2xl">Daftar</CardTitle>
               <form
                 className="w-full px-10 space-y-5"
                 id="register-form"
                 onSubmit={registerForm.handleSubmit(handleOnSubmit)}
               >
                 <FieldGroup>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Controller
-                      name="firstName"
-                      control={registerForm.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="firstName">
-                            Nama Depan
-                            <span className="text-destructive">*</span>
-                          </FieldLabel>
-                          <Input
-                            id="firstName"
-                            placeholder="John"
-                            aria-invalid={fieldState.invalid}
-                            {...field}
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                    <Controller
-                      name="lastName"
-                      control={registerForm.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="lastName">
-                            Nama Belakang (Optional)
-                          </FieldLabel>
-                          <Input
-                            id="lastName"
-                            placeholder="Doe"
-                            aria-invalid={fieldState.invalid}
-                            {...field}
-                          />
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                  </div>
+                  <Controller
+                    name="fullname"
+                    control={registerForm.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="fullname">
+                          Nama Lengkap
+                          <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <Input
+                          id="fullname"
+                          placeholder="John Doe"
+                          aria-invalid={fieldState.invalid}
+                          {...field}
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
                   <Controller
                     name="userName"
                     control={registerForm.control}
@@ -198,7 +153,7 @@ export default function RegisterPage() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="email">
-                          Email (Optional)
+                          Email<span className="text-destructive">*</span>
                         </FieldLabel>
                         <Input
                           id="email"
@@ -221,7 +176,9 @@ export default function RegisterPage() {
                           No Telepon<span className="text-destructive">*</span>
                         </FieldLabel>
                         <ButtonGroup>
-                          <ButtonGroupText>+62</ButtonGroupText>
+                          <ButtonGroupText asChild>
+                            <Label htmlFor="noTelepon">+62</Label>
+                          </ButtonGroupText>
                           <Input
                             id="noTelepon"
                             placeholder="81234567890"
@@ -241,7 +198,7 @@ export default function RegisterPage() {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor="address">
-                          Address (Optional)
+                          Address<span className="text-destructive">*</span>
                         </FieldLabel>
                         <InputGroup>
                           <InputGroupTextarea
@@ -281,25 +238,12 @@ export default function RegisterPage() {
                           fieldState={fieldState}
                         />
                         <FieldDescription>
-                          Buat password menggunakan kombinasi huruf besar, huruf
-                          kecil, angka, dan simbol {'(!@#$%^&*(),.?":{}|<>)'}.
+                          Buat password menggunakan kombinasi huruf besar, dan huruf
+                          kecil.
                         </FieldDescription>
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
                         )}
-
-                        <div className="animate-fadeIn">
-                          <PasswordStrengthBar
-                            strength={passwordStrengthState}
-                          />
-                        </div>
-
-                        <div className="animate-fadeIn">
-                          <PasswordRequirements
-                            strength={passwordStrengthState}
-                            field={field}
-                          />
-                        </div>
                       </Field>
                     )}
                   />
@@ -333,11 +277,19 @@ export default function RegisterPage() {
                   />
                 </FieldGroup>
 
-                <div className="flex flex-col items-center gap-2 justify-center">
+                <div className="flex flex-col items-center justify-center gap-2">
                   <Button form="register-form" type="submit">
                     Daftar
                   </Button>
-                  <p className="text-muted-foreground text-sm">
+                  <div className="flex flex-col items-center gap-4 shrink-0">
+                    <CardDescription>
+                      Sudah memiliki akun Pasjajan?{" "}
+                      <Link href="/login">
+                        <Button variant="link">Masuk</Button>
+                      </Link>
+                    </CardDescription>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
                     atau daftar menggunakan:
                   </p>
                   <Button variant={"ghost"} size="icon" className="size-14">

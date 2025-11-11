@@ -68,7 +68,7 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
 
 export const registerSchema = z
   .object({
-    name: z
+    fullname: z
       .string()
       .min(2, "Nama lengkap minimal harus 3 karakter")
       .max(20, "Nama lengkap maksimal 30 karakter"),
