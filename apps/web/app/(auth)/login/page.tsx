@@ -7,9 +7,9 @@ import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardTitle,
+  CardTitle
 } from "@workspace/ui/components/card";
+import { Checkbox } from "@workspace/ui/components/checkbox";
 import {
   Field,
   FieldError,
@@ -25,24 +25,38 @@ import {
 import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
+import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
 
 export default function LoginPage() {
   const [showPhoneCode, setShowPhoneCode] = useState<boolean>(false);
+  const router = useRouter();
 
-  const loginForm = useForm({
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       UET: "",
       password: "",
+      rememberMe: false,
     },
   });
 
   const handleOnSubmit = (data: z.infer<typeof loginSchema>) => {
-    data.UET = "62" + data.UET;
+    data.UET = "+62" + data.UET;
+    toast.promise(
+      new Promise<typeof loginForm>((resolve) => resolve(loginForm)),
+      {
+        loading: "Loading...",
+        toasterId: "global",
+        success: () => "Berhasil Masuk!",
+        error: () => "Gagal Masuk!",
+      },
+    );
+    router.push("/");
     console.log(data);
   };
 
@@ -65,24 +79,24 @@ export default function LoginPage() {
     } else {
       setShowPhoneCode(false);
     }
-  }, [UET]);
+  }, [UET, loginForm]);
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
-      <Card className="p-0 w-2/3 h-2/3 overflow-hidden flex flex-col">
-        <CardContent className="p-0 flex-1 min-h-0">
+    <div className="flex h-screen w-screen items-center justify-center">
+      <Card className="flex h-2/3 w-2/3 flex-col overflow-hidden p-0">
+        <CardContent className="min-h-0 flex-1 p-0">
           <div className="flex h-full">
-            <div className="bg-primary flex justify-center flex-1 items-center relative">
+            <div className="bg-primary relative flex flex-1 items-center justify-center">
               <Link href="/">
                 <Button
                   variant="ghost"
-                  className="absolute top-4 left-4 text-accent"
+                  className="text-accent absolute top-4 left-4"
                 >
                   <ChevronLeftCircle className="size-5" />
                   <span>Kembali ke Beranda</span>
                 </Button>
               </Link>
-              <div className="flex flex-col items-center text-white gap-5">
+              <div className="flex flex-col items-center gap-5 text-white">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
                   <Image src="/logo.png" alt="Logo" width={128} height={128} />
@@ -94,19 +108,13 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex flex-col flex-1 items-center justify-center gap-4">
-              <div className="flex flex-col shrink-0 items-center gap-4">
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <div className="flex shrink-0 flex-col items-center gap-4">
                 <CardTitle className="text-2xl">Masuk</CardTitle>
-                <CardDescription>
-                  Belum punya akun Pasjajan?{" "}
-                  <Link href="/register">
-                    <Button variant="link">Daftar</Button>
-                  </Link>
-                </CardDescription>
               </div>
 
               <form
-                className="w-full px-10 space-y-5"
+                className="w-full space-y-5 px-10"
                 id="register-form"
                 onSubmit={loginForm.handleSubmit(handleOnSubmit)}
               >
@@ -123,7 +131,7 @@ export default function LoginPage() {
                           </FieldLabel>
                           <InputGroup className="relative">
                             {showPhoneCode && (
-                              <InputGroupAddon className="bg-accent pr-3 rounded-l-md">
+                              <InputGroupAddon className="bg-accent rounded-l-md pr-3">
                                 <InputGroupText>+62</InputGroupText>
                               </InputGroupAddon>
                             )}
@@ -160,19 +168,47 @@ export default function LoginPage() {
                       </Field>
                     )}
                   />
-                </FieldGroup>
 
-                <div className="flex flex-col items-center gap-2 justify-center">
-                  <Button form="register-form" type="submit">
-                    Masuk
-                  </Button>
-                  <p className="text-muted-foreground text-sm">
-                    atau masuk menggunakan:
-                  </p>
-                  <Button variant={"ghost"} size="icon" className="size-14">
-                    <FcGoogle className="size-10" />
-                  </Button>
-                </div>
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Button form="register-form" type="submit">
+                      Masuk
+                    </Button>
+                    <p>
+                      Belum punya akun Pasjajan?{" "}
+                      <Link href="/register">
+                        <Button variant="link">Daftar</Button>
+                      </Link>
+                    </p>
+                    <div className="flex justify-between w-full">
+                      <Controller
+                        control={loginForm.control}
+                        name="rememberMe"
+                        render={({ field }) => (
+                          <Field orientation={"horizontal"}>
+                            <Checkbox
+                              id="rememberMe"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                            <FieldLabel htmlFor="rememberMe">
+                              Ingat Saya
+                            </FieldLabel>
+                          </Field>
+                        )}
+                      />
+
+                      <Link href="/forgot-password">
+                        <Button variant="link">Lupa Password?</Button>
+                      </Link>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      atau masuk menggunakan:
+                    </p>
+                    <Button variant={"ghost"} size="icon" className="size-14">
+                      <FcGoogle className="size-10" />
+                    </Button>
+                  </div>
+                </FieldGroup>
               </form>
             </div>
           </div>
