@@ -9,14 +9,9 @@ const usernameSchema = z
     "Username hanya boleh huruf, angka, dan underscore",
   );
 
-const emailSchema = z.union([
-  z.literal(""),
-  z.string().email("Email tidak Valid"),
-]);
+const emailSchema = z.string().email("Email tidak Valid");
 
-const phoneSchema = z
-  .string()
-  .regex(/^(\+62|62|0)[0-9]{9,12}$/, "Format nomor telepon tidak valid");
+const phoneSchema = z.string();
 
 const passwordSchema = z.string().superRefine((val, ctx) => {
   const strength = passwordStrength(val);
@@ -42,56 +37,48 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
     });
   }
 
-  if (!strength.contains.includes("number")) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password harus mengandung angka",
-    });
-  }
-
-  if (!strength.contains.includes("symbol")) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password harus mengandung simbol",
-    });
-  }
-
-  if (/\s/.test(val)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password tidak boleh mengandung spasi",
-    });
-  }
-
-  if (strength.id < 2) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password masih terlalu lemah",
-    });
-  }
+  // if (!strength.contains.includes("number")) {
+  //   ctx.addIssue({
+  //     code: z.ZodIssueCode.custom,
+  //     message: "Password harus mengandung angka",
+  //   });
+  // }
+  //
+  // if (!strength.contains.includes("symbol")) {
+  //   ctx.addIssue({
+  //     code: z.ZodIssueCode.custom,
+  //     message: "Password harus mengandung simbol",
+  //   });
+  // }
+  //
+  // if (/\s/.test(val)) {
+  //   ctx.addIssue({
+  //     code: z.ZodIssueCode.custom,
+  //     message: "Password tidak boleh mengandung spasi",
+  //   });
+  // }
+  //
+  // if (strength.id < 2) {
+  //   ctx.addIssue({
+  //     code: z.ZodIssueCode.custom,
+  //     message: "Password masih terlalu lemah",
+  //   });
+  // }
 });
 
 export const registerSchema = z
   .object({
-    firstName: z
+    name: z
       .string()
-      .min(2, "Nama depan minimal harus 2 karakter")
-      .max(20, "Nama depan maksimal 20 karakter"),
-    lastName: z.union([
-      z.literal(""),
-      z
-        .string()
-        .min(2, "Nama belakang minimal harus 2 karakter")
-        .max(20, "Nama belakang maksimal 20 karakter"),
-    ]),
+      .min(2, "Nama lengkap minimal harus 3 karakter")
+      .max(20, "Nama lengkap maksimal 30 karakter"),
     userName: usernameSchema,
     email: emailSchema,
     noTelepon: phoneSchema,
     address: z
       .string()
       .min(10, "Alamat minimal harus 10 karakter")
-      .max(200, "Alamat maksimal 200 karakter")
-      .optional(),
+      .max(200, "Alamat maksimal 200 karakter"),
     password: passwordSchema,
     confirmPassword: z.string(),
   })
@@ -156,4 +143,34 @@ export const loginSchema = z.object({
       });
     }),
   password: passwordSchema,
+  rememberMe: z.boolean().optional(),
 });
+
+export const otpSchema = z.object({
+  pin: z.string().min(6, {
+    message: "OTP anda harus terdiri dari 6 karakter.",
+  }),
+});
+
+export const verificationCodeSchema = z.object({
+  email: emailSchema,
+});
+
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Konfirmasi password tidak sesuai dengan password sebelumnya.",
+        path: ["confirmPassword"],
+      });
+    }
+  });
