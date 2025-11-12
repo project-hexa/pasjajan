@@ -27,7 +27,6 @@ export const useAuth = () => {
       username: string;
       password: string;
       rememberMe: boolean;
-      redirect: string;
     },
     opts: {
       showToast?: boolean;
@@ -37,7 +36,7 @@ export const useAuth = () => {
       };
     } = {},
   ) => {
-    const { username, password, rememberMe, redirect } = data;
+    const { username, password, rememberMe } = data;
     const { showToast = true, customMessage } = opts;
 
     try {

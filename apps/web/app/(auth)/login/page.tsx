@@ -1,14 +1,11 @@
 "use client";
 
 import { Password } from "@/components/password";
+import { useAuth } from "@/hooks/contollers/useAuth";
 import { loginSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardTitle
-} from "@workspace/ui/components/card";
+import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import {
   Field,
@@ -25,16 +22,14 @@ import {
 import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
-import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
 
 export default function LoginPage() {
   const [showPhoneCode, setShowPhoneCode] = useState<boolean>(false);
-  const router = useRouter();
+  const {login} = useAuth()
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -46,18 +41,15 @@ export default function LoginPage() {
   });
 
   const handleOnSubmit = (data: z.infer<typeof loginSchema>) => {
-    data.UET = "+62" + data.UET;
-    toast.promise(
-      new Promise<typeof loginForm>((resolve) => resolve(loginForm)),
-      {
-        loading: "Loading...",
-        toasterId: "global",
-        success: () => "Berhasil Masuk!",
-        error: () => "Gagal Masuk!",
-      },
-    );
-    router.push("/");
-    console.log(data);
+    if (data.UET === typeof Number) {
+      data.UET = "+62" + data.UET;
+    }
+
+    login({
+      username: data.UET,
+      password: data.password,
+      rememberMe: data.rememberMe ?? false,
+    })
   };
 
   const UET = loginForm.watch("UET");
@@ -179,7 +171,7 @@ export default function LoginPage() {
                         <Button variant="link">Daftar</Button>
                       </Link>
                     </p>
-                    <div className="flex justify-between w-full">
+                    <div className="flex w-full justify-between">
                       <Controller
                         control={loginForm.control}
                         name="rememberMe"
