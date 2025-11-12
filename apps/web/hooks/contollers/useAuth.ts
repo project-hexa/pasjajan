@@ -1,19 +1,15 @@
 "use client";
 
 import { api } from "@/lib/utils/axios";
-import { useLocalStorage } from "@workspace/react-use";
 import { toast } from "@workspace/ui/components/sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
+import z from "zod";
+import { loginSchema } from "@/lib/schema/auth.schema";
 
 export const useAuth = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [localToken, setLocalToken] = useLocalStorage<string | null>(
-    "token",
-    null,
-  );
 
   const getToken = () => {
     return Cookies.get("token");
@@ -23,11 +19,7 @@ export const useAuth = () => {
   const isLoggedIn = !!token;
 
   const login = async (
-    data: {
-      username: string;
-      password: string;
-      rememberMe: boolean;
-    },
+    data: z.infer<typeof loginSchema>,
     opts: {
       showToast?: boolean;
       customMessage?: {
@@ -36,12 +28,12 @@ export const useAuth = () => {
       };
     } = {},
   ) => {
-    const { username, password, rememberMe } = data;
+    const { UET, password, rememberMe } = data;
     const { showToast = true, customMessage } = opts;
 
     try {
       const response = await api.post("/auth/login", {
-        username,
+        UET,
         password,
       });
 
