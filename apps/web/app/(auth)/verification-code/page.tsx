@@ -40,7 +40,7 @@ export default function VerificationCodePage() {
             height={250}
           />
 
-          {!verifCodeForm.formState.isSubmitted ? (
+          {!verifCodeForm.formState.isSubmitSuccessful ? (
             <form
               id="verifCode"
               onSubmit={verifCodeForm.handleSubmit(handleSubmit)}

@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
     <div className="flex h-screen w-screen items-center justify-center">
       <Card className="flex w-1/2 flex-col overflow-hidden border-2 border-black">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
-          {!forgotPassForm.formState.isSubmitted ? (
+          {!forgotPassForm.formState.isSubmitSuccessful ? (
             <CardTitle className="text-2xl">Lupa Password?</CardTitle>
           ) : (
             <>
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
             </>
           )}
 
-          {!forgotPassForm.formState.isSubmitted ? (
+          {!forgotPassForm.formState.isSubmitSuccessful ? (
             <form
               id="forgotPass"
               onSubmit={forgotPassForm.handleSubmit(handleSubmit)}
