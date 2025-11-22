@@ -101,6 +101,25 @@ export default function HomePage() {
                 </Card>
               </div>
               <Separator />
+              <span>Coba navigasi dengan dynamic route</span>
+              <Card className="gap-2">
+                <CardHeader>folder (delivery)/</CardHeader>
+                <Separator />
+                <CardContent>
+                  <div className="flex flex-wrap gap-2 pt-6">
+                    <Link href="/delivery/123/rating">
+                      <Button variant={"secondary"}>/delivery/123/rating</Button>
+                    </Link>
+                    <Link href="/delivery/123/tracking">
+                      <Button variant={"secondary"}>/delivery/123/tracking</Button>
+                    </Link>
+                  </div>
+                  <p className="text-muted-foreground mt-2">
+                    Folder: app/(delivery)/[deliveryId]/rating dan app/(delivery)/[deliveryId]/tracking
+                  </p>
+                </CardContent>
+              </Card>
+              <Separator />
               <span>Coba navigasi dengan catch all route</span>
               <div className="flex gap-2">
                 <Link href="/employee">
