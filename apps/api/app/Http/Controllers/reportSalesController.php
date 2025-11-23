@@ -13,7 +13,9 @@ class reportSalesController extends Controller
     public function reportSales(Request $request)
     {
         $request->validate([
-            'period'    => 'nullable|in:daily,monthly,yearly',
+            'period'    => 'nullable|in:daily,monthly,yearly,custom',
+            'from'      => 'required_if:period,custom|date',
+            'to'        => 'required_if:period,custom|date|after_or_equal:from',
             'store_id'  => 'nullable|integer|exists:stores,id',
             'top_n'     => 'nullable|integer|min:1|max:50',
         ]);
@@ -25,16 +27,21 @@ class reportSalesController extends Controller
             'daily'   => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
             'monthly' => [Carbon::now()->startOfMonth(), Carbon::now()->endOfDay()],
             'yearly'  => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
+            'custom'  => [
+                Carbon::parse($request->input('from'))->startOfDay(),
+                Carbon::parse($request->input('to'))->endOfDay()
+            ],
             default   => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
         };
 
-        if ($request->filled('from')) $from = Carbon::parse($request->input('from'))->startOfDay();
-        if ($request->filled('to'))   $to   = Carbon::parse($request->input('to'))->endOfDay();
+
+        $totalDays = $from->diffInDays($to) + 1;
 
         $groupByExpr = match ($period) {
             'daily'   => "HOUR(orders.created_at)",
             'monthly' => "DAY(orders.created_at)",
             'yearly'  => "MONTH(orders.created_at)",
+            'custom'  => "DAY(orders.created_at)",
             default   => "HOUR(orders.created_at)",
         };
 
@@ -75,6 +82,7 @@ class reportSalesController extends Controller
             'daily' => collect(range(0, 23))->map(function ($hour) use ($periodicData) {
                 return [
                     'label' =>  $hour,
+                    'date' => Carbon::now()->startOfDay()->addHours($hour)->format('Y-m-d H:i:s'),
                     'value' => (int) ($periodicData->get($hour)->transactions ?? 0),
                     'revenue' => (float) ($periodicData->get($hour)->revenue ?? 0),
                 ];
@@ -82,6 +90,7 @@ class reportSalesController extends Controller
             'monthly' => collect(range(1, $to->daysInMonth))->map(function ($day) use ($periodicData) {
                 return [
                     'label' =>  $day,
+                    'date' => Carbon::now()->startOfMonth()->addDays($day - 1)->format('Y-m-d'),
                     'value' => (int) ($periodicData->get($day)->transactions ?? 0),
                     'revenue' => (float) ($periodicData->get($day)->revenue ?? 0),
                 ];
@@ -89,8 +98,20 @@ class reportSalesController extends Controller
             'yearly' => collect(range(1, 12))->map(function ($month) use ($periodicData) {
                 return [
                     'label' =>  $month,
+                    'date' => Carbon::now()->startOfYear()->addMonths($month - 1)->format('Y-m'),
                     'value' => (int) ($periodicData->get($month)->transactions ?? 0),
                     'revenue' => (float) ($periodicData->get($month)->revenue ?? 0),
+                ];
+            }),
+            'custom' => collect(range(1, $totalDays))->map(function ($day) use ($periodicData, $from) {
+                $currentDate = $from->copy()->addDays($day - 1);
+                $dayOfMonth = (int) $currentDate->format('d');
+
+                return [
+                    'label' => $day,
+                    'date' => $currentDate->format('Y-m-d'),
+                    'value' => (int) ($periodicData->get($dayOfMonth)->transactions ?? 0),
+                    'revenue' => (float) ($periodicData->get($dayOfMonth)->revenue ?? 0),
                 ];
             }),
             default => collect([]),
