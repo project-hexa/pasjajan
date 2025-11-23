@@ -13,19 +13,36 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('phone_number')->unique();
+			$table->string('username')->unique();
             $table->string('password');
-            $table->rememberToken();
+            $table->date('birth_date');
+            $table->enum('gender', ['Laki-Laki', 'Perempuan']);
+            $table->dateTime('phone_number_verified_at');
+            $table->string('avatar'); // URL/path to user's profile photo
+			$table->enum('role', ['Staff', 'Admin', 'Customer'])->default('Customer');
+			$table->string('remember_token')->nullable();
+            $table->enum('status_account', ['Active', 'Inactive', 'Pending']);
+            $table->timestamp('last_login_date');
+            $table->text('reason_deleted');
             $table->timestamps();
+            $table->softDeletes('deleted_at');
+			/*
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
+			 */
         });
 
+		/*
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
+		*/
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
