@@ -2,19 +2,20 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\reportSalesController;
+use App\Http\Controllers\BranchController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Dashboard Reports
-Route::get('/dashboard/report-sales', [DashboardController::class, 'reportSales'])->name('dashboard.report.sales');
+// Sales Reports
+Route::get('/reports/sales', [reportSalesController::class, 'reportSales'])->name('reports.sales');
 
 // Branch Management Routes
-Route::get('/branches', [DashboardController::class, 'listBranches'])->name('branches.index');
-Route::post('/branches', [DashboardController::class, 'storeBranch'])->name('branches.store');
-Route::get('/branches/{id}', [DashboardController::class, 'showBranch'])->name('branches.show');
-Route::put('/branches/{id}', [DashboardController::class, 'updateBranch'])->name('branches.update');
-Route::patch('/branches/{id}/deactivate', [DashboardController::class, 'deactivateBranch'])->name('branches.deactivate');
-Route::patch('/branches/{id}/activate', [DashboardController::class, 'activateBranch'])->name('branches.activate');
+Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
+Route::get('/branches/{id}', [BranchController::class, 'show'])->name('branches.show');
+Route::put('/branches/{id}', [BranchController::class, 'update'])->name('branches.update');
+Route::patch('/branches/{id}/deactivate', [BranchController::class, 'deactivate'])->name('branches.deactivate');
+Route::patch('/branches/{id}/activate', [BranchController::class, 'activate'])->name('branches.activate');

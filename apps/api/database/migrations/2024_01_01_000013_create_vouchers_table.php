@@ -12,15 +12,17 @@ return new class extends Migration
       $table->id();
       $table->string('code', 50);
       $table->string('name', 50);
-      $table->text('code_gcm')->nullable();
+      $table->text('description')->nullable();
       $table->decimal('discount_value', 10, 2);
-      $table->decimal('min_order_value', 10, 2)->nullable();
-      $table->integer('required_points')->nullable();
+      $table->integer('required_points')->default(0);
       $table->date('start_date');
       $table->date('end_date');
       $table->boolean('is_active')->default(true);
+      $table->unsignedBigInteger('created_by');
       $table->timestamp('created_at')->useCurrent();
       $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
+      $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
     });
   }
 

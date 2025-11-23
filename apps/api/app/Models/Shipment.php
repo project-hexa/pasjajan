@@ -17,7 +17,11 @@ class Shipment extends Model
     'method_id',
     'staff_id',
     'completion_status',
-    'notes',
+    'cost',
+  ];
+
+  protected $casts = [
+    'cost' => 'decimal:2',
   ];
 
   public function order(): BelongsTo
@@ -28,6 +32,11 @@ class Shipment extends Model
   public function shipmentMethod(): BelongsTo
   {
     return $this->belongsTo(ShipmentMethod::class, 'method_id');
+  }
+
+  public function staff(): BelongsTo
+  {
+    return $this->belongsTo(Staff::class);
   }
 
   public function shipmentReview(): HasOne

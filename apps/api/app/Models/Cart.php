@@ -14,10 +14,12 @@ class Cart extends Model
     'customer_id',
     'product_id',
     'quantity',
+    'added_at',
   ];
 
   protected $casts = [
     'quantity' => 'integer',
+    'added_at' => 'datetime',
   ];
 
   public function customer(): BelongsTo

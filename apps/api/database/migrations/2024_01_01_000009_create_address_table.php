@@ -10,6 +10,10 @@ return new class extends Migration
   {
     Schema::create('address', function (Blueprint $table) {
       $table->id();
+      $table->unsignedBigInteger('customer_id');
+      $table->string('label', 50);
+      $table->string('detail_address', 255);
+      $table->string('notes_address', 255)->nullable();
       $table->string('recipient_name', 100);
       $table->string('phone_number', 15);
       $table->decimal('latitude', 10, 8);
@@ -17,6 +21,8 @@ return new class extends Migration
       $table->boolean('is_default')->default(false);
       $table->timestamp('created_at')->useCurrent();
       $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
+      $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
     });
   }
 

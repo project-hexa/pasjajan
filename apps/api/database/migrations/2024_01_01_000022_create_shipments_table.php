@@ -12,14 +12,15 @@ return new class extends Migration
       $table->id();
       $table->unsignedBigInteger('order_id');
       $table->unsignedBigInteger('method_id');
-      $table->unsignedInteger('staff_id')->nullable();
-      $table->enum('completion_status', ['DIKIRIM', 'DELIVERED', 'FAILED'])->default('DIKIRIM');
-      $table->text('notes')->nullable();
+      $table->unsignedBigInteger('staff_id')->nullable();
+      $table->string('completion_status', 20)->default('DIKIRIM');
+      $table->decimal('cost', 10, 2);
       $table->timestamp('created_at')->useCurrent();
       $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 
       $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
       $table->foreign('method_id')->references('id')->on('shipment_methods')->onDelete('cascade');
+      $table->foreign('staff_id')->references('id')->on('staffs')->onDelete('set null');
     });
   }
 

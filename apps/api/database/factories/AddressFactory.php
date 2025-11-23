@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Address;
+use App\Models\Customer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AddressFactory extends Factory
@@ -12,6 +13,10 @@ class AddressFactory extends Factory
   public function definition(): array
   {
     return [
+      'customer_id' => Customer::factory(),
+      'label' => $this->faker->randomElement(['Rumah', 'Kantor', 'Kos', 'Toko']),
+      'detail_address' => $this->faker->address(),
+      'notes_address' => $this->faker->optional()->sentence(),
       'recipient_name' => $this->faker->name(),
       'phone_number' => $this->faker->numerify('08##########'),
       'latitude' => $this->faker->latitude(-10, 10),

@@ -17,6 +17,7 @@ class CartFactory extends Factory
       'customer_id' => Customer::factory(),
       'product_id' => Product::factory(),
       'quantity' => $this->faker->numberBetween(1, 10),
+      'added_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
     ];
   }
 }

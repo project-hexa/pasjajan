@@ -12,7 +12,12 @@ class Customer extends Model
   use HasFactory;
 
   protected $fillable = [
-    'code',
+    'user_id',
+    'point',
+  ];
+
+  protected $casts = [
+    'point' => 'integer',
   ];
 
   public function user(): BelongsTo

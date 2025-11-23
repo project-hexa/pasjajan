@@ -13,6 +13,7 @@ return new class extends Migration
       $table->unsignedBigInteger('customer_id');
       $table->unsignedBigInteger('product_id');
       $table->integer('quantity');
+      $table->timestamp('added_at')->useCurrent();
       $table->timestamp('created_at')->useCurrent();
       $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 

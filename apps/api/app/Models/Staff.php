@@ -13,6 +13,7 @@ class Staff extends Model
   protected $table = 'staffs';
 
   protected $fillable = [
+    'user_id',
     'store_id',
   ];
 

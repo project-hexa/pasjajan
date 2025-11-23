@@ -13,16 +13,15 @@ class StockMovement extends Model
   protected $fillable = [
     'store_id',
     'product_id',
-    'movement_name',
+    'quantity_change',
     'movement_type',
-    'quantity',
-    'notes',
+    'order_id',
     'user_id',
-    'token',
+    'notes',
   ];
 
   protected $casts = [
-    'quantity' => 'integer',
+    'quantity_change' => 'integer',
   ];
 
   public function store(): BelongsTo
@@ -33,6 +32,11 @@ class StockMovement extends Model
   public function product(): BelongsTo
   {
     return $this->belongsTo(Product::class);
+  }
+
+  public function order(): BelongsTo
+  {
+    return $this->belongsTo(Order::class);
   }
 
   public function user(): BelongsTo

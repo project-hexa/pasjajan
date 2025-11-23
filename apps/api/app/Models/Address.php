@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Address extends Model
 {
@@ -13,6 +14,10 @@ class Address extends Model
   protected $table = 'address';
 
   protected $fillable = [
+    'customer_id',
+    'label',
+    'detail_address',
+    'notes_address',
     'recipient_name',
     'phone_number',
     'latitude',
@@ -25,6 +30,11 @@ class Address extends Model
     'longitude' => 'decimal:8',
     'is_default' => 'boolean',
   ];
+
+  public function customer(): BelongsTo
+  {
+    return $this->belongsTo(Customer::class);
+  }
 
   public function orders(): HasMany
   {
