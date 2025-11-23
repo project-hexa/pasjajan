@@ -244,6 +244,7 @@ export default function DashboardPage() {
             >
               Last 7 Days
             </Button>
+            <Button className="ml-16">Export CSV</Button>
           </div>
         </div>
         <AnalyticChart label="Total" data={chartData} />
