@@ -43,6 +43,10 @@ class OrderFactory extends Factory
       'paid_at' => $this->faker->optional()->dateTimeBetween('-1 month', 'now'),
       'expired_at' => $this->faker->optional()->dateTimeBetween('now', '+1 day'),
       'notes' => $this->faker->optional()->sentence(),
+      'created_at' => $this->faker->dateTimeBetween('-3 months', 'now'),
+      'updated_at' => function (array $attributes) {
+        return $this->faker->dateTimeBetween($attributes['created_at'], 'now');
+      },
     ];
   }
 }
