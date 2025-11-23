@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -18,11 +19,19 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'username',
         'password',
+        'birth_date',
+        'gender',
+        'phone_number_verified_at',
+        'avatar',
         'role',
-        'status',
+        'status_account',
+        'last_login_date',
+        'reason_deleted',
     ];
 
     /**
@@ -43,21 +52,45 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'phone_number_verified_at' => 'datetime',
+            'birth_date' => 'date',
+            'last_login_date' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    public function sales()
+    public function customer()
     {
-        return $this->hasMany(Sale::class, 'admin_id');
+        return $this->hasOne(Customer::class);
     }
-    public function salesReports()
+
+    public function staff()
     {
-        return $this->hasMany(SalesReport::class, 'admin_id');
+        return $this->hasOne(Staff::class);
     }
+
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'to_user_id');
+    }
+
+    public function sentNotifications()
+    {
+        return $this->hasMany(Notification::class, 'from_user_id');
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function createdPromos()
+    {
+        return $this->hasMany(Promo::class, 'created_by');
     }
 }

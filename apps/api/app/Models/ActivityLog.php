@@ -1,20 +1,31 @@
 <?php
-// app/Models/ActivityLog.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ActivityLog extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = ['user_id', 'activity_type', 'description', 'timestamp', 'ip_address'];
+  protected $table = 'activity_log';
 
-    protected $casts = ['timestamp' => 'datetime'];
+  protected $fillable = [
+    'user_id',
+    'activity_type',
+    'description',
+    'timestamp',
+    'ip_address',
+  ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+  protected $casts = [
+    'timestamp' => 'datetime',
+  ];
+
+  public function user(): BelongsTo
+  {
+    return $this->belongsTo(User::class);
+  }
 }
