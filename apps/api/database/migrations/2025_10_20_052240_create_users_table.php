@@ -19,15 +19,15 @@ return new class extends Migration
             $table->string('phone_number')->unique();
 			$table->string('username')->unique();
             $table->string('password');
-            $table->date('birth_date');
-            $table->enum('gender', ['Laki-Laki', 'Perempuan']);
-            $table->dateTime('phone_number_verified_at');
-            $table->string('avatar'); // URL/path to user's profile photo
+            $table->date('birth_date')->nullable();
+            $table->enum('gender', ['Laki-Laki', 'Perempuan'])->nullable();
+            $table->dateTime('phone_number_verified_at')->nullable();
+            $table->string('avatar')->nullable(); // URL/path to user's profile photo
 			$table->enum('role', ['Staff', 'Admin', 'Customer'])->default('Customer');
 			$table->string('remember_token')->nullable();
-            $table->enum('status_account', ['Active', 'Inactive', 'Pending']);
+            $table->enum('status_account', ['Active', 'Inactive', 'Pending'])->default('Active');
             $table->timestamp('last_login_date');
-            $table->text('reason_deleted');
+            $table->text('reason_deleted')->nullable();
             $table->timestamps();
             $table->softDeletes('deleted_at');
 			/*

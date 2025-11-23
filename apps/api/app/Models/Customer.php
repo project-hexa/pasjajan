@@ -8,7 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Customer extends Model
 {
-	public function users(): BelongsTo
+	protected $fillable = [
+		'user_id',
+		'point',
+	];
+
+	public $timestamps = false;
+
+	public function user(): BelongsTo
 	{
 		return $this->belongsTo(User::class);
 	}
