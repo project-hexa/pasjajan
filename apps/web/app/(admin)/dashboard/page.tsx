@@ -20,26 +20,26 @@ const analyticsDataByPeriod = {
   "7days": [
     {
       title: "Total Revenue",
-      growth: "+15%",
-      value: "Rp45.230.000",
-      description: "Strong week performance",
+      growth: "+8%",
+      value: "Rp6.450.000",
+      description: "Today's performance",
     },
     {
       title: "Total Units Sold",
-      growth: "+12%",
-      value: "345",
-      description: "Above weekly average",
+      growth: "+5%",
+      value: "48",
+      description: "Good daily sales",
     },
     {
       title: "Avg. Order Value",
-      growth: "+8%",
-      value: "Rp131.188",
-      description: "Improving daily",
+      growth: "+3%",
+      value: "Rp134.375",
+      description: "Steady today",
     },
     {
       title: "Profit Margin",
-      growth: "+3%",
-      value: "28%",
+      growth: "+2%",
+      value: "26%",
       description: "Healthy margins",
     },
   ],
@@ -72,40 +72,40 @@ const analyticsDataByPeriod = {
   "3months": [
     {
       title: "Total Revenue",
-      growth: "+18%",
-      value: "Rp524.567.890",
-      description: "Excellent quarter growth",
+      growth: "+22%",
+      value: "Rp2.145.678.900",
+      description: "Excellent yearly growth",
     },
     {
       title: "Total Units Sold",
-      growth: "+14%",
-      value: "3.892",
-      description: "Strong quarter performance",
+      growth: "+18%",
+      value: "15.234",
+      description: "Strong yearly performance",
     },
     {
       title: "Avg. Order Value",
-      growth: "+9%",
-      value: "Rp134.789",
-      description: "Consistent improvement",
+      growth: "+12%",
+      value: "Rp140.890",
+      description: "Year-over-year improvement",
     },
     {
       title: "Profit Margin",
-      growth: "+4%",
-      value: "27%",
-      description: "Best quarterly margin",
+      growth: "+6%",
+      value: "29%",
+      description: "Best yearly margin",
     },
   ],
 };
 
 const chartDataByPeriod = {
   "7days": [
-    { name: "Mon", value: 320 },
-    { name: "Tue", value: 380 },
-    { name: "Wed", value: 450 },
-    { name: "Thu", value: 420 },
-    { name: "Fri", value: 520 },
-    { name: "Sat", value: 600 },
-    { name: "Sun", value: 480 },
+    { name: "00:00", value: 0 },
+    { name: "04:00", value: 0 },
+    { name: "08:00", value: 150 },
+    { name: "12:00", value: 420 },
+    { name: "16:00", value: 380 },
+    { name: "20:00", value: 280 },
+    { name: "23:59", value: 120 },
   ],
   "30days": [
     { name: "Week 1", value: 1200 },
@@ -114,24 +114,31 @@ const chartDataByPeriod = {
     { name: "Week 4", value: 1800 },
   ],
   "3months": [
-    { name: "Jan", value: 4500 },
-    { name: "Feb", value: 5200 },
-    { name: "Mar", value: 5800 },
+    { name: "Jan", value: 15200 },
+    { name: "Feb", value: 16800 },
+    { name: "Mar", value: 18400 },
+    { name: "Apr", value: 17600 },
+    { name: "May", value: 19200 },
+    { name: "Jun", value: 20100 },
+    { name: "Jul", value: 21500 },
+    { name: "Aug", value: 19800 },
+    { name: "Sep", value: 22400 },
+    { name: "Oct", value: 23600 },
+    { name: "Nov", value: 24800 },
+    { name: "Dec", value: 26200 },
   ],
 };
 
 const tableDataByPeriod = {
   "7days": [
-    { name: "Indomie Goreng", unitSold: 45, revenue: "Rp450.000", sort: 1 },
-    { name: "Mie Sedaap", unitSold: 38, revenue: "Rp380.000", sort: 2 },
-    { name: "Pop Mie", unitSold: 32, revenue: "Rp320.000", sort: 3 },
-    { name: "Sarimi", unitSold: 28, revenue: "Rp280.000", sort: 4 },
-    { name: "Supermie", unitSold: 25, revenue: "Rp250.000", sort: 5 },
-    { name: "Chitato", unitSold: 23, revenue: "Rp345.000", sort: 6 },
-    { name: "Lays", unitSold: 19, revenue: "Rp285.000", sort: 7 },
-    { name: "Taro", unitSold: 16, revenue: "Rp240.000", sort: 8 },
-    { name: "Pocky", unitSold: 29, revenue: "Rp435.000", sort: 9 },
-    { name: "Oreo", unitSold: 35, revenue: "Rp525.000", sort: 10 },
+    { name: "Indomie Goreng", unitSold: 8, revenue: "Rp80.000", sort: 1 },
+    { name: "Aqua 600ml", unitSold: 12, revenue: "Rp36.000", sort: 2 },
+    { name: "Teh Pucuk", unitSold: 7, revenue: "Rp35.000", sort: 3 },
+    { name: "Oreo", unitSold: 5, revenue: "Rp75.000", sort: 4 },
+    { name: "Coca Cola", unitSold: 6, revenue: "Rp48.000", sort: 5 },
+    { name: "Mie Sedaap", unitSold: 4, revenue: "Rp40.000", sort: 6 },
+    { name: "Chitato", unitSold: 3, revenue: "Rp45.000", sort: 7 },
+    { name: "Pocky", unitSold: 3, revenue: "Rp45.000", sort: 8 },
   ],
   "30days": [
     { name: "Indomie Goreng", unitSold: 234, revenue: "Rp2.340.000", sort: 1 },
@@ -156,26 +163,36 @@ const tableDataByPeriod = {
     { name: "Beng Beng", unitSold: 178, revenue: "Rp1.780.000", sort: 20 },
   ],
   "3months": [
-    { name: "Indomie Goreng", unitSold: 712, revenue: "Rp7.120.000", sort: 1 },
-    { name: "Mie Sedaap", unitSold: 598, revenue: "Rp5.980.000", sort: 2 },
-    { name: "Pop Mie", unitSold: 534, revenue: "Rp5.340.000", sort: 3 },
-    { name: "Sarimi", unitSold: 445, revenue: "Rp4.450.000", sort: 4 },
-    { name: "Supermie", unitSold: 398, revenue: "Rp3.980.000", sort: 5 },
-    { name: "Chitato", unitSold: 367, revenue: "Rp5.505.000", sort: 6 },
-    { name: "Lays", unitSold: 296, revenue: "Rp4.440.000", sort: 7 },
-    { name: "Taro", unitSold: 263, revenue: "Rp3.945.000", sort: 8 },
-    { name: "Pocky", unitSold: 472, revenue: "Rp7.080.000", sort: 9 },
-    { name: "Oreo", unitSold: 571, revenue: "Rp8.565.000", sort: 10 },
-    { name: "Roma Kelapa", unitSold: 433, revenue: "Rp4.330.000", sort: 11 },
-    { name: "Biskuat", unitSold: 506, revenue: "Rp5.060.000", sort: 12 },
-    { name: "Aqua 600ml", unitSold: 1345, revenue: "Rp4.035.000", sort: 13 },
-    { name: "Le Minerale", unitSold: 945, revenue: "Rp2.835.000", sort: 14 },
-    { name: "Coca Cola", unitSold: 708, revenue: "Rp5.664.000", sort: 15 },
-    { name: "Teh Pucuk", unitSold: 902, revenue: "Rp4.510.000", sort: 16 },
-    { name: "Kopi Kapal Api", unitSold: 564, revenue: "Rp2.820.000", sort: 17 },
-    { name: "Ultra Milk", unitSold: 609, revenue: "Rp6.090.000", sort: 18 },
-    { name: "SilverQueen", unitSold: 372, revenue: "Rp5.580.000", sort: 19 },
-    { name: "Beng Beng", unitSold: 538, revenue: "Rp5.380.000", sort: 20 },
+    {
+      name: "Indomie Goreng",
+      unitSold: 2856,
+      revenue: "Rp28.560.000",
+      sort: 1,
+    },
+    { name: "Aqua 600ml", unitSold: 5380, revenue: "Rp16.140.000", sort: 2 },
+    { name: "Teh Pucuk", unitSold: 3612, revenue: "Rp18.060.000", sort: 3 },
+    { name: "Mie Sedaap", unitSold: 2392, revenue: "Rp23.920.000", sort: 4 },
+    { name: "Oreo", unitSold: 2284, revenue: "Rp34.260.000", sort: 5 },
+    { name: "Coca Cola", unitSold: 2832, revenue: "Rp22.656.000", sort: 6 },
+    { name: "Pop Mie", unitSold: 2136, revenue: "Rp21.360.000", sort: 7 },
+    { name: "Chitato", unitSold: 1468, revenue: "Rp22.020.000", sort: 8 },
+    { name: "Pocky", unitSold: 1888, revenue: "Rp28.320.000", sort: 9 },
+    { name: "Ultra Milk", unitSold: 2436, revenue: "Rp24.360.000", sort: 10 },
+    { name: "Sarimi", unitSold: 1780, revenue: "Rp17.800.000", sort: 11 },
+    { name: "Biskuat", unitSold: 2024, revenue: "Rp20.240.000", sort: 12 },
+    { name: "Le Minerale", unitSold: 3780, revenue: "Rp11.340.000", sort: 13 },
+    { name: "Supermie", unitSold: 1592, revenue: "Rp15.920.000", sort: 14 },
+    { name: "Roma Kelapa", unitSold: 1732, revenue: "Rp17.320.000", sort: 15 },
+    { name: "Lays", unitSold: 1184, revenue: "Rp17.760.000", sort: 16 },
+    {
+      name: "Kopi Kapal Api",
+      unitSold: 2256,
+      revenue: "Rp11.280.000",
+      sort: 17,
+    },
+    { name: "SilverQueen", unitSold: 1488, revenue: "Rp22.320.000", sort: 18 },
+    { name: "Beng Beng", unitSold: 2152, revenue: "Rp21.520.000", sort: 19 },
+    { name: "Taro", unitSold: 1052, revenue: "Rp15.780.000", sort: 20 },
   ],
 };
 
@@ -227,22 +244,22 @@ export default function DashboardPage() {
           <h3 className="text-2xl font-semibold">Periodic Sales Trend</h3>
           <div className="space-x-2">
             <Button
-              variant={timeFilter === "3months" ? "default" : "outline"}
-              onClick={() => setTimeFilter("3months")}
+              variant={timeFilter === "7days" ? "default" : "outline"}
+              onClick={() => setTimeFilter("7days")}
             >
-              Last 3 Months
+              Hari Ini
             </Button>
             <Button
               variant={timeFilter === "30days" ? "default" : "outline"}
               onClick={() => setTimeFilter("30days")}
             >
-              Last 30 Days
+              1 Bulan Terakhir
             </Button>
             <Button
-              variant={timeFilter === "7days" ? "default" : "outline"}
-              onClick={() => setTimeFilter("7days")}
+              variant={timeFilter === "3months" ? "default" : "outline"}
+              onClick={() => setTimeFilter("3months")}
             >
-              Last 7 Days
+              1 Tahun Terakhir
             </Button>
             <Button className="ml-16">Export CSV</Button>
           </div>
