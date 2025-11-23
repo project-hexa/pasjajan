@@ -10,7 +10,7 @@ import {
 const logs = [
   {
     id: 1,
-    time: "2024-06-01T10:00:00Z",
+    time: "01 Juni 2024, 10:00:00",
     email: "user@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -18,7 +18,7 @@ const logs = [
   },
   {
     id: 2,
-    time: "2024-06-01T10:15:23Z",
+    time: "01 Juni 2024, 10:15:23",
     email: "admin@example.com",
     type: "UPDATE",
     action: "Updated user profile",
@@ -26,7 +26,7 @@ const logs = [
   },
   {
     id: 3,
-    time: "2024-06-01T10:30:45Z",
+    time: "01 Juni 2024, 10:30:45",
     email: "john.doe@example.com",
     type: "CREATE",
     action: "Created new document",
@@ -34,7 +34,7 @@ const logs = [
   },
   {
     id: 4,
-    time: "2024-06-01T11:05:12Z",
+    time: "01 Juni 2024, 11:05:12",
     email: "sarah.smith@example.com",
     type: "DELETE",
     action: "Deleted old file",
@@ -42,7 +42,7 @@ const logs = [
   },
   {
     id: 5,
-    time: "2024-06-01T11:20:38Z",
+    time: "01 Juni 2024, 11:20:38",
     email: "mike.johnson@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -50,7 +50,7 @@ const logs = [
   },
   {
     id: 6,
-    time: "2024-06-01T11:45:55Z",
+    time: "01 Juni 2024, 11:45:55",
     email: "emily.davis@example.com",
     type: "LOGOUT",
     action: "User logged out",
@@ -58,7 +58,7 @@ const logs = [
   },
   {
     id: 7,
-    time: "2024-06-01T12:10:22Z",
+    time: "01 Juni 2024, 12:10:22",
     email: "david.wilson@example.com",
     type: "UPDATE",
     action: "Modified settings configuration",
@@ -66,7 +66,7 @@ const logs = [
   },
   {
     id: 8,
-    time: "2024-06-01T12:35:47Z",
+    time: "01 Juni 2024, 12:35:47",
     email: "lisa.anderson@example.com",
     type: "CREATE",
     action: "Added new team member",
@@ -74,7 +74,7 @@ const logs = [
   },
   {
     id: 9,
-    time: "2024-06-01T13:00:15Z",
+    time: "01 Juni 2024, 13:00:15",
     email: "robert.brown@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -82,7 +82,7 @@ const logs = [
   },
   {
     id: 10,
-    time: "2024-06-01T13:25:33Z",
+    time: "01 Juni 2024, 13:25:33",
     email: "jennifer.martinez@example.com",
     type: "UPDATE",
     action: "Changed password",
@@ -90,7 +90,7 @@ const logs = [
   },
   {
     id: 11,
-    time: "2024-06-01T13:50:08Z",
+    time: "01 Juni 2024, 13:50:08",
     email: "william.garcia@example.com",
     type: "DELETE",
     action: "Removed outdated entry",
@@ -98,7 +98,7 @@ const logs = [
   },
   {
     id: 12,
-    time: "2024-06-01T14:15:42Z",
+    time: "01 Juni 2024, 14:15:42",
     email: "mary.rodriguez@example.com",
     type: "CREATE",
     action: "Generated new report",
@@ -106,7 +106,7 @@ const logs = [
   },
   {
     id: 13,
-    time: "2024-06-01T14:40:19Z",
+    time: "01 Juni 2024, 14:40:19",
     email: "james.hernandez@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -114,7 +114,7 @@ const logs = [
   },
   {
     id: 14,
-    time: "2024-06-01T15:05:56Z",
+    time: "01 Juni 2024, 15:05:56",
     email: "patricia.lopez@example.com",
     type: "UPDATE",
     action: "Updated billing information",
@@ -122,7 +122,7 @@ const logs = [
   },
   {
     id: 15,
-    time: "2024-06-01T15:30:27Z",
+    time: "01 Juni 2024, 15:30:27",
     email: "richard.gonzalez@example.com",
     type: "LOGOUT",
     action: "User logged out",
@@ -130,7 +130,7 @@ const logs = [
   },
   {
     id: 16,
-    time: "2024-06-01T15:55:44Z",
+    time: "01 Juni 2024, 15:55:44",
     email: "barbara.wilson@example.com",
     type: "CREATE",
     action: "Created new project",
@@ -138,7 +138,7 @@ const logs = [
   },
   {
     id: 17,
-    time: "2024-06-01T16:20:11Z",
+    time: "01 Juni 2024, 16:20:11",
     email: "thomas.moore@example.com",
     type: "DELETE",
     action: "Archived old records",
@@ -146,7 +146,7 @@ const logs = [
   },
   {
     id: 18,
-    time: "2024-06-01T16:45:36Z",
+    time: "01 Juni 2024, 16:45:36",
     email: "susan.taylor@example.com",
     type: "UPDATE",
     action: "Modified user permissions",
@@ -154,7 +154,7 @@ const logs = [
   },
   {
     id: 19,
-    time: "2024-06-01T17:10:52Z",
+    time: "01 Juni 2024, 17:10:52",
     email: "daniel.thomas@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -162,7 +162,7 @@ const logs = [
   },
   {
     id: 20,
-    time: "2024-06-01T17:35:28Z",
+    time: "01 Juni 2024, 17:35:28",
     email: "nancy.jackson@example.com",
     type: "CREATE",
     action: "Added new dashboard widget",
@@ -170,7 +170,7 @@ const logs = [
   },
   {
     id: 21,
-    time: "2024-06-01T18:00:15Z",
+    time: "01 Juni 2024, 18:00:15",
     email: "christopher.white@example.com",
     type: "UPDATE",
     action: "Updated system settings",
@@ -178,7 +178,7 @@ const logs = [
   },
   {
     id: 22,
-    time: "2024-06-01T18:25:42Z",
+    time: "01 Juni 2024, 18:25:42",
     email: "karen.harris@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -186,7 +186,7 @@ const logs = [
   },
   {
     id: 23,
-    time: "2024-06-01T18:50:19Z",
+    time: "01 Juni 2024, 18:50:19",
     email: "mark.clark@example.com",
     type: "DELETE",
     action: "Removed inactive users",
@@ -194,7 +194,7 @@ const logs = [
   },
   {
     id: 24,
-    time: "2024-06-01T19:15:37Z",
+    time: "01 Juni 2024, 19:15:37",
     email: "betty.lewis@example.com",
     type: "CREATE",
     action: "Created backup file",
@@ -202,7 +202,7 @@ const logs = [
   },
   {
     id: 25,
-    time: "2024-06-01T19:40:54Z",
+    time: "01 Juni 2024, 19:40:54",
     email: "george.robinson@example.com",
     type: "UPDATE",
     action: "Modified access controls",
@@ -210,7 +210,7 @@ const logs = [
   },
   {
     id: 26,
-    time: "2024-06-01T20:05:21Z",
+    time: "01 Juni 2024, 20:05:21",
     email: "dorothy.walker@example.com",
     type: "LOGOUT",
     action: "User logged out",
@@ -218,7 +218,7 @@ const logs = [
   },
   {
     id: 27,
-    time: "2024-06-01T20:30:48Z",
+    time: "01 Juni 2024, 20:30:48",
     email: "steven.hall@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -226,7 +226,7 @@ const logs = [
   },
   {
     id: 28,
-    time: "2024-06-01T20:55:13Z",
+    time: "01 Juni 2024, 20:55:13",
     email: "helen.allen@example.com",
     type: "CREATE",
     action: "Generated analytics report",
@@ -234,7 +234,7 @@ const logs = [
   },
   {
     id: 29,
-    time: "2024-06-01T21:20:39Z",
+    time: "01 Juni 2024, 21:20:39",
     email: "kevin.young@example.com",
     type: "UPDATE",
     action: "Updated notification preferences",
@@ -242,7 +242,7 @@ const logs = [
   },
   {
     id: 30,
-    time: "2024-06-01T21:45:06Z",
+    time: "01 Juni 2024, 21:45:06",
     email: "sandra.king@example.com",
     type: "DELETE",
     action: "Cleared cache data",
@@ -250,7 +250,7 @@ const logs = [
   },
   {
     id: 31,
-    time: "2024-06-01T22:10:32Z",
+    time: "01 Juni 2024, 22:10:32",
     email: "brian.wright@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -258,7 +258,7 @@ const logs = [
   },
   {
     id: 32,
-    time: "2024-06-01T22:35:58Z",
+    time: "01 Juni 2024, 22:35:58",
     email: "donna.lopez@example.com",
     type: "CREATE",
     action: "Added new category",
@@ -266,7 +266,7 @@ const logs = [
   },
   {
     id: 33,
-    time: "2024-06-01T23:00:24Z",
+    time: "01 Juni 2024, 23:00:24",
     email: "ronald.scott@example.com",
     type: "UPDATE",
     action: "Changed email preferences",
@@ -274,7 +274,7 @@ const logs = [
   },
   {
     id: 34,
-    time: "2024-06-01T23:25:51Z",
+    time: "01 Juni 2024, 23:25:51",
     email: "carol.green@example.com",
     type: "LOGOUT",
     action: "User logged out",
@@ -282,7 +282,7 @@ const logs = [
   },
   {
     id: 35,
-    time: "2024-06-01T23:50:17Z",
+    time: "01 Juni 2024, 23:50:17",
     email: "jason.adams@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -290,7 +290,7 @@ const logs = [
   },
   {
     id: 36,
-    time: "2024-06-02T00:15:43Z",
+    time: "02 Juni 2024, 00:15:43",
     email: "sharon.baker@example.com",
     type: "CREATE",
     action: "Created new workflow",
@@ -298,7 +298,7 @@ const logs = [
   },
   {
     id: 37,
-    time: "2024-06-02T00:40:09Z",
+    time: "02 Juni 2024, 00:40:09",
     email: "matthew.nelson@example.com",
     type: "DELETE",
     action: "Deleted temporary files",
@@ -306,7 +306,7 @@ const logs = [
   },
   {
     id: 38,
-    time: "2024-06-02T01:05:36Z",
+    time: "02 Juni 2024, 01:05:36",
     email: "michelle.carter@example.com",
     type: "UPDATE",
     action: "Updated security settings",
@@ -314,7 +314,7 @@ const logs = [
   },
   {
     id: 39,
-    time: "2024-06-02T01:30:02Z",
+    time: "02 Juni 2024, 01:30:02",
     email: "anthony.mitchell@example.com",
     type: "LOGIN",
     action: "User logged in",
@@ -322,7 +322,7 @@ const logs = [
   },
   {
     id: 40,
-    time: "2024-06-02T01:55:28Z",
+    time: "02 Juni 2024, 01:55:28",
     email: "laura.perez@example.com",
     type: "CREATE",
     action: "Added new integration",
