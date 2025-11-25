@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('notes_address')->nullable();
             $table->string('recipient_name');
             $table->string('phone_number');
-            $table->decimal('latitude', total:10, places:8);
-            $table->decimal('longitude', total:11, places:8);
+            $table->decimal('latitude', total:10, places:8)->nullable();
+            $table->decimal('longitude', total:11, places:8)->nullable();
             $table->boolean('is_default'); // Is primary address or not
             $table->timestamps();
         });

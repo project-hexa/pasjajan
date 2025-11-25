@@ -37,12 +37,12 @@ class User extends Authenticatable
 		return $this->hasMany(Otp::class);
 	}
 
-	public function customers(): HasOne
+	public function customer(): HasOne
 	{
 		return $this->hasOne(Customer::class);
 	}
 
-	public function staffs(): HasOne
+	public function staff(): HasOne
 	{
 		return $this->hasOne(Staff::class);
 	}

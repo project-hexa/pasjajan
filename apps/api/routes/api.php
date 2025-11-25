@@ -29,6 +29,8 @@ Route::controller(UserController::class)->group(function () {
 	Route::middleware('auth:sanctum')->group(function () {
 		Route::get('/user/{username}/profile', 'getProfile');
 		Route::post('/user/{username}/change-profile', 'changeProfile');
+		Route::post('/user/{username}/add-address', 'createAddress');
+		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
 		Route::post('/user/{username}/change-password', 'changePassword');
 	});
 });

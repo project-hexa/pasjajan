@@ -14,6 +14,7 @@ use Hash;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\Otp;
+use App\Models\Address;
 
 class AuthController extends BaseController
 {
@@ -97,7 +98,7 @@ class AuthController extends BaseController
 			'first_name' => 'required|string|alpha:ascii',
 			'last_name' => 'string|alpha:ascii',
 			'phone_number' => 'required|string|string|unique:users,phone_number',
-			//'address' => 'required|string',
+			'address' => 'required|string',
 			'email' => 'required|string|email|unique:users,email',
 			'password' => [
 				'required',
@@ -302,6 +303,16 @@ class AuthController extends BaseController
 		$customer = Customer::create([
 			'user_id' => $user['id'],
 			'point' => 0,
+		]);
+
+		// Memasukkan alamat milik user baru ke database
+		$address = Address::create([
+			'customer_id' => $customer['id'],
+			'label' => 'Rumah',
+			'detail_address' => $data['address'],
+			'recipient_name' => $user['first_name'] . ' ' . $user['last_name'],
+			'phone_number' => $user['phone_number'],
+			'is_default' => true,
 		]);
 
 		return $customer->load('user');
