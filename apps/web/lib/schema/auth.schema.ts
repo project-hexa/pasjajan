@@ -36,34 +36,6 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
       message: "Password harus mengandung huruf kecil",
     });
   }
-
-  // if (!strength.contains.includes("number")) {
-  //   ctx.addIssue({
-  //     code: z.ZodIssueCode.custom,
-  //     message: "Password harus mengandung angka",
-  //   });
-  // }
-  //
-  // if (!strength.contains.includes("symbol")) {
-  //   ctx.addIssue({
-  //     code: z.ZodIssueCode.custom,
-  //     message: "Password harus mengandung simbol",
-  //   });
-  // }
-  //
-  // if (/\s/.test(val)) {
-  //   ctx.addIssue({
-  //     code: z.ZodIssueCode.custom,
-  //     message: "Password tidak boleh mengandung spasi",
-  //   });
-  // }
-  //
-  // if (strength.id < 2) {
-  //   ctx.addIssue({
-  //     code: z.ZodIssueCode.custom,
-  //     message: "Password masih terlalu lemah",
-  //   });
-  // }
 });
 
 export const registerSchema = z
@@ -93,55 +65,7 @@ export const registerSchema = z
   });
 
 export const loginSchema = z.object({
-  UET: z
-    .string()
-    .min(1, "Field ini wajib diisi")
-    .superRefine((val, ctx) => {
-      const isValidUsername = usernameSchema.safeParse(val).success;
-      const isValidEmail = emailSchema.safeParse(val).success;
-      const isValidPhone = phoneSchema.safeParse(val).success;
-
-      const inValidUsername = usernameSchema.safeParse(val).error;
-      const inValidEmail = emailSchema.safeParse(val).error;
-      const inValidPhone = phoneSchema.safeParse(val).error;
-
-      if (isValidPhone || isValidUsername || isValidEmail) {
-        return;
-      }
-
-      if (val.includes("@")) {
-        if (inValidEmail) {
-          const issue = inValidEmail.issues?.[0];
-          if (issue) ctx.addIssue(issue);
-          return;
-        }
-      }
-
-      if (val.length > 0) {
-        const first = val[0] || "";
-
-        if (/[A-Za-z]/.test(first)) {
-          if (inValidUsername) {
-            const issue = inValidUsername.issues?.[0];
-            if (issue) ctx.addIssue(issue);
-          }
-          return;
-        }
-
-        if (/\d|\+/.test(first)) {
-          if (inValidPhone) {
-            const issue = inValidPhone.issues?.[0];
-            if (issue) ctx.addIssue(issue);
-          }
-          return;
-        }
-      }
-
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Masukkan username, email, atau nomor telepon yang valid",
-      });
-    }),
+  email: emailSchema,
   password: passwordSchema,
   rememberMe: z.boolean().optional(),
 });
