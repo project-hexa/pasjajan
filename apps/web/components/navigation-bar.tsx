@@ -22,7 +22,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@workspace/ui/components/item";
-import { ModeToggle } from "@workspace/ui/components/mode-toggle";
 import { Separator } from "@workspace/ui/components/separator";
 import {
   Grid2X2,
@@ -72,7 +71,6 @@ export const Navbar = ({ className }: { className?: string }) => {
         </div>
 
         <div className="flex h-10 items-center gap-2">
-          <ModeToggle />
           <div className="flex items-center">
             <Link href="/promo">
               <Button variant={"link"} className="text-white">
