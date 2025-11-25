@@ -13,65 +13,37 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@workspace/ui/components/input-group";
+import { Input } from "@workspace/ui/components/input";
 import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import z from "zod";
 
 export default function LoginPage() {
-  const [showPhoneCode, setShowPhoneCode] = useState<boolean>(false);
-  const {login} = useAuth()
+  const { login } = useAuth();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      UET: "",
+      email: "",
       password: "",
       rememberMe: false,
     },
   });
 
   const handleOnSubmit = (data: z.infer<typeof loginSchema>) => {
-    if (data.UET === typeof Number) {
-      data.UET = "+62" + data.UET;
+    if (data.email === typeof Number) {
+      data.email = "+62" + data.email;
     }
 
     login({
-      username: data.UET,
+      email: data.email,
       password: data.password,
       rememberMe: data.rememberMe ?? false,
-    })
+    });
   };
-
-  const UET = loginForm.watch("UET");
-
-  useEffect(() => {
-    if (UET && UET.length > 0) {
-      if (/^(\+628|628|08)/.test(UET)) {
-        setShowPhoneCode(true);
-      } else {
-        setShowPhoneCode(false);
-      }
-
-      const newValue = UET.replace(/^(?:\+628|628|08)/, "8");
-      loginForm.setValue("UET", newValue);
-    }
-
-    if (/^8/.test(UET)) {
-      setShowPhoneCode(true);
-    } else {
-      setShowPhoneCode(false);
-    }
-  }, [UET, loginForm]);
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
@@ -82,7 +54,7 @@ export default function LoginPage() {
               <Link href="/">
                 <Button
                   variant="ghost"
-                  className="text-accent absolute top-4 left-4"
+                  className="text-accent absolute left-4 top-4"
                 >
                   <ChevronLeftCircle className="size-5" />
                   <span>Kembali ke Beranda</span>
@@ -112,28 +84,21 @@ export default function LoginPage() {
               >
                 <FieldGroup>
                   <Controller
-                    name={"UET"}
+                    name={"email"}
                     control={loginForm.control}
                     render={({ field, fieldState }) => {
                       return (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="UET">
-                            Username/Email/No Telepon
+                          <FieldLabel htmlFor="email">
+                            Email
                             <span className="text-destructive">*</span>
                           </FieldLabel>
-                          <InputGroup className="relative">
-                            {showPhoneCode && (
-                              <InputGroupAddon className="bg-accent rounded-l-md pr-3">
-                                <InputGroupText>+62</InputGroupText>
-                              </InputGroupAddon>
-                            )}
-                            <InputGroupInput
-                              id="UET"
-                              placeholder="johndoe_123 / john@example.com / 08123456789"
-                              aria-invalid={fieldState.invalid}
-                              {...field}
-                            />
-                          </InputGroup>
+                          <Input
+                            id="email"
+                            placeholder="johndoe_123 / john@example.com / 08123456789"
+                            aria-invalid={fieldState.invalid}
+                            {...field}
+                          />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}
