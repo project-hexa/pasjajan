@@ -13,8 +13,6 @@ class Customer extends Model
 		'point',
 	];
 
-	public $timestamps = false;
-
 	public function user(): BelongsTo
 	{
 		return $this->belongsTo(User::class);
@@ -23,5 +21,25 @@ class Customer extends Model
 	public function addresses(): HasMany
 	{
 		return $this->hasMany(Address::class);
+	}
+
+	public function historyPoints(): HasMany
+	{
+		return $this->hasMany(HistoryPoint::class);
+	}
+	
+	public function carts(): HasMany
+	{
+		return $this->hasMany(Cart::class);
+	}
+
+	public function customerVouchers(): HasMany
+	{
+		return $this->hasMany(CustomerVoucher::class);
+	}
+
+	public function orders(): HasMany
+	{
+		return $this->hasMany(Order::class);
 	}
 }

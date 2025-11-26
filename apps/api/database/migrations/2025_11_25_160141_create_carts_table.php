@@ -3,8 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\User;
-use App\Models\Store;
+use App\Models\Customer;
+use App\Models\Product;
 
 return new class extends Migration
 {
@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('staff', function (Blueprint $table) {
+        Schema::create('carts', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class); // Create unsigned BIGINT
-            $table->foreignIdFor(Store::class); // Create unsigned BIGINT
+            $table->foreignIdFor(Customer::class);
+            $table->foreignIdFor(Product::class);
+            $table->integer('quantity');
+            $table->timestamp('added_at');
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('staff');
+        Schema::dropIfExists('carts');
     }
 };

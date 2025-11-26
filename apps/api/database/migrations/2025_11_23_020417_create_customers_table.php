@@ -15,8 +15,8 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class); // Create unsigned BIGINT
-            $table->integer('point');
-            //$table->timestamps();
+            $table->integer('point')->default(0);
+            $table->timestamps();
         });
     }
 

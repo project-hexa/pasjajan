@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stores', function (Blueprint $table) {
+        Schema::create('vouchers', function (Blueprint $table) {
             $table->id();
             $table->string('code');
             $table->string('name');
-            $table->text('address');
-            $table->string('phone_number');
-            $table->decimal('latitude', total:10, places:8);
-            $table->decimal('longitude', total:11, places:8);
+            $table->text('description');
+            $table->decimal('discount_value', total: 10, places: 2);
+            $table->integer('required_points');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->boolean('is_active')->default(1);
+            $table->unsignedBigInteger('created_by');
+            $table->foreign('created_by')->references('id')->on('staff');
             $table->timestamps();
         });
     }
@@ -29,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stores');
+        Schema::dropIfExists('vouchers');
     }
 };

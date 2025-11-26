@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Models\User;
+use App\Models\Promo;
 use App\Models\Store;
 
 return new class extends Migration
@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('staff', function (Blueprint $table) {
+        Schema::create('promo_stores', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class); // Create unsigned BIGINT
-            $table->foreignIdFor(Store::class); // Create unsigned BIGINT
+            $table->foreignIdFor(Promo::class);
+            $table->foreignIdFor(Store::class);
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('staff');
+        Schema::dropIfExists('promo_stores');
     }
 };

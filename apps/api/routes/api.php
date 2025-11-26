@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 
+/*
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+*/
 
 // Membungkus route yang berkaitan dengan autentifikasi user ke route group yang menjalankan AuthController
 Route::controller(AuthController::class)->group(function () {
