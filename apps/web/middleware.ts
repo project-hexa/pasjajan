@@ -10,7 +10,8 @@ export default function middleware(request: NextRequest) {
     "/one-time-password",
     "/forgot-password",
     "/reset-password",
-    "/dashboard"
+    "/dashboard",
+    "/profile"
   ].some((route) => pathname.startsWith(route));
   const unprotectedRoute = ["/login", "/register"].some((route) =>
     pathname.startsWith(route),
@@ -43,6 +44,7 @@ export const config = {
     "/one-time-password:path*",
     "/forgot-password:path*",
     "/reset-password:path*",
-    "/dashboard:path*"
+    "/dashboard:path*",
+    "/profile:path*",
   ],
 };
