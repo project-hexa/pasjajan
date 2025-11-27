@@ -3,7 +3,6 @@
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
-import { ModeToggle } from "@workspace/ui/components/mode-toggle";
 import { Separator } from "@workspace/ui/components/separator";
 import Link from "next/link";
 import { useState } from "react";
@@ -15,11 +14,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-80px)] border">
-      <div className="flex flex-col justify-center items-center gap-5">
+      <div className="flex flex-col items-center justify-center gap-5">
         <h1 className="text-2xl font-bold">Setup Proyek Pasjajan-Mart</h1>
         <Card>
           <CardContent>
-            <div className="flex flex-col gap-2 items-center">
+            <div className="flex flex-col items-center gap-2">
               <span>Test Button dengan Count</span>
               <span>Count: {count}</span>
               <ButtonGroup>
@@ -33,17 +32,9 @@ export default function HomePage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent>
-            <div className="flex flex-col gap-2 items-center">
-              <span>Test Button Clicked dengan Mode Toggle Theme</span>
-              <ModeToggle />
-            </div>
-          </CardContent>
-        </Card>
         <Card className="max-w-1/2">
           <CardContent>
-            <div className="flex flex-col gap-2 items-center">
+            <div className="flex flex-col items-center gap-2">
               <span>Coba Navigasi ke route tertentu:</span>
               <p>semua folder routing harus ada di folder apps/web/app/</p>
               <Card className="gap-2">
@@ -66,7 +57,7 @@ export default function HomePage() {
               <Separator />
               <span>Coba navigasi dengan struktur folder group</span>
               <div className="flex gap-2">
-                <Card className="gap-2 w-60">
+                <Card className="w-60 gap-2">
                   <CardHeader>folder (auth)/</CardHeader>
                   <Separator />
                   <CardContent>
@@ -83,7 +74,7 @@ export default function HomePage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="gap-2 w-60">
+                <Card className="w-60 gap-2">
                   <CardHeader>folder (admin)/</CardHeader>
                   <Separator />
                   <CardContent>
@@ -119,7 +110,7 @@ export default function HomePage() {
         </Card>
         <Card className="max-w-1/2">
           <CardContent>
-            <div className="flex flex-col gap-2 items-center">
+            <div className="flex flex-col items-center gap-2">
               <p>
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit
                 optio unde earum, ducimus corporis minima numquam odio dolores
