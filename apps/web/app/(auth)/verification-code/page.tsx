@@ -31,10 +31,11 @@ export default function VerificationCodePage() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex w-1/2 flex-col overflow-hidden border-2 border-black">
+      <Card className="flex lg:w-1/2 md:w-2/3 max-lg:px-5 max-sm:-mt-40 flex-col overflow-hidden md:border-2 md:border-black max-sm:mx-5">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
           <Image
             src="/icon-email-verif-code.svg"
+            className="max-sm:size-32"
             alt="Verification Code"
             width={250}
             height={250}

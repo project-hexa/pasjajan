@@ -13,8 +13,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field";
+import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
-import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
@@ -46,22 +46,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex h-2/3 w-2/3 flex-col overflow-hidden p-0">
+    <div className="md:flex md:h-screen md:w-screen items-center justify-center">
+      <Card className="flex md:h-2/3 md:w-2/3 flex-col overflow-hidden p-0">
         <CardContent className="min-h-0 flex-1 p-0">
-          <div className="flex h-full">
-            <div className="bg-primary relative flex flex-1 items-center justify-center">
+          <div className="flex h-full max-sm:py-10">
+            <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
               <Link href="/">
                 <Button
                   variant="ghost"
                   className="text-accent absolute left-4 top-4"
                 >
-                  <ChevronLeftCircle className="size-5" />
+                  <Icon
+                    icon="lucide:circle-chevron-left"
+                    width="24"
+                    height="24"
+                  />
                   <span>Kembali ke Beranda</span>
                 </Button>
               </Link>
               <div className="flex flex-col items-center gap-5 text-white">
-                <h1 className="text-4xl font-bold">Selamat datang</h1>
+                <h1 className="lg:text-4xl md:text-2xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
                   <Image src="/logo.png" alt="Logo" width={128} height={128} />
                   <div className="flex flex-col text-center">

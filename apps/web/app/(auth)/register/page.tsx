@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  Password
-} from "@/components/password";
+import { Password } from "@/components/password";
 import { registerSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
@@ -31,7 +29,6 @@ import {
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
 import { Label } from "@workspace/ui/components/label";
-import { ChevronLeftCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,9 +36,10 @@ import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
+import { Icon } from "@workspace/ui/components/icon";
 
 export default function RegisterPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -58,31 +56,34 @@ export default function RegisterPage() {
 
   const handleOnSubmit = (data: z.infer<typeof registerSchema>) => {
     if (data.noTelepon) {
-      data.noTelepon = '+62' + data.noTelepon.replace(/^(\+62|62|0)/, '');
+      data.noTelepon = "+62" + data.noTelepon.replace(/^(\+62|62|0)/, "");
     }
 
-    toast.promise(new Promise<typeof registerForm>((resolve) => resolve(registerForm)), {
-      loading: "Loading...",
-      toasterId: "global",
-      success: () => "Akun berhasil dibuat!",
-      error: () => "Akun gagal dibuat",
-    })
+    toast.promise(
+      new Promise<typeof registerForm>((resolve) => resolve(registerForm)),
+      {
+        loading: "Loading...",
+        toasterId: "global",
+        success: () => "Akun berhasil dibuat!",
+        error: () => "Akun gagal dibuat",
+      },
+    );
     router.push("/verification-code");
     console.log(data);
   };
 
   return (
-    <div className="flex items-center justify-center w-screen h-screen">
-      <Card className="flex flex-col w-2/3 p-0 overflow-hidden h-2/3">
-        <CardContent className="flex-1 min-h-0 p-0">
+    <div className="items-center md:flex md:h-screen md:w-screen justify-center">
+      <Card className="flex flex-col overflow-hidden p-0 max-sm:rounded-none md:h-2/3 md:w-2/3">
+        <CardContent className="min-h-0 flex-1 p-0">
           <div className="flex h-full">
-            <div className="relative flex items-center justify-center flex-1 bg-primary">
+            <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
               <Link href="/">
                 <Button
                   variant="ghost"
-                  className="absolute top-4 left-4 text-accent"
+                  className="text-accent absolute left-4 top-4"
                 >
-                  <ChevronLeftCircle className="size-5" />
+                  <Icon icon="lucide:circle-chevron-left" />
                   <span>Kembali ke Beranda</span>
                 </Button>
               </Link>
@@ -98,10 +99,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center flex-1 gap-4 py-4 overflow-y-auto">
+            <div className="flex flex-1 flex-col items-center gap-4 overflow-y-auto py-4">
               <CardTitle className="text-2xl">Daftar</CardTitle>
               <form
-                className="w-full px-10 space-y-5"
+                className="w-full space-y-5 px-10"
                 id="register-form"
                 onSubmit={registerForm.handleSubmit(handleOnSubmit)}
               >
@@ -206,7 +207,7 @@ export default function RegisterPage() {
                             placeholder="Jl. Setiabudhi No.123, Bandung"
                             aria-invalid={fieldState.invalid}
                             rows={6}
-                            className="resize-none min-h-24"
+                            className="min-h-24 resize-none"
                             {...field}
                           />
                           <InputGroupAddon
@@ -238,8 +239,8 @@ export default function RegisterPage() {
                           fieldState={fieldState}
                         />
                         <FieldDescription>
-                          Buat password menggunakan kombinasi huruf besar, dan huruf
-                          kecil.
+                          Buat password menggunakan kombinasi huruf besar, dan
+                          huruf kecil.
                         </FieldDescription>
                         {fieldState.invalid && (
                           <FieldError errors={[fieldState.error]} />
@@ -281,7 +282,7 @@ export default function RegisterPage() {
                   <Button form="register-form" type="submit">
                     Daftar
                   </Button>
-                  <div className="flex flex-col items-center gap-4 shrink-0">
+                  <div className="flex shrink-0 flex-col items-center gap-4">
                     <CardDescription>
                       Sudah memiliki akun Pasjajan?{" "}
                       <Link href="/login">
@@ -289,7 +290,7 @@ export default function RegisterPage() {
                       </Link>
                     </CardDescription>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     atau daftar menggunakan:
                   </p>
                   <Button variant={"ghost"} size="icon" className="size-14">

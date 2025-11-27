@@ -28,12 +28,12 @@ export default function OTPPage() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex h-2/3 w-1/2 flex-col overflow-hidden border-2 border-black p-0">
+      <Card className="flex lg:h-2/3 lg:w-1/2 flex-col overflow-hidden md:border-2 md:border-black p-0 max-sm:mx-5 max-sm:-mt-40">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center p-0">
           <form
             onSubmit={otpForm.handleSubmit(handleSubmit)}
             id="otpForm"
-            className="flex flex-col items-center justify-center gap-4"
+            className="flex flex-col items-center justify-center gap-4 max-lg:p-5"
           >
             <Controller
               control={otpForm.control}
@@ -47,15 +47,19 @@ export default function OTPPage() {
                   </FieldDescription>
                   <InputOTP
                     maxLength={6}
-                    containerClassName="gap-10"
+                    containerClassName="gap-5 md:gap-10 justify-center"
                     {...field}
                   >
-                    <InputOTPSlot index={0} aria-invalid={fieldState.invalid} />
-                    <InputOTPSlot index={1} aria-invalid={fieldState.invalid} />
-                    <InputOTPSlot index={2} aria-invalid={fieldState.invalid} />
-                    <InputOTPSlot index={3} aria-invalid={fieldState.invalid} />
-                    <InputOTPSlot index={4} aria-invalid={fieldState.invalid} />
-                    <InputOTPSlot index={5} aria-invalid={fieldState.invalid} />
+                    {
+                      [...Array(6)].map((_, index) => (
+                        <InputOTPSlot
+                          key={index}
+                          index={index}
+                          aria-invalid={fieldState.invalid}
+                          className="max-sm:size-10"
+                        />
+                      ))
+                    }
                   </InputOTP>
                   {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
