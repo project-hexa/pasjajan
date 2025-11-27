@@ -1,6 +1,6 @@
 "use client";
 
-import { Password } from "@/components/password";
+import { Password } from "@/components/auth/password";
 import { registerSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";

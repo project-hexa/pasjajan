@@ -26,15 +26,24 @@ import { Separator } from "@workspace/ui/components/separator";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Logout } from "./auth/logout";
+import { useEffect, useState } from "react";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
   const { isLoggedIn, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
       <nav className="flex h-full items-center justify-between px-4 md:px-10">
-        <div className="flex items-center gap-2 max-md:justify-between w-full">
+        <div className="flex w-full items-center gap-2 max-md:justify-between">
           <Link href="/">
             <Image
               src={"/logo.png"}
@@ -61,7 +70,7 @@ export const Navbar = ({ className }: { className?: string }) => {
             <ButtonGroup>
               <Input
                 placeholder="Cari produk yang anda inginkan disini"
-                className="bg-card w-24 md:w-36 lg:w-96 placeholder:max-sm:text-xs"
+                className="bg-card w-24 placeholder:max-sm:text-xs md:w-36 lg:w-96"
               />
               <Button variant={"secondary"} size={"icon"}>
                 <Icon icon="lucide:search" className="size-4" />
@@ -161,17 +170,14 @@ export const Navbar = ({ className }: { className?: string }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-primary">
-                <DropdownMenuItem className="dark:hover:text-primary">
+                <DropdownMenuItem>
                   <Icon icon="lucide:settings" /> Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem className="dark:hover:text-primary">
+                <DropdownMenuItem>
                   <Icon icon={"ic:outline-discount"} /> Transaksi & Poin
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="dark:hover:text-primary"
-                  onClick={() => logout()}
-                >
-                  <Icon icon="lucide:log-out" /> Logout
+                <DropdownMenuItem asChild>
+                  <Logout />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

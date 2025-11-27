@@ -1,6 +1,6 @@
 "use client";
 
-import { Password } from "@/components/password";
+import { Password } from "@/components/auth/password";
 import { useAuth } from "@/hooks/contollers/useAuth";
 import { loginSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
