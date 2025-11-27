@@ -28,29 +28,29 @@ export const useAuth = () => {
       };
     } = {},
   ) => {
-    const { UET, password, rememberMe } = data;
+    const { email, password, rememberMe } = data;
     const { showToast = true, customMessage } = opts;
 
     try {
       const response = await api.post("/auth/login", {
-        UET,
+        email,
         password,
       });
 
-      const newToken = response.data.token;
+      const newToken = response.data.access_token;
 
       if (rememberMe) {
         Cookies.set("token", newToken, {
           expires: 7,
           path: "/",
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          // sameSite: "lax",
         });
       } else {
         Cookies.set("token", newToken, {
           path: "/",
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          // sameSite: "lax",
         });
       }
 
