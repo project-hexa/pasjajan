@@ -4,10 +4,10 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@workspace/ui/components/input-group";
-import { Check, Eye, EyeOff, X } from "lucide-react";
 import { useState } from "react";
 import { ControllerFieldState, ControllerRenderProps } from "react-hook-form";
 import { Progress } from "@workspace/ui/components/progress";
+import { Icon } from "@workspace/ui/components/icon";
 
 export interface PasswordStrength {
   id: number;
@@ -50,15 +50,18 @@ export const PasswordStrengthBar = ({
   const width = (strength.id / 3) * 100;
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className="mt-2 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">Kekuatan Password</span>
         <span className={`text-sm font-medium ${textColorMap[strength.value]}`}>
           {labelMap[strength.value]}
         </span>
       </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <Progress indicatorClassName={`${colorMap[strength.value]}`} value={width} />
+      <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+        <Progress
+          indicatorClassName={`${colorMap[strength.value]}`}
+          value={width}
+        />
       </div>
     </div>
   );
@@ -99,15 +102,21 @@ export const PasswordRequirements = ({
   ];
 
   return (
-    <div className="space-y-2 mt-3">
-      <p className="text-xs text-gray-600 font-medium">Syarat Password:</p>
+    <div className="mt-3 space-y-2">
+      <p className="text-xs font-medium text-gray-600">Syarat Password:</p>
       <div className="grid grid-cols-1 gap-1.5">
         {requirements.map((req, idx) => (
           <div key={idx} className="flex items-center gap-2">
             {req.met ? (
-              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <Icon
+                icon="lucide:check"
+                className="h-4 w-4 flex-shrink-0 text-green-500"
+              />
             ) : (
-              <X className="w-4 h-4 text-destructive flex-shrink-0" />
+              <Icon
+                icon="maki:cross"
+                className="text-destructive h-4 w-4 flex-shrink-0"
+              />
             )}
             <span
               className={`text-xs ${req.met ? "text-green-600" : "text-gray-500"}`}
@@ -154,7 +163,11 @@ export const Password = ({
           size="icon"
           type="button"
         >
-          {showPassword === "password" ? <Eye /> : <EyeOff />}
+          {showPassword === "password" ? (
+            <Icon icon="lucide:eye" />
+          ) : (
+            <Icon icon="lucide:eye-off" />
+          )}
         </Button>
       </InputGroupAddon>
     </InputGroup>

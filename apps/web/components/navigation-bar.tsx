@@ -23,14 +23,6 @@ import {
   ItemTitle,
 } from "@workspace/ui/components/item";
 import { Separator } from "@workspace/ui/components/separator";
-import {
-  Grid2X2,
-  LogOut,
-  Search,
-  Settings,
-  ShoppingBasket,
-  User,
-} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -41,36 +33,44 @@ export const Navbar = ({ className }: { className?: string }) => {
 
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
-      <nav className="flex h-full items-center justify-between px-10">
-        <div className="flex items-center gap-2">
+      <nav className="flex h-full items-center justify-between px-4 md:px-10">
+        <div className="flex items-center gap-2 max-md:justify-between w-full">
           <Link href="/">
-            <Image src={"/logo.png"} alt="logo" width={64} height={64} />
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="p-0">
-                <Grid2X2 />
-                Kategori
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-card text-accent-foreground">
-              <DropdownMenuItem>Category 1</DropdownMenuItem>
-              <DropdownMenuItem>Category 2</DropdownMenuItem>
-              <DropdownMenuItem>Category 3</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <ButtonGroup>
-            <Input
-              placeholder="Cari produk yang anda inginkan disini"
-              className="bg-card w-96"
+            <Image
+              src={"/logo.png"}
+              alt="logo"
+              width={64}
+              height={64}
+              sizes="50vw"
             />
-            <Button variant={"secondary"} size={"icon"}>
-              <Search />
-            </Button>
-          </ButtonGroup>
+          </Link>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="p-0">
+                  <Icon icon="lucide:grid-2x2" />
+                  Kategori
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-card text-accent-foreground">
+                <DropdownMenuItem>Category 1</DropdownMenuItem>
+                <DropdownMenuItem>Category 2</DropdownMenuItem>
+                <DropdownMenuItem>Category 3</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <ButtonGroup>
+              <Input
+                placeholder="Cari produk yang anda inginkan disini"
+                className="bg-card w-24 md:w-36 lg:w-96 placeholder:max-sm:text-xs"
+              />
+              <Button variant={"secondary"} size={"icon"}>
+                <Icon icon="lucide:search" className="size-4" />
+              </Button>
+            </ButtonGroup>
+          </div>
         </div>
 
-        <div className="flex h-10 items-center gap-2">
+        <div className="flex h-10 items-center gap-2 max-sm:hidden">
           <div className="flex items-center">
             <Link href="/promo">
               <Button variant={"link"} className="text-white">
@@ -84,7 +84,7 @@ export const Navbar = ({ className }: { className?: string }) => {
                   className="p-0 text-white"
                   variant={"ghost"}
                 >
-                  <ShoppingBasket />
+                  <Icon icon="lucide:shopping-basket" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-card text-accent-foreground">
@@ -157,12 +157,12 @@ export const Navbar = ({ className }: { className?: string }) => {
                   size={"icon"}
                   className="text-primary-foreground"
                 >
-                  <User />
+                  <Icon icon="lucide:user" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-primary">
                 <DropdownMenuItem className="dark:hover:text-primary">
-                  <Settings className="text-inherit" /> Profile
+                  <Icon icon="lucide:settings" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem className="dark:hover:text-primary">
                   <Icon icon={"ic:outline-discount"} /> Transaksi & Poin
@@ -171,7 +171,7 @@ export const Navbar = ({ className }: { className?: string }) => {
                   className="dark:hover:text-primary"
                   onClick={() => logout()}
                 >
-                  <LogOut className="text-inherit" /> Logout
+                  <Icon icon="lucide:log-out" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
