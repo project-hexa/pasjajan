@@ -23,7 +23,8 @@ class AdminMiddleware
         }
         $user = Auth::user();
 
-        if (!in_array($user->role, ['admin', 'staff'])) {
+        // Case-insensitive check untuk role Admin dan Staff
+        if (!in_array(strtolower($user->role), ['admin', 'staff'])) {
             return response()->json([
                 'message' => 'Forbidden. Only admin and staff can access this resource.'
             ], 403);
