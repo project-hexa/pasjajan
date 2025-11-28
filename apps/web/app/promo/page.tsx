@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Card } from "@workspace/ui/components/card";
 import { Navbar } from "@/components/navigation-bar";
 import { Footer } from "@/components/footer";
+import Link from "next/link";
 
 const promos = [
   {
@@ -66,6 +67,12 @@ const promos = [
   },
 ];
 
+const toSlug = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 export default function PromoPage() {
   return (
     <>
@@ -78,24 +85,29 @@ export default function PromoPage() {
 
         <div className="grid cursor-pointer grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {promos.map((promo, index) => (
-            <Card
-              key={index}
-              className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+            <Link
+              key={toSlug(promo.title)}
+              href={`/promo/${promo.title.toLowerCase().replace(/\s+/g, "-")}`}
             >
-              <div className="group relative aspect-[16/9] w-full overflow-hidden">
-                <Image
-                  src={promo.image}
-                  alt={promo.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <Card
+                key={index}
+                className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="group relative aspect-[16/9] w-full overflow-hidden">
+                  <Image
+                    src={promo.image}
+                    alt={promo.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
 
-              <div className="p-4 pt-3">
-                <h2 className="font-bold text-gray-800">{promo.title}</h2>
-                <p className="text-sm text-gray-500">{promo.date}</p>
-              </div>
-            </Card>
+                <div className="p-4 pt-3">
+                  <h2 className="font-bold text-gray-800">{promo.title}</h2>
+                  <p className="text-sm text-gray-500">{promo.date}</p>
+                </div>
+              </Card>
+            </Link>
           ))}
         </div>
       </main>
