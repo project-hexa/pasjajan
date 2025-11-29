@@ -102,7 +102,7 @@ class CustomerController extends Controller
                         'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
                         'email' => $customer->user->email,
                         'quantity' => $customer->orders_count,
-                        'total_price' => (float) ($customer->total_price ?? 0),
+                        'total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
                     ];
                 });
 
@@ -123,7 +123,7 @@ class CustomerController extends Controller
                     'id' => $customer->id,
                     'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
                     'quantity' => $customer->orders_count,
-                    'total_price' => (float) ($customer->total_price ?? 0),
+                    'total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
 
                 ];
             });
