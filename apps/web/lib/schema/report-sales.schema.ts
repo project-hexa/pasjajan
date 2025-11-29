@@ -12,19 +12,28 @@ export const reportSalesSchema = z.object({
       date_range: z.object({ from: z.string(), to: z.string() }),
     }),
     summary: z.object({
-      totalRevenue: z.number(),
-      formattedRevenue: z.string(),
-      totalTransactions: z.number(),
-      averageTransactionValue: z.number(),
-      formattedAvgTxValue: z.string(),
-      totalUnitSold: z.number(),
+      total_customers: z.object({
+        value: z.number(),
+        trend: z.string(),
+        description: z.string(),
+      }),
+      total_transactions: z.object({
+        value: z.string(),
+        trend: z.string(),
+        description: z.string(),
+      }),
+      avg_transaction: z.object({
+        value: z.string(),
+        trend: z.string(),
+        description: z.string(),
+      }),
     }),
     salesTrend: z.array(
       z.object({
         label: z.number(),
         date: z.string(),
         value: z.number(),
-        revenue: z.number(),
+        revenue: z.string(),
       }),
     ),
     topProducts: z.array(
@@ -32,9 +41,7 @@ export const reportSalesSchema = z.object({
         id: z.number(),
         name: z.string(),
         unitSold: z.number(),
-        revenue: z.number(),
-        formattedRevenue: z.string(),
-        transactionCount: z.number(),
+        revenue: z.string(),
       }),
     ),
   }),

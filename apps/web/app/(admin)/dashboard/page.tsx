@@ -32,20 +32,22 @@ export default async function DashboardPage({
     <section className="space-y-4">
       <div className="flex gap-4">
         <AnalyticCard
+          title="Total Pelanggan"
+          value={data.summary.total_customers.value.toString()}
+          growth={data.summary.total_customers.trend}
+          description={data.summary.total_customers.description}
+        />
+        <AnalyticCard
           title="Total Transaksi"
-          value={data.summary.totalTransactions.toString()}
+          value={data.summary.total_transactions.value.toString()}
+          growth={data.summary.total_transactions.trend}
+          description={data.summary.total_transactions.description}
         />
         <AnalyticCard
-          title="Total Pendapatan"
-          value={data.summary.formattedRevenue}
-        />
-        <AnalyticCard
-          title="Rata-rata Nilai Transaksi"
-          value={data.summary.formattedAvgTxValue}
-        />
-        <AnalyticCard
-          title="Total Unit Terjual"
-          value={data.summary.totalUnitSold.toString()}
+          title="Rata-rata Transaksi"
+          value={data.summary.avg_transaction.value.toString()}
+          growth={data.summary.avg_transaction.trend}
+          description={data.summary.avg_transaction.description}
         />
       </div>
       <div className="w-full space-y-8 rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
@@ -77,7 +79,7 @@ export default async function DashboardPage({
           label="Total"
           data={data.salesTrend.map((item) => ({
             name: item.date,
-            value: item.revenue,
+            value: item.value,
           }))}
         />
       </div>
