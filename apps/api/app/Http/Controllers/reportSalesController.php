@@ -76,6 +76,48 @@ class reportSalesController extends Controller
                 ->whereIn('order_id', (clone $base)->pluck('id'))
                 ->sum('quantity');
 
+            $periodDiff = $from->diffInDays($to);
+            $previousFrom = $from->copy()->subDays($periodDiff + 1);
+            $previousTo = $from->copy()->subDay();
+
+            $previousBase = Order::query()
+                ->whereBetween('created_at', [$previousFrom, $previousTo])
+                ->whereIn('status', ['COMPLETED']);
+
+            if ($request->filled('store_id')) {
+                $previousBase->where('store_id', $request->integer('store_id'));
+            }
+
+            $previousSummary = $previousBase
+                ->selectRaw('
+                SUM(grand_total) as total_revenue,
+                COUNT(id)        as total_transactions,
+                ROUND(AVG(grand_total), 0) as avg_tx_value
+            ')
+                ->first();
+
+            $previousCustomers = \App\Models\Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
+                $query->whereBetween('created_at', [$previousFrom, $previousTo])
+                    ->whereIn('status', ['COMPLETED']);
+            })->count();
+
+            $currentCustomers = \App\Models\Customer::whereHas('orders', function ($query) use ($from, $to) {
+                $query->whereBetween('created_at', [$from, $to])
+                    ->whereIn('status', ['COMPLETED']);
+            })->count();
+
+            $customerTrend = $previousCustomers > 0
+                ? round((($currentCustomers - $previousCustomers) / $previousCustomers) * 100, 1)
+                : ($currentCustomers > 0 ? 100 : 0);
+
+            $revenueTrend = $previousSummary->total_revenue > 0
+                ? round((($summary->total_revenue - $previousSummary->total_revenue) / $previousSummary->total_revenue) * 100, 1)
+                : ($summary->total_revenue > 0 ? 100 : 0);
+
+            $avgTrend = $previousSummary->avg_tx_value > 0
+                ? round((($summary->avg_tx_value - $previousSummary->avg_tx_value) / $previousSummary->avg_tx_value) * 100, 1)
+                : ($summary->avg_tx_value > 0 ? 100 : 0);
+
             $periodicData = (clone $base)
                 ->selectRaw("
                 {$groupByExpr} as period,
@@ -94,7 +136,7 @@ class reportSalesController extends Controller
                         'label' =>  $hour,
                         'date' => Carbon::now()->startOfDay()->addHours($hour)->format('Y-m-d H:i:s'),
                         'value' => (int) ($periodicData->get($hour)->transactions ?? 0),
-                        'revenue' => (float) ($periodicData->get($hour)->revenue ?? 0),
+                        'revenue' => 'Rp' . number_format($periodicData->get($hour)->revenue ?? 0, 0, ',', '.'),
                     ];
                 }),
                 'monthly' => collect(range(1, $to->daysInMonth))->map(function ($day) use ($periodicData) {
@@ -102,7 +144,7 @@ class reportSalesController extends Controller
                         'label' =>  $day,
                         'date' => Carbon::now()->startOfMonth()->addDays($day - 1)->format('Y-m-d'),
                         'value' => (int) ($periodicData->get($day)->transactions ?? 0),
-                        'revenue' => (float) ($periodicData->get($day)->revenue ?? 0),
+                        'revenue' => 'Rp' . number_format($periodicData->get($day)->revenue ?? 0, 0, ',', '.'),
                     ];
                 }),
                 'yearly' => collect(range(1, 12))->map(function ($month) use ($periodicData) {
@@ -110,7 +152,7 @@ class reportSalesController extends Controller
                         'label' =>  $month,
                         'date' => Carbon::now()->startOfYear()->addMonths($month - 1)->format('Y-m'),
                         'value' => (int) ($periodicData->get($month)->transactions ?? 0),
-                        'revenue' => (float) ($periodicData->get($month)->revenue ?? 0),
+                        'revenue' => 'Rp' . number_format($periodicData->get($month)->revenue ?? 0, 0, ',', '.'),
                     ];
                 }),
                 'custom' => collect(range(1, $totalDays))->map(function ($day) use ($periodicData, $from) {
@@ -121,7 +163,7 @@ class reportSalesController extends Controller
                         'label' => $day,
                         'date' => $currentDate->format('Y-m-d'),
                         'value' => (int) ($periodicData->get($dayOfMonth)->transactions ?? 0),
-                        'revenue' => (float) ($periodicData->get($dayOfMonth)->revenue ?? 0),
+                        'revenue' => 'Rp' . number_format($periodicData->get($dayOfMonth)->revenue ?? 0, 0, ',', '.'),
                     ];
                 }),
                 default => collect([]),
@@ -156,10 +198,21 @@ class reportSalesController extends Controller
                         ],
                     ],
                     'summary' => [
-                        'totalRevenue' => (float) ($summary->total_revenue ?? 0),
-                        'totalTransactions' => (int) ($summary->total_transactions ?? 0),
-                        'averageTransactionValue' => (float) ($summary->avg_tx_value ?? 0),
-                        'totalUnitSold' => (int) $totalUnitSold,
+                        'total_customers' => [
+                            'value' => $currentCustomers,
+                            'trend' => ($customerTrend >= 0 ? '+' : '') . $customerTrend . '%',
+                            'description' => $customerTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+                        ],
+                        'total_transactions' => [
+                            'value' => 'Rp' . number_format($summary->total_revenue ?? 0, 0, ',', '.'),
+                            'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
+                            'description' => $revenueTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+                        ],
+                        'avg_transaction' => [
+                            'value' => 'Rp' . number_format($summary->avg_tx_value ?? 0, 0, ',', '.'),
+                            'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
+                            'description' => $avgTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+                        ],
                     ],
                     'salesTrend' => $salesTrend->values(),
                     'topProducts' => $topProduct->map(function ($item) {
@@ -167,8 +220,7 @@ class reportSalesController extends Controller
                             'id' => $item->id,
                             'name' => $item->product_name,
                             'unitSold' => (int) $item->unit_sold,
-                            'revenue' => (float) $item->revenue,
-                            'transactionCount' => (int) $item->trx_count,
+                            'revenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
                         ];
                     })->values(),
                 ]

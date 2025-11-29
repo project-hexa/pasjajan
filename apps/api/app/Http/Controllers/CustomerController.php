@@ -19,9 +19,11 @@ class CustomerController extends Controller
         try {
 
             $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:7d,30d,3m,6m,1y,custom',
+                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
                 'from' => 'required_if:period,custom|date',
                 'to' => 'required_if:period,custom|date|after_or_equal:from',
+                'per_page' => 'nullable|integer|min:5|max:100',
+                'page' => 'nullable|integer|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -120,11 +122,9 @@ class CustomerController extends Controller
                 return [
                     'id' => $customer->id,
                     'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
-                    'email' => $customer->user->email,
                     'quantity' => $customer->orders_count,
                     'total_price' => (float) ($customer->total_price ?? 0),
-                    'phone' => $customer->user->phone_number,
-                    'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
+
                 ];
             });
 
@@ -142,14 +142,17 @@ class CustomerController extends Controller
                     'total_customers' => [
                         'value' => $totalCustomers,
                         'trend' => ($customerTrend >= 0 ? '+' : '') . $customerTrend . '%',
+                        'description' => $customerTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
                     ],
                     'total_transactions' => [
-                        'value' => (float) $totalRevenue,
+                        'value' => 'Rp' . number_format($totalRevenue, 0, ',', '.'),
                         'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
+                        'description' => $revenueTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
                     ],
                     'avg_transaction' => [
-                        'value' => (float) $avgOrderValue,
+                        'value' => 'Rp' . number_format($avgOrderValue, 0, ',', '.'),
                         'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
+                        'description' => $avgTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
                     ],
                 ],
                 'top_customers' => $topCustomers,
@@ -434,25 +437,88 @@ class CustomerController extends Controller
     private function getDateRange($period, $request)
     {
         return match ($period) {
-            '7d' => [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->endOfDay()],
-            '30d' => [Carbon::now()->subDays(30)->startOfDay(), Carbon::now()->endOfDay()],
-            '3m' => [Carbon::now()->subMonths(3)->startOfDay(), Carbon::now()->endOfDay()],
-            '6m' => [Carbon::now()->subMonths(6)->startOfDay(), Carbon::now()->endOfDay()],
-            '1y' => [Carbon::now()->subYear()->startOfDay(), Carbon::now()->endOfDay()],
+            '1d' => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
+            '7h' => [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()],
+            '30h' => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
+            '3b' => [Carbon::now()->subMonths(3)->startOfDay(), Carbon::now()->endOfDay()],
+            '6b' => [Carbon::now()->subMonths(6)->startOfDay(), Carbon::now()->endOfDay()],
+            '1th' => [Carbon::now()->subYear()->startOfDay(), Carbon::now()->endOfDay()],
             'custom' => [
                 Carbon::parse($request->input('from'))->startOfDay(),
                 Carbon::parse($request->input('to'))->endOfDay()
             ],
-            default => [Carbon::now()->subDays(30)->startOfDay(), Carbon::now()->endOfDay()],
+            default => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
         };
     }
 
 
     private function getPurchaseTrend($from, $to, $period)
     {
+        if ($period === '1d') {
+            $orders = Order::whereBetween('created_at', [$from, $to])
+                ->whereIn('status', ['COMPLETED'])
+                ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, SUM(grand_total) as revenue')
+                ->groupBy('hour')
+                ->get()
+                ->keyBy('hour');
+
+            return collect(range(0, 23))->map(function ($hour) use ($orders) {
+                $order = $orders->get($hour);
+                return [
+                    'date' => Carbon::now()->startOfDay()->addHours($hour)->format('Y-m-d H:00:00'),
+                    'label' => $hour . ':00',
+                    'transactions' => $order ? (int) $order->count : 0,
+                    'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
+                ];
+            });
+        }
+
+        if ($period === '7h') {
+            $orders = Order::whereBetween('created_at', [$from, $to])
+                ->whereIn('status', ['COMPLETED'])
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
+                ->groupBy('date')
+                ->get()
+                ->keyBy('date');
+
+            return collect(range(0, 6))->map(function ($day) use ($from, $orders) {
+                $date = $from->copy()->addDays($day);
+                $dateStr = $date->format('Y-m-d');
+                $order = $orders->get($dateStr);
+
+                return [
+                    'date' => $dateStr,
+                    'label' => $date->format('d M'),
+                    'transactions' => $order ? (int) $order->count : 0,
+                    'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
+                ];
+            });
+        }
+
+        if ($period === '30h') {
+            $orders = Order::whereBetween('created_at', [$from, $to])
+                ->whereIn('status', ['COMPLETED'])
+                ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
+                ->groupBy('date')
+                ->get()
+                ->keyBy('date');
+
+            return collect(range(0, 29))->map(function ($day) use ($from, $orders) {
+                $date = $from->copy()->addDays($day);
+                $dateStr = $date->format('Y-m-d');
+                $order = $orders->get($dateStr);
+
+                return [
+                    'date' => $dateStr,
+                    'label' => $date->format('d M'),
+                    'transactions' => $order ? (int) $order->count : 0,
+                    'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
+                ];
+            });
+        }
+
         $groupBy = match ($period) {
-            '7d', '30d' => 'DATE(created_at)',
-            '3m', '6m', '1y' => 'DATE_FORMAT(created_at, "%Y-%m")',
+            '3b', '6b', '1th' => 'DATE_FORMAT(created_at, "%Y-%m")',
             default => 'DATE(created_at)',
         };
 
@@ -467,8 +533,7 @@ class CustomerController extends Controller
             return [
                 'date' => $item->date,
                 'transactions' => (int) $item->count,
-                'revenue' => (float) $item->revenue,
-                'formatted_revenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
+                'revenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
             ];
         });
     }
