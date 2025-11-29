@@ -49,6 +49,38 @@ class CustomerController extends Controller
 
             $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
 
+            $periodDiff = $from->diffInDays($to);
+            $previousFrom = $from->copy()->subDays($periodDiff + 1);
+            $previousTo = $from->copy()->subDay();
+
+            $previousCustomers = Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
+                $query->whereBetween('created_at', [$previousFrom, $previousTo])
+                    ->whereIn('status', ['COMPLETED']);
+            })->count();
+
+            $previousRevenue = Order::whereBetween('created_at', [$previousFrom, $previousTo])
+                ->whereIn('status', ['COMPLETED'])
+                ->sum('grand_total');
+
+            $previousOrders = Order::whereBetween('created_at', [$previousFrom, $previousTo])
+                ->whereIn('status', ['COMPLETED'])
+                ->count();
+
+            $previousAvgOrderValue = $previousOrders > 0 ? $previousRevenue / $previousOrders : 0;
+
+            $customerTrend = $previousCustomers > 0
+                ? round((($totalCustomers - $previousCustomers) / $previousCustomers) * 100, 1)
+                : ($totalCustomers > 0 ? 100 : 0);
+
+            $revenueTrend = $previousRevenue > 0
+                ? round((($totalRevenue - $previousRevenue) / $previousRevenue) * 100, 1)
+                : ($totalRevenue > 0 ? 100 : 0);
+
+            $avgTrend = $previousAvgOrderValue > 0
+                ? round((($avgOrderValue - $previousAvgOrderValue) / $previousAvgOrderValue) * 100, 1)
+                : ($avgOrderValue > 0 ? 100 : 0);
+
+
             $topCustomers = Customer::with('user')
                 ->withCount(['orders' => function ($query) use ($from, $to) {
                     $query->whereBetween('created_at', [$from, $to])
@@ -111,23 +143,17 @@ class CustomerController extends Controller
                 'summary' => [
                     'total_customers' => [
                         'value' => $totalCustomers,
-                        'label' => 'Total Pelanggan',
-                        'trend' => '+2%',
-                        'description' => 'Trending up this month',
+                        'trend' => ($customerTrend >= 0 ? '+' : '') . $customerTrend . '%',
                     ],
                     'total_transactions' => [
                         'value' => (float) $totalRevenue,
                         'formatted' => 'Rp' . number_format($totalRevenue, 0, ',', '.'),
-                        'label' => 'Total Transaksi',
-                        'trend' => '+23%',
-                        'description' => 'Trending up this month',
+                        'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
                     ],
                     'avg_transaction' => [
                         'value' => (float) $avgOrderValue,
                         'formatted' => 'Rp' . number_format($avgOrderValue, 0, ',', '.'),
-                        'label' => 'Rata-rata transaksi',
-                        'trend' => '+12%',
-                        'description' => 'Trending up for last 3 months',
+                        'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
                     ],
                 ],
                 'top_customers' => $topCustomers,
