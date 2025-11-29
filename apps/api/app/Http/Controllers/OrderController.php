@@ -44,7 +44,6 @@ class OrderController extends Controller
                 'sub_total' => $request->sub_total,
                 'discount' => $request->discount ?? 0,
                 'shipping_fee' => $request->shipping_fee,
-                'tax_amount' => $request->tax_amount ?? 0,
                 'admin_fee' => $request->admin_fee ?? 0,
                 'grand_total' => $request->grand_total,
                 'status' => 'pending',
@@ -58,13 +57,9 @@ class OrderController extends Controller
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
-                    'product_name' => $item['product_name'],
-                    'product_sku' => $item['product_sku'] ?? null,
-                    'product_image_url' => $item['product_image_url'] ?? null,
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
                     'sub_total' => $item['price'] * $item['quantity'],
-                    'discount' => $item['discount'] ?? 0,
                 ]);
             }
 
@@ -121,14 +116,13 @@ class OrderController extends Controller
                     'sub_total' => $order->sub_total,
                     'discount' => $order->discount,
                     'shipping_fee' => $order->shipping_fee,
-                    'tax_amount' => $order->tax_amount,
                     'admin_fee' => $order->admin_fee,
                     'grand_total' => $order->grand_total,
                     'payment_method' => $order->paymentMethod ? [
                         'id' => $order->paymentMethod->id,
-                        'name' => $order->paymentMethod->name,
+                        'name' => $order->paymentMethod->method_name,
                         'code' => $order->paymentMethod->code,
-                        'category' => $order->paymentMethod->category,
+                        'category' => $order->paymentMethod->payment_type,
                     ] : null,
                     'payment_instructions' => $order->payment_instructions,
                     'status' => $order->status,
@@ -140,13 +134,9 @@ class OrderController extends Controller
                     'items' => $order->items->map(function ($item) {
                         return [
                             'product_id' => $item->product_id,
-                            'product_name' => $item->product_name,
-                            'product_sku' => $item->product_sku,
-                            'product_image_url' => $item->product_image_url,
                             'price' => $item->price,
                             'quantity' => $item->quantity,
                             'sub_total' => $item->sub_total,
-                            'discount' => $item->discount,
                         ];
                     }),
                 ],

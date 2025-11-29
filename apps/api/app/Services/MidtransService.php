@@ -92,7 +92,17 @@ class MidtransService
             'customer_details' => [
                 'first_name' => $order->customer_name ?? 'Customer',
                 'email' => $order->customer_email,
-                'phone' => $order->shipping_recipient_phone ?? $order->customer_phone,
+                'phone' => $order->customer_phone ?? $order->shipping_recipient_phone,
+                'billing_address' => [
+                    'first_name' => $order->customer_name ?? 'Customer',
+                    'phone' => $order->customer_phone ?? $order->shipping_recipient_phone,
+                    'address' => $order->shipping_address,
+                ],
+                'shipping_address' => [
+                    'first_name' => $order->shipping_recipient_name ?? $order->customer_name ?? 'Customer',
+                    'phone' => $order->shipping_recipient_phone,
+                    'address' => $order->shipping_address,
+                ],
             ],
             'item_details' => $this->buildItemDetails($order),
         ];
@@ -217,11 +227,15 @@ class MidtransService
 
         // Add product items
         foreach ($order->items as $item) {
+            // Fetch product name from Product model since OrderItem doesn't store it
+            $product = \App\Models\Product::find($item->product_id);
+            $productName = $product ? $product->name : "Product #{$item->product_id}";
+
             $items[] = [
                 'id' => (string) $item->product_id,
                 'price' => (int) $item->price,
                 'quantity' => $item->quantity,
-                'name' => substr($item->product_name, 0, 50), // Midtrans limit 50 chars
+                'name' => substr($productName, 0, 50), // Midtrans limit 50 chars
             ];
         }
 
@@ -242,16 +256,6 @@ class MidtransService
                 'price' => (int) $order->shipping_fee,
                 'quantity' => 1,
                 'name' => 'Shipping Cost',
-            ];
-        }
-
-        // Add tax
-        if ($order->tax_amount > 0) {
-            $items[] = [
-                'id' => 'TAX',
-                'price' => (int) $order->tax_amount,
-                'quantity' => 1,
-                'name' => 'Tax',
             ];
         }
 

@@ -39,18 +39,13 @@ class CheckoutRequest extends FormRequest
             // Items (dari modul katalog)
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|integer',
-            'items.*.product_name' => 'required|string|max:255',
-            'items.*.product_sku' => 'nullable|string|max:100',
-            'items.*.product_image_url' => 'nullable|url',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.discount' => 'nullable|numeric|min:0',
 
             // Pricing (dari modul lain, sudah final)
             'sub_total' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'shipping_fee' => 'required|numeric|min:0',
-            'tax_amount' => 'nullable|numeric|min:0',
             'admin_fee' => 'nullable|numeric|min:0',
             'grand_total' => 'required|numeric|min:0',
 
@@ -74,7 +69,6 @@ class CheckoutRequest extends FormRequest
             'shipping_recipient_phone.required' => 'Nomor telepon penerima diperlukan',
             'items.required' => 'Minimal 1 item harus ada',
             'items.*.product_id.required' => 'Product ID diperlukan untuk setiap item',
-            'items.*.product_name.required' => 'Nama produk diperlukan untuk setiap item',
             'items.*.price.required' => 'Harga diperlukan untuk setiap item',
             'items.*.quantity.min' => 'Quantity minimal 1',
             'grand_total.required' => 'Total pembayaran diperlukan',

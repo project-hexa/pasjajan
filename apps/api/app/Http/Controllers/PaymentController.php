@@ -29,20 +29,17 @@ class PaymentController extends Controller
     {
         try {
             $paymentMethods = PaymentMethod::active()
-                ->ordered()
                 ->get()
                 ->map(function ($method) {
                     return [
                         'id' => $method->id,
                         'code' => $method->code,
-                        'name' => $method->name,
-                        'category' => $method->category,
-                        'channel' => $method->channel,
+                        'name' => $method->method_name,
+                        'category' => $method->payment_type,
                         'icon' => $method->icon_url,
                         'fee' => $method->fee,
                         'min_amount' => $method->min_amount,
                         'max_amount' => $method->max_amount,
-                        'description' => $method->description,
                     ];
                 });
 
@@ -96,7 +93,7 @@ class PaymentController extends Controller
             // Validate amount
             if (!$paymentMethod->isValidAmount($order->grand_total)) {
                 return ApiResponse::error(
-                    "Jumlah pembayaran tidak valid untuk metode {$paymentMethod->name}. " .
+                    "Jumlah pembayaran tidak valid untuk metode {$paymentMethod->method_name}. " .
                         "Min: {$paymentMethod->min_amount}, Max: " . ($paymentMethod->max_amount ?? 'unlimited'),
                     400
                 );
@@ -135,8 +132,8 @@ class PaymentController extends Controller
                 'order_code' => $order->code,
                 'payment_method' => [
                     'code' => $paymentMethod->code,
-                    'name' => $paymentMethod->name,
-                    'category' => $paymentMethod->category,
+                    'name' => $paymentMethod->method_name,
+                    'category' => $paymentMethod->payment_type,
                 ],
                 'payment_status' => $order->payment_status,
                 'grand_total' => $order->grand_total,
@@ -235,7 +232,7 @@ class PaymentController extends Controller
                 'status' => $order->status,
                 'payment_status' => $order->payment_status,
                 'payment_method' => $order->paymentMethod ? [
-                    'name' => $order->paymentMethod->name,
+                    'name' => $order->paymentMethod->method_name,
                     'code' => $order->paymentMethod->code,
                 ] : null,
                 'grand_total' => $order->grand_total,

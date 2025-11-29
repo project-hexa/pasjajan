@@ -102,8 +102,8 @@ class PaymentMethodSeeder extends Seeder
 
         foreach ($paymentMethods as $method) {
             DB::table('payment_methods')->insert(array_merge($method, [
-                'created_at' => now(),
-                'updated_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
             ]));
         }
     }
