@@ -157,10 +157,8 @@ class reportSalesController extends Controller
                     ],
                     'summary' => [
                         'totalRevenue' => (float) ($summary->total_revenue ?? 0),
-                        'formattedRevenue' => 'Rp' . number_format($summary->total_revenue ?? 0, 0, ',', '.'),
                         'totalTransactions' => (int) ($summary->total_transactions ?? 0),
                         'averageTransactionValue' => (float) ($summary->avg_tx_value ?? 0),
-                        'formattedAvgTxValue' => 'Rp' . number_format($summary->avg_tx_value ?? 0, 0, ',', '.'),
                         'totalUnitSold' => (int) $totalUnitSold,
                     ],
                     'salesTrend' => $salesTrend->values(),
@@ -170,7 +168,6 @@ class reportSalesController extends Controller
                             'name' => $item->product_name,
                             'unitSold' => (int) $item->unit_sold,
                             'revenue' => (float) $item->revenue,
-                            'formattedRevenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
                             'transactionCount' => (int) $item->trx_count,
                         ];
                     })->values(),

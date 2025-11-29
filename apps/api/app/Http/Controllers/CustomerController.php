@@ -101,7 +101,6 @@ class CustomerController extends Controller
                         'email' => $customer->user->email,
                         'quantity' => $customer->orders_count,
                         'total_price' => (float) ($customer->total_price ?? 0),
-                        'formatted_total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
                     ];
                 });
 
@@ -124,7 +123,6 @@ class CustomerController extends Controller
                     'email' => $customer->user->email,
                     'quantity' => $customer->orders_count,
                     'total_price' => (float) ($customer->total_price ?? 0),
-                    'formatted_total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
                     'phone' => $customer->user->phone_number,
                     'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
                 ];
@@ -147,12 +145,10 @@ class CustomerController extends Controller
                     ],
                     'total_transactions' => [
                         'value' => (float) $totalRevenue,
-                        'formatted' => 'Rp' . number_format($totalRevenue, 0, ',', '.'),
                         'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
                     ],
                     'avg_transaction' => [
                         'value' => (float) $avgOrderValue,
-                        'formatted' => 'Rp' . number_format($avgOrderValue, 0, ',', '.'),
                         'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
                     ],
                 ],
