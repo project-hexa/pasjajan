@@ -11,7 +11,6 @@ class CustomerSeeder extends Seeder
   public function run(): void
   {
     $customers = [
-      ['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john.doe@email.com', 'phone' => '081234567800'],
       ['first_name' => 'Budi', 'last_name' => 'Santoso', 'email' => 'budi.santoso@email.com', 'phone' => '081234567801'],
       ['first_name' => 'Siti', 'last_name' => 'Nurhaliza', 'email' => 'siti.nur@email.com', 'phone' => '081234567802'],
       ['first_name' => 'Ahmad', 'last_name' => 'Hidayat', 'email' => 'ahmad.hidayat@email.com', 'phone' => '081234567803'],
@@ -33,6 +32,14 @@ class CustomerSeeder extends Seeder
       ['first_name' => 'Bambang', 'last_name' => 'Suharto', 'email' => 'bambang.suharto@email.com', 'phone' => '081234567819'],
       ['first_name' => 'Retno', 'last_name' => 'Wulandari', 'email' => 'retno.wulandari@email.com', 'phone' => '081234567820'],
     ];
+
+    $existingUser = User::where('email', 'john.doe@email.com')->first();
+    if ($existingUser && !Customer::where('user_id', $existingUser->id)->exists()) {
+      Customer::create([
+        'user_id' => $existingUser->id,
+        'point' => rand(0, 1000),
+      ]);
+    }
 
     foreach ($customers as $customerData) {
       $user = User::create([
