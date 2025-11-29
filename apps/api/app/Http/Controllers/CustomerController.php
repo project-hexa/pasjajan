@@ -17,154 +17,116 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-
             $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
-                'from' => 'required_if:period,custom|date',
-                'to' => 'required_if:period,custom|date|after_or_equal:from',
                 'per_page' => 'nullable|integer|min:5|max:100',
                 'page' => 'nullable|integer|min:1',
+                'search' => 'nullable|string|max:255',
+                'sort' => 'nullable|in:highest,lowest',
             ]);
 
             if ($validator->fails()) {
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
-
-            $period = $request->input('period', '30d');
             $perPage = $request->input('per_page', 10);
             $page = $request->input('page', 1);
-            [$from, $to] = $this->getDateRange($period, $request);
+            $search = $request->input('search');
+            $sort = $request->input('sort');
 
-            $totalCustomers = Customer::whereHas('orders', function ($query) use ($from, $to) {
-                $query->whereBetween('created_at', [$from, $to])
-                    ->whereIn('status', ['COMPLETED']);
-            })->count();
+            $query = Order::query()
+                ->join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('users', 'customers.user_id', '=', 'users.id')
+                ->select(
+                    'orders.id',
+                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as customer_name"),
+                    'orders.created_at as transaction_date',
+                    'orders.grand_total as total_payment'
+                )
+                ->where('users.role', 'customer')
+                ->whereIn('orders.status', ['COMPLETED']);
 
-            $totalOrders = Order::whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED'])
-                ->count();
-
-            $totalRevenue = Order::whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED'])
-                ->sum('grand_total');
-
-            $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
-
-            $periodDiff = $from->diffInDays($to);
-            $previousFrom = $from->copy()->subDays($periodDiff + 1);
-            $previousTo = $from->copy()->subDay();
-
-            $previousCustomers = Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
-                $query->whereBetween('created_at', [$previousFrom, $previousTo])
-                    ->whereIn('status', ['COMPLETED']);
-            })->count();
-
-            $previousRevenue = Order::whereBetween('created_at', [$previousFrom, $previousTo])
-                ->whereIn('status', ['COMPLETED'])
-                ->sum('grand_total');
-
-            $previousOrders = Order::whereBetween('created_at', [$previousFrom, $previousTo])
-                ->whereIn('status', ['COMPLETED'])
-                ->count();
-
-            $previousAvgOrderValue = $previousOrders > 0 ? $previousRevenue / $previousOrders : 0;
-
-            $customerTrend = $previousCustomers > 0
-                ? round((($totalCustomers - $previousCustomers) / $previousCustomers) * 100, 1)
-                : ($totalCustomers > 0 ? 100 : 0);
-
-            $revenueTrend = $previousRevenue > 0
-                ? round((($totalRevenue - $previousRevenue) / $previousRevenue) * 100, 1)
-                : ($totalRevenue > 0 ? 100 : 0);
-
-            $avgTrend = $previousAvgOrderValue > 0
-                ? round((($avgOrderValue - $previousAvgOrderValue) / $previousAvgOrderValue) * 100, 1)
-                : ($avgOrderValue > 0 ? 100 : 0);
-
-
-            $topCustomers = Customer::with('user')
-                ->withCount(['orders' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
-                }])
-                ->withSum(['orders as total_price' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
-                }], 'grand_total')
-                ->having('orders_count', '>', 0)
-                ->orderBy('orders_count', 'desc')
-                ->take(10)
-                ->get()
-                ->map(function ($customer) {
-                    return [
-                        'id' => $customer->id,
-                        'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
-                        'email' => $customer->user->email,
-                        'quantity' => $customer->orders_count,
-                        'total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
-                    ];
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(users.first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(users.last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
+            }
 
-            $customersQuery = Customer::with('user')
-                ->withCount(['orders' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
-                }])
-                ->withSum(['orders as total_price' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
-                }], 'grand_total');
+            if ($sort) {
+                if ($sort === 'highest') {
+                    $query->orderBy('orders.grand_total', 'desc');
+                } else {
+                    $query->orderBy('orders.grand_total', 'asc');
+                }
+            } else {
+                $query->orderBy('orders.created_at', 'desc');
+            }
 
-            $allCustomersPaginated = $customersQuery->paginate($perPage, ['*'], 'page', $page);
+            $ordersPaginated = $query->paginate($perPage, ['*'], 'page', $page);
 
-            $allCustomers = $allCustomersPaginated->map(function ($customer) {
+            $customers = $ordersPaginated->map(function ($order) {
+                $totalItems = OrderItem::where('order_id', $order->id)->sum('quantity');
+
                 return [
-                    'id' => $customer->id,
-                    'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
-                    'quantity' => $customer->orders_count,
-                    'total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
-
+                    'customer_name' => $order->customer_name,
+                    'transaction_date' => Carbon::parse($order->transaction_date)->format('Y-m-d H:i:s'),
+                    'total_items' => (int) $totalItems,
+                    'total_payment' => 'Rp' . number_format($order->total_payment, 0, ',', '.'),
                 ];
             });
 
+            return ApiResponse::success('Data pelanggan berhasil diambil', [
+                'customers' => $customers,
+                'pagination' => [
+                    'current_page' => $ordersPaginated->currentPage(),
+                    'per_page' => $ordersPaginated->perPage(),
+                    'total' => $ordersPaginated->total(),
+                    'last_page' => $ordersPaginated->lastPage(),
+                    'from' => $ordersPaginated->firstItem(),
+                    'to' => $ordersPaginated->lastItem(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Gagal mengambil data pelanggan',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
+
+
+    public function analytics(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
+                'from' => 'required_if:period,custom|date',
+                'to' => 'required_if:period,custom|date|after_or_equal:from',
+            ]);
+
+            if ($validator->fails()) {
+                return ApiResponse::validationError($validator->errors()->toArray());
+            }
+
+            $period = $request->input('period', '30h');
+            [$from, $to] = $this->getDateRange($period, $request);
+
+            // Calculate summary cards
+            $summary = $this->getSummaryCards($from, $to);
+
+            // Get analytics charts
             $purchaseTrend = $this->getPurchaseTrend($from, $to, $period);
             $categoryComposition = $this->getCategoryComposition($from, $to);
             $purchaseFrequency = $this->getPurchaseFrequency($from, $to);
 
-            return ApiResponse::success('Data pelanggan berhasil diambil', [
+            return ApiResponse::success('Data analytics berhasil diambil', [
                 'period' => [
                     'filter' => $period,
                     'from' => $from->format('Y-m-d'),
                     'to' => $to->format('Y-m-d'),
                 ],
-                'summary' => [
-                    'total_customers' => [
-                        'value' => $totalCustomers,
-                        'trend' => ($customerTrend >= 0 ? '+' : '') . $customerTrend . '%',
-                        'description' => $customerTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
-                    ],
-                    'total_transactions' => [
-                        'value' => 'Rp' . number_format($totalRevenue, 0, ',', '.'),
-                        'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
-                        'description' => $revenueTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
-                    ],
-                    'avg_transaction' => [
-                        'value' => 'Rp' . number_format($avgOrderValue, 0, ',', '.'),
-                        'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
-                        'description' => $avgTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
-                    ],
-                ],
-                'top_customers' => $topCustomers,
-                'customers' => $allCustomers,
-                'pagination' => [
-                    'current_page' => $allCustomersPaginated->currentPage(),
-                    'per_page' => $allCustomersPaginated->perPage(),
-                    'total' => $allCustomersPaginated->total(),
-                    'last_page' => $allCustomersPaginated->lastPage(),
-                    'from' => $allCustomersPaginated->firstItem(),
-                    'to' => $allCustomersPaginated->lastItem(),
-                ],
+                'summary' => $summary,
                 'analytics' => [
                     'purchase_trend' => $purchaseTrend,
                     'category_composition' => $categoryComposition,
@@ -173,7 +135,7 @@ class CustomerController extends Controller
             ]);
         } catch (\Exception $e) {
             return ApiResponse::serverError(
-                'Gagal mengambil data pelanggan',
+                'Gagal mengambil data analytics',
                 ['error' => $e->getMessage()]
             );
         }
@@ -288,48 +250,6 @@ class CustomerController extends Controller
     }
 
 
-    public function analytics(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:7d,30d,3m,6m,1y,custom',
-                'from' => 'required_if:period,custom|date',
-                'to' => 'required_if:period,custom|date|after_or_equal:from',
-            ]);
-
-            if ($validator->fails()) {
-                return ApiResponse::validationError($validator->errors()->toArray());
-            }
-
-            $period = $request->input('period', '30d');
-            [$from, $to] = $this->getDateRange($period, $request);
-
-            $purchaseTrend = $this->getPurchaseTrend($from, $to, $period);
-
-
-            $categoryComposition = $this->getCategoryComposition($from, $to);
-
-            $purchaseFrequency = $this->getPurchaseFrequency($from, $to);
-
-            return ApiResponse::success('Data analytics berhasil diambil', [
-                'period' => [
-                    'filter' => $period,
-                    'from' => $from->format('Y-m-d'),
-                    'to' => $to->format('Y-m-d'),
-                ],
-                'purchase_trend' => $purchaseTrend,
-                'category_composition' => $categoryComposition,
-                'purchase_frequency' => $purchaseFrequency,
-            ]);
-        } catch (\Exception $e) {
-            return ApiResponse::serverError(
-                'Gagal mengambil data analytics',
-                ['error' => $e->getMessage()]
-            );
-        }
-    }
-
-
     public function purchases(Request $request, $customerId)
     {
         try {
@@ -384,7 +304,7 @@ class CustomerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:7d,30d,3m,6m,1y,custom',
+                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
                 'from' => 'required_if:period,custom|date',
                 'to' => 'required_if:period,custom|date|after_or_equal:from',
             ]);
@@ -393,7 +313,7 @@ class CustomerController extends Controller
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
-            $period = $request->input('period', '30d');
+            $period = $request->input('period', '30h');
             [$from, $to] = $this->getDateRange($period, $request);
 
             $customers = Customer::with('user')
@@ -433,6 +353,113 @@ class CustomerController extends Controller
         }
     }
 
+    private function getSummaryCards($from, $to)
+    {
+        $totalCustomers = Customer::whereHas('orders', function ($query) use ($from, $to) {
+            $query->whereBetween('created_at', [$from, $to])
+                ->whereIn('status', ['COMPLETED']);
+        })->count();
+
+        $totalOrders = Order::whereBetween('created_at', [$from, $to])
+            ->whereIn('status', ['COMPLETED'])
+            ->count();
+
+        $totalRevenue = Order::whereBetween('created_at', [$from, $to])
+            ->whereIn('status', ['COMPLETED'])
+            ->sum('grand_total');
+
+        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
+
+        $periodDiff = $from->diffInDays($to);
+        $previousFrom = $from->copy()->subDays($periodDiff + 1);
+        $previousTo = $from->copy()->subDay();
+
+        $previousCustomers = Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
+            $query->whereBetween('created_at', [$previousFrom, $previousTo])
+                ->whereIn('status', ['COMPLETED']);
+        })->count();
+
+        $previousRevenue = Order::whereBetween('created_at', [$previousFrom, $previousTo])
+            ->whereIn('status', ['COMPLETED'])
+            ->sum('grand_total');
+
+        $previousOrders = Order::whereBetween('created_at', [$previousFrom, $previousTo])
+            ->whereIn('status', ['COMPLETED'])
+            ->count();
+
+        $previousAvgOrderValue = $previousOrders > 0 ? $previousRevenue / $previousOrders : 0;
+
+        $customerTrend = $previousCustomers > 0
+            ? round((($totalCustomers - $previousCustomers) / $previousCustomers) * 100, 1)
+            : ($totalCustomers > 0 ? 100 : 0);
+
+        $revenueTrend = $previousRevenue > 0
+            ? round((($totalRevenue - $previousRevenue) / $previousRevenue) * 100, 1)
+            : ($totalRevenue > 0 ? 100 : 0);
+
+        $avgTrend = $previousAvgOrderValue > 0
+            ? round((($avgOrderValue - $previousAvgOrderValue) / $previousAvgOrderValue) * 100, 1)
+            : ($avgOrderValue > 0 ? 100 : 0);
+
+        return [
+            'total_customers' => [
+                'value' => $totalCustomers,
+                'trend' => ($customerTrend >= 0 ? '+' : '') . $customerTrend . '%',
+                'description' => $customerTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+            ],
+            'total_transactions' => [
+                'value' => 'Rp' . number_format($totalRevenue, 0, ',', '.'),
+                'trend' => ($revenueTrend >= 0 ? '+' : '') . $revenueTrend . '%',
+                'description' => $revenueTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+            ],
+            'avg_transaction' => [
+                'value' => 'Rp' . number_format($avgOrderValue, 0, ',', '.'),
+                'trend' => ($avgTrend >= 0 ? '+' : '') . $avgTrend . '%',
+                'description' => $avgTrend >= 0 ? 'Naik dari periode sebelumnya' : 'Turun dari periode sebelumnya',
+            ],
+        ];
+    }
+
+    private function getOrdersQuery($from, $to, $search = null, $sort = null)
+    {
+        $query = Order::with(['customer.user', 'orderItems'])
+            ->whereBetween('orders.created_at', [$from, $to])
+            ->whereIn('orders.status', ['COMPLETED'])
+            ->join('customers', 'orders.customer_id', '=', 'customers.id')
+            ->join('users', 'customers.user_id', '=', 'users.id')
+            ->where('users.role', 'customer')
+            ->select('orders.*');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('users.first_name', 'like', "%{$search}%")
+                    ->orWhere('users.last_name', 'like', "%{$search}%")
+                    ->orWhere('users.email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($sort === 'top') {
+            $query->orderBy('orders.grand_total', 'desc');
+        } else {
+            $query->orderBy('orders.created_at', 'desc');
+        }
+
+        return $query;
+    }
+
+    private function formatOrdersList($ordersPaginated)
+    {
+        return $ordersPaginated->map(function ($order) {
+            $totalItems = $order->orderItems->sum('quantity');
+
+            return [
+                'customer_name' => $order->customer->user->first_name . ' ' . $order->customer->user->last_name,
+                'transaction_date' => $order->created_at->format('Y-m-d H:i:s'),
+                'total_items' => $totalItems,
+                'total_payment' => 'Rp' . number_format($order->grand_total, 0, ',', '.'),
+            ];
+        });
+    }
 
     private function getDateRange($period, $request)
     {
@@ -450,7 +477,6 @@ class CustomerController extends Controller
             default => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
         };
     }
-
 
     private function getPurchaseTrend($from, $to, $period)
     {
@@ -538,7 +564,6 @@ class CustomerController extends Controller
         });
     }
 
-
     private function getCategoryComposition($from, $to)
     {
         $composition = OrderItem::join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -561,7 +586,6 @@ class CustomerController extends Controller
             ];
         });
     }
-
 
     private function getPurchaseFrequency($from, $to)
     {
