@@ -11,16 +11,13 @@ class PaymentMethod extends Model
 
     protected $fillable = [
         'code',
-        'name',
-        'category',
-        'channel',
+        'method_name',
+        'payment_type',
         'icon',
         'fee',
         'min_amount',
         'max_amount',
-        'description',
         'is_active',
-        'display_order',
     ];
 
     protected $casts = [
@@ -28,7 +25,6 @@ class PaymentMethod extends Model
         'min_amount' => 'integer',
         'max_amount' => 'integer',
         'is_active' => 'boolean',
-        'display_order' => 'integer',
     ];
 
     // Relationships
@@ -43,14 +39,9 @@ class PaymentMethod extends Model
         return $query->where('is_active', true);
     }
 
-    public function scopeByCategory($query, string $category)
+    public function scopeByPaymentType($query, string $paymentType)
     {
-        return $query->where('category', $category);
-    }
-
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('display_order');
+        return $query->where('payment_type', $paymentType);
     }
 
     // Helper Methods
