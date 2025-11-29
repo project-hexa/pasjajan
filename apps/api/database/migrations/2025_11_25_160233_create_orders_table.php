@@ -18,25 +18,91 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Customer::class);
-            $table->foreignIdFor(Voucher::class);
-            $table->foreignIdFor(Address::class);
-            $table->foreignIdFor(Store::class);
-            $table->foreignIdFor(PaymentMethod::class);
-            $table->string('code');
-            $table->enum('status', ['PENDING', 'PROCESSED', 'COMPLETED']);
-            $table->decimal('subtotal', total: 10, places: 2);
-            $table->decimal('discount', total: 10, places: 2)->nullable();
-            $table->decimal('shipping_fee', total: 10, places: 2);
-            $table->decimal('grand_total', total: 10, places: 2);
-            $table->string('midtrans_transaction_id')->nullable();
+            $table->foreignIdFor(Customer::class)
+                ->constrained()
+                ->restrictOnDelete(); // Prevent delete customer if has orders
+
+            $table->foreignIdFor(Address::class)
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete(); // Set null if address deleted
+
+            $table->foreignIdFor(Store::class)
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->foreignIdFor(Voucher::class)
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->foreignIdFor(PaymentMethod::class)
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->string('code')->unique(); // PJ-20250103-XXXXX (business identifier)
+
+            // Customer snapshot (untuk backup jika data dihapus)
+            $table->string('customer_name')->nullable();
+            $table->string('customer_email')->nullable();
+            $table->string('customer_phone')->nullable();
+
+            // Shipping address snapshot
+            $table->text('shipping_address');
+            $table->string('shipping_recipient_name')->nullable();
+            $table->string('shipping_recipient_phone')->nullable();
+
+            // Pricing
+            $table->decimal('sub_total', 10, 2); // Total before discount
+            $table->decimal('discount', 10, 2)->default(0); // Voucher discount
+            $table->decimal('shipping_fee', 10, 2)->default(0); // Shipping cost
+            $table->decimal('admin_fee', 10, 2)->default(0); // Admin fee (optional)
+            $table->decimal('grand_total', 10, 2); // Final total to pay
+
+            // Midtrans payment integration
+            $table->string('midtrans_transaction_id')->nullable()->index();
             $table->string('midtrans_order_id')->nullable();
-            $table->json('payment_instructions')->nullable();
-            $table->string('payment_status')->nullable();
-            $table->dateTime('paid_at')->nullable();
-            $table->dateTime('expired_at')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('payment_instructions')->nullable(); // JSON: VA number, QR, deeplink
+
+            // Status - detailed for order lifecycle
+            $table->enum('status', [
+                'pending',      // Created, not paid
+                'confirmed',    // Paid, ready to process
+                'processing',   // Being processed (packing)
+                'shipped',      // Shipped
+                'delivered',    // Received by customer
+                'completed',    // Completed (cannot be changed)
+                'cancelled',    // Cancelled
+            ])->default('pending');
+
+            // Payment Status - detailed for payment tracking
+            $table->enum('payment_status', [
+                'unpaid',       // Not paid
+                'pending',      // Waiting for verification
+                'paid',         // Paid and verified
+                'failed',       // Payment failed
+                'expired',      // Payment expired
+                'refunded',     // Refunded
+            ])->default('unpaid');
+
+            // Timestamps
+            $table->timestamp('paid_at')->nullable(); // Payment success time
+            $table->timestamp('expired_at')->nullable(); // Order expiration time
+            $table->text('notes')->nullable(); // Notes from customer or admin
             $table->timestamps();
+            $table->softDeletes(); // For audit trail
+
+            // Indexes for performance
+            $table->index('customer_id');
+            $table->index('address_id');
+            $table->index('store_id');
+            $table->index('voucher_id');
+            $table->index('status');
+            $table->index('payment_status');
+            $table->index(['status', 'payment_status']); // Composite index
+            $table->index('created_at');
         });
     }
 
