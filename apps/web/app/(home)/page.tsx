@@ -1,5 +1,7 @@
 "use client";
 
+import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navigation-bar";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
@@ -14,7 +16,7 @@ export default function HomePage() {
   const handleClickPlus = () => setCount(count + 1);
 
   return (
-    <div className="min-h-[calc(100vh-80px)]">
+    <div className="min-h-[calc(100vh-80px)] border">
       <div className="flex flex-col justify-center items-center gap-5">
         <h1 className="text-2xl font-bold">Setup Proyek Pasjajan-Mart</h1>
         <Card>
@@ -63,9 +65,7 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
-
               <Separator />
-
               <span>Coba navigasi dengan struktur folder group</span>
               <div className="flex gap-2">
                 <Card className="gap-2 w-60">
@@ -100,9 +100,7 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               </div>
-
               <Separator />
-
               <span>Coba navigasi dengan catch all route</span>
               <div className="flex gap-2">
                 <Link href="/employee">
