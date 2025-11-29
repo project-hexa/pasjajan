@@ -30,6 +30,8 @@ class CustomerController extends Controller
 
 
             $period = $request->input('period', '30d');
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
             [$from, $to] = $this->getDateRange($period, $request);
 
             $totalCustomers = Customer::whereHas('orders', function ($query) use ($from, $to) {
@@ -71,7 +73,7 @@ class CustomerController extends Controller
                     ];
                 });
 
-            $allCustomers = Customer::with('user')
+            $customersQuery = Customer::with('user')
                 ->withCount(['orders' => function ($query) use ($from, $to) {
                     $query->whereBetween('created_at', [$from, $to])
                         ->whereIn('status', ['COMPLETED']);
@@ -79,20 +81,22 @@ class CustomerController extends Controller
                 ->withSum(['orders as total_price' => function ($query) use ($from, $to) {
                     $query->whereBetween('created_at', [$from, $to])
                         ->whereIn('status', ['COMPLETED']);
-                }], 'grand_total')
-                ->get()
-                ->map(function ($customer) {
-                    return [
-                        'id' => $customer->id,
-                        'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
-                        'email' => $customer->user->email,
-                        'quantity' => $customer->orders_count,
-                        'total_price' => (float) ($customer->total_price ?? 0),
-                        'formatted_total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
-                        'phone' => $customer->user->phone_number,
-                        'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
-                    ];
-                });
+                }], 'grand_total');
+
+            $allCustomersPaginated = $customersQuery->paginate($perPage, ['*'], 'page', $page);
+
+            $allCustomers = $allCustomersPaginated->map(function ($customer) {
+                return [
+                    'id' => $customer->id,
+                    'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
+                    'email' => $customer->user->email,
+                    'quantity' => $customer->orders_count,
+                    'total_price' => (float) ($customer->total_price ?? 0),
+                    'formatted_total_price' => 'Rp' . number_format($customer->total_price ?? 0, 0, ',', '.'),
+                    'phone' => $customer->user->phone_number,
+                    'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
+                ];
+            });
 
             $purchaseTrend = $this->getPurchaseTrend($from, $to, $period);
             $categoryComposition = $this->getCategoryComposition($from, $to);
@@ -128,7 +132,14 @@ class CustomerController extends Controller
                 ],
                 'top_customers' => $topCustomers,
                 'customers' => $allCustomers,
-                'total' => $allCustomers->count(),
+                'pagination' => [
+                    'current_page' => $allCustomersPaginated->currentPage(),
+                    'per_page' => $allCustomersPaginated->perPage(),
+                    'total' => $allCustomersPaginated->total(),
+                    'last_page' => $allCustomersPaginated->lastPage(),
+                    'from' => $allCustomersPaginated->firstItem(),
+                    'to' => $allCustomersPaginated->lastItem(),
+                ],
                 'analytics' => [
                     'purchase_trend' => $purchaseTrend,
                     'category_composition' => $categoryComposition,
