@@ -4,8 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\reportSalesController;
 
 
 /*
@@ -52,4 +53,13 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 	Route::patch('/branches/{id}', [BranchController::class, 'update'])->name('branches.update.patch');
 	Route::patch('/branches/{id}/deactivate', [BranchController::class, 'deactivate'])->name('branches.deactivate');
 	Route::patch('/branches/{id}/activate', [BranchController::class, 'activate'])->name('branches.activate');
+
+
+	//Customer Management
+	Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+	Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+	Route::get('/customers/analytics', [CustomerController::class, 'analytics'])->name('customers.analytics');
+	Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+	Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('customers.show');
+	Route::get('/customers/{id}/purchases', [CustomerController::class, 'purchases'])->name('customers.purchases');
 });
