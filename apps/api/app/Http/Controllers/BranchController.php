@@ -131,7 +131,6 @@ class BranchController extends Controller
                         'latitude' => (float) $store->latitude,
                         'longitude' => (float) $store->longitude,
                         'is_active' => (bool) $store->is_active,
-                        'total_orders' => $store->orders_count,
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
