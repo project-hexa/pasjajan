@@ -1,52 +1,46 @@
 import AnalyticCard from "@/components/dashboard/analytic-card";
 import { AnalyticChart } from "@/components/dashboard/analytic-chart";
 import AnalyticPieChart from "@/components/dashboard/analytic-pie-chart";
+import CustomerAnalyticsClient from "@/components/dashboard/customer-analytics-client";
 import {
   getCustomerList,
   getCustomersAnalytics,
 } from "@/services/customers-analytics";
 
-import { Button } from "@workspace/ui/components/button";
 import { ChartConfig } from "@workspace/ui/components/chart";
-import { Input } from "@workspace/ui/components/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@workspace/ui/components/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@workspace/ui/components/pagination";
-import { SearchIcon } from "lucide-react";
 
 interface CustomerPageProps {
   searchParams: Promise<{
     period?: "monthly" | "yearly" | "daily" | "custom";
     search?: string;
+    page?: string;
+    start_date?: string;
+    end_date?: string;
   }>;
 }
 
 export default async function CustomersAnalytics({
   searchParams,
 }: CustomerPageProps) {
-  const { period, search } = await searchParams;
+  const { period, search, page, start_date, end_date } = await searchParams;
 
-  const { data } = await getCustomersAnalytics({ period: "30h" });
+  const currentPeriod = period ?? "monthly";
+  const currentPage = parseInt(page ?? "1", 10);
+
+  const { data } = await getCustomersAnalytics({
+    period: currentPeriod,
+    start_date,
+    end_date,
+  });
 
   const { data: customerList } = await getCustomerList({
-    page: 1,
+    page: currentPage,
     perPage: 20,
-    period: "30h",
+    period: currentPeriod,
     sort: "highest",
+    search,
+    start_date,
+    end_date,
   });
 
   const chartColors = [
@@ -108,8 +102,8 @@ export default async function CustomersAnalytics({
           <AnalyticChart
             label="Yahut"
             data={data.analytics.purchase_trend.map((item) => ({
-              name: item.label,
-              value: item.transactions,
+              name: item.date,
+              value: item.value,
             }))}
             className="h-48"
           />
@@ -125,60 +119,7 @@ export default async function CustomersAnalytics({
           />
         </div>
       </div>
-      <div className="flex items-center justify-between rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-        <div className="flex items-center">
-          <SearchIcon />
-          <Input
-            placeholder="Search"
-            className="border-0 shadow-none focus-visible:ring-0"
-            name="search"
-          />
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline">Last 3 Months</Button>
-          <Button variant="outline">Last 30 Days</Button>
-          <Button variant="outline">Last 7 Days</Button>
-          <Button className="ml-16">Export CSV</Button>
-        </div>
-      </div>
-      <div className="space-y-4">
-        <Table className="overflow-clip rounded-2xl bg-[#F7FFFB]">
-          <TableHeader>
-            <TableRow className="bg-[#B9DCCC]">
-              <TableHead className="pl-8">Nama Pelanggan</TableHead>
-              <TableHead>Tanggal Transaksi</TableHead>
-              <TableHead>Total Item</TableHead>
-              <TableHead className="pr-8">Total Harga</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {customerList.customers.map((item, i) => (
-              <TableRow key={`customer-list-${i}`}>
-                <TableCell className="pl-8">{item.customer_name}</TableCell>
-                <TableCell>{item.transaction_date}</TableCell>
-                <TableCell>{item.total_items}</TableCell>
-                <TableCell className="pr-8">{item.total_payment}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <CustomerAnalyticsClient initialData={customerList} />
     </section>
   );
 }

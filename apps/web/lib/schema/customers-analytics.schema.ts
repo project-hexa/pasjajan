@@ -26,9 +26,9 @@ export const customerAnalyticSchema = z.object({
     analytics: z.object({
       purchase_trend: z.array(
         z.object({
+          label: z.number(),
           date: z.string(),
-          label: z.string(),
-          transactions: z.number(),
+          value: z.number(),
           revenue: z.string(),
         }),
       ),
@@ -71,8 +71,8 @@ export const customerListSchema = z.object({
       per_page: z.number(),
       total: z.number(),
       last_page: z.number(),
-      from: z.number(),
-      to: z.number(),
+      from: z.number().nullable(),
+      to: z.number().nullable(),
     }),
   }),
 });

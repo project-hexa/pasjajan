@@ -6,21 +6,35 @@ import {
 import { getToken } from "@/lib/utils";
 
 interface CustomerAnalyticParams {
-  period: "30h" | "yearly" | "daily" | "custom";
+  period: "monthly" | "yearly" | "daily" | "custom";
+  start_date?: string;
+  end_date?: string;
 }
 
 interface CustomerListParams {
   perPage: number;
   page: number;
-  period: "30h" | "yearly" | "daily" | "custom";
+  period: "monthly" | "yearly" | "daily" | "custom";
   sort: "highest" | "lowest";
+  search?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export const getCustomersAnalytics = async ({
   period,
+  start_date,
+  end_date,
 }: CustomerAnalyticParams): Promise<CustomerAnalyticResponse> => {
+  const params = new URLSearchParams({ period });
+
+  if (period === "custom" && start_date && end_date) {
+    params.append("from", start_date);
+    params.append("to", end_date);
+  }
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers/analytics?period=${period}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/customers/analytics?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
@@ -52,9 +66,28 @@ export const getCustomerList = async ({
   perPage,
   period,
   sort,
+  search,
+  start_date,
+  end_date,
 }: CustomerListParams) => {
+  const params = new URLSearchParams({
+    sort,
+    period,
+    page: page.toString(),
+    per_page: perPage.toString(),
+  });
+
+  if (search) {
+    params.append("search", search);
+  }
+
+  if (period === "custom" && start_date && end_date) {
+    params.append("from", start_date);
+    params.append("to", end_date);
+  }
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers?period=${period}&per_page=${perPage}&page=${page}&sort=${sort}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/customers?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
