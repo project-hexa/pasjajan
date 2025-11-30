@@ -18,6 +18,9 @@ class CustomerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'period' => 'nullable|in:daily,monthly,yearly,custom',
+                'from' => 'required_if:period,custom|date',
+                'to' => 'required_if:period,custom|date|after_or_equal:from',
                 'per_page' => 'nullable|integer|min:5|max:100',
                 'page' => 'nullable|integer|min:1',
                 'search' => 'nullable|string|max:255',
@@ -28,10 +31,13 @@ class CustomerController extends Controller
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
+            $period = $request->input('period', 'monthly');
             $perPage = $request->input('per_page', 10);
             $page = $request->input('page', 1);
             $search = $request->input('search');
             $sort = $request->input('sort');
+
+            [$from, $to] = $this->getDateRange($period, $request);
 
             $query = Order::query()
                 ->join('customers', 'orders.customer_id', '=', 'customers.id')
@@ -43,7 +49,8 @@ class CustomerController extends Controller
                     'orders.grand_total as total_payment'
                 )
                 ->where('users.role', 'customer')
-                ->whereIn('orders.status', ['COMPLETED']);
+                ->whereIn('orders.status', ['COMPLETED'])
+                ->whereBetween('orders.created_at', [$from, $to]);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -77,6 +84,11 @@ class CustomerController extends Controller
             });
 
             return ApiResponse::success('Data pelanggan berhasil diambil', [
+                'period' => [
+                    'filter' => $period,
+                    'from' => $from->format('Y-m-d'),
+                    'to' => $to->format('Y-m-d'),
+                ],
                 'customers' => $customers,
                 'pagination' => [
                     'current_page' => $ordersPaginated->currentPage(),
