@@ -100,7 +100,7 @@ class CustomerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
+                'period' => 'nullable|in:daily,monthly,yearly,custom',
                 'from' => 'required_if:period,custom|date',
                 'to' => 'required_if:period,custom|date|after_or_equal:from',
             ]);
@@ -109,7 +109,7 @@ class CustomerController extends Controller
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
-            $period = $request->input('period', '30h');
+            $period = $request->input('period', 'monthly');
             [$from, $to] = $this->getDateRange($period, $request);
 
             // Calculate summary cards
@@ -304,7 +304,7 @@ class CustomerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'period' => 'nullable|in:1d,7h,30h,3b,6b,1th,custom',
+                'period' => 'nullable|in:daily,monthly,yearly,custom',
                 'from' => 'required_if:period,custom|date',
                 'to' => 'required_if:period,custom|date|after_or_equal:from',
             ]);
@@ -313,7 +313,7 @@ class CustomerController extends Controller
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
-            $period = $request->input('period', '30h');
+            $period = $request->input('period', 'monthly');
             [$from, $to] = $this->getDateRange($period, $request);
 
             $customers = Customer::with('user')
@@ -464,23 +464,20 @@ class CustomerController extends Controller
     private function getDateRange($period, $request)
     {
         return match ($period) {
-            '1d' => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
-            '7h' => [Carbon::now()->subDays(6)->startOfDay(), Carbon::now()->endOfDay()],
-            '30h' => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
-            '3b' => [Carbon::now()->subMonths(3)->startOfDay(), Carbon::now()->endOfDay()],
-            '6b' => [Carbon::now()->subMonths(6)->startOfDay(), Carbon::now()->endOfDay()],
-            '1th' => [Carbon::now()->subYear()->startOfDay(), Carbon::now()->endOfDay()],
+            'daily' => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
+            'monthly' => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
+            'yearly' => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
             'custom' => [
                 Carbon::parse($request->input('from'))->startOfDay(),
                 Carbon::parse($request->input('to'))->endOfDay()
             ],
-            default => [Carbon::now()->subDays(29)->startOfDay(), Carbon::now()->endOfDay()],
+            default => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
         };
     }
 
     private function getPurchaseTrend($from, $to, $period)
     {
-        if ($period === '1d') {
+        if ($period === 'daily') {
             $orders = Order::whereBetween('created_at', [$from, $to])
                 ->whereIn('status', ['COMPLETED'])
                 ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, SUM(grand_total) as revenue')
@@ -491,15 +488,15 @@ class CustomerController extends Controller
             return collect(range(0, 23))->map(function ($hour) use ($orders) {
                 $order = $orders->get($hour);
                 return [
+                    'label' => $hour,
                     'date' => Carbon::now()->startOfDay()->addHours($hour)->format('Y-m-d H:00:00'),
-                    'label' => $hour . ':00',
-                    'transactions' => $order ? (int) $order->count : 0,
+                    'value' => $order ? (int) $order->count : 0,
                     'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
                 ];
             });
         }
 
-        if ($period === '7h') {
+        if ($period === 'monthly') {
             $orders = Order::whereBetween('created_at', [$from, $to])
                 ->whereIn('status', ['COMPLETED'])
                 ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
@@ -507,58 +504,53 @@ class CustomerController extends Controller
                 ->get()
                 ->keyBy('date');
 
-            return collect(range(0, 6))->map(function ($day) use ($from, $orders) {
+            $days = $from->diffInDays($to);
+            return collect(range(0, $days))->map(function ($day) use ($from, $orders) {
                 $date = $from->copy()->addDays($day);
                 $dateStr = $date->format('Y-m-d');
                 $order = $orders->get($dateStr);
 
                 return [
+                    'label' => $date->day,
                     'date' => $dateStr,
-                    'label' => $date->format('d M'),
-                    'transactions' => $order ? (int) $order->count : 0,
+                    'value' => $order ? (int) $order->count : 0,
                     'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
                 ];
             });
         }
 
-        if ($period === '30h') {
+        if ($period === 'yearly') {
             $orders = Order::whereBetween('created_at', [$from, $to])
                 ->whereIn('status', ['COMPLETED'])
-                ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
-                ->groupBy('date')
+                ->selectRaw('MONTH(created_at) as month, COUNT(*) as count, SUM(grand_total) as revenue')
+                ->groupBy('month')
                 ->get()
-                ->keyBy('date');
+                ->keyBy('month');
 
-            return collect(range(0, 29))->map(function ($day) use ($from, $orders) {
-                $date = $from->copy()->addDays($day);
-                $dateStr = $date->format('Y-m-d');
-                $order = $orders->get($dateStr);
-
+            return collect(range(1, 12))->map(function ($month) use ($orders) {
+                $order = $orders->get($month);
                 return [
-                    'date' => $dateStr,
-                    'label' => $date->format('d M'),
-                    'transactions' => $order ? (int) $order->count : 0,
+                    'label' => $month,
+                    'date' => Carbon::now()->month($month)->format('Y-m'),
+                    'value' => $order ? (int) $order->count : 0,
                     'revenue' => $order ? 'Rp' . number_format($order->revenue, 0, ',', '.') : 'Rp0',
                 ];
             });
         }
 
-        $groupBy = match ($period) {
-            '3b', '6b', '1th' => 'DATE_FORMAT(created_at, "%Y-%m")',
-            default => 'DATE(created_at)',
-        };
-
-        $trend = Order::whereBetween('created_at', [$from, $to])
+        $orders = Order::whereBetween('created_at', [$from, $to])
             ->whereIn('status', ['COMPLETED'])
-            ->selectRaw("{$groupBy} as date, COUNT(*) as count, SUM(grand_total) as revenue")
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        return $trend->map(function ($item) {
+        return $orders->map(function ($item) {
+            $date = Carbon::parse($item->date);
             return [
+                'label' => $date->day,
                 'date' => $item->date,
-                'transactions' => (int) $item->count,
+                'value' => (int) $item->count,
                 'revenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
             ];
         });
