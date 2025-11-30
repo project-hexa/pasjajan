@@ -57,7 +57,6 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 	//Customer Management
 	Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-	Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
 	Route::get('/customers/analytics', [CustomerController::class, 'analytics'])->name('customers.analytics');
 	Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
 	Route::get('/customers/{id}', [CustomerController::class, 'show'])->name('customers.show');
