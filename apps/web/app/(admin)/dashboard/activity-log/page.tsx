@@ -1,3 +1,10 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { SearchIcon } from "lucide-react";
+import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import {
   Table,
   TableBody,
@@ -331,31 +338,80 @@ const logs = [
 ];
 
 export default function ActivityLog() {
+  const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+  const [toDate, setToDate] = useState<Date | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredLogs = logs.filter((log) => {
+    const logDate = new Date(log.time);
+    
+    // Filter berdasarkan tanggal
+    if (fromDate || toDate) {
+      const fromCondition = fromDate ? logDate >= new Date(fromDate.setHours(0, 0, 0, 0)) : true;
+      const toCondition = toDate ? logDate <= new Date(toDate.setHours(23, 59, 59, 999)) : true;
+      if (!(fromCondition && toCondition)) return false;
+    }
+
+    // Filter berdasarkan pencarian
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        log.email.toLowerCase().includes(searchLower) ||
+        log.type.toLowerCase().includes(searchLower) ||
+        log.action.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return true;
+  });
+
   return (
-    <section className="space-y-4">
-      <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
-      <Table className="overflow-clip rounded-2xl bg-[#F7FFFB]">
-        <TableHeader>
-          <TableRow className="bg-[#B9DCCC]">
-            <TableHead className="pl-8">Waktu Aktivitas</TableHead>
-            <TableHead>Informasi Pengguna</TableHead>
-            <TableHead>Tipe Aktivitas</TableHead>
-            <TableHead>Aksi</TableHead>
-            <TableHead className="pr-8">Status</TableHead>
+  <section className="space-y-4">
+    <h2 className="text-2xl font-semibold">Log Aktivitas</h2>
+
+    <div className="flex items-center gap-4">
+      <div className="flex-1">
+  <div className="relative flex items-center">
+    <SearchIcon className="absolute left-3 h-4 w-4" />
+    <Input
+      placeholder="Search"
+      className="w-full border border-black/20 bg-[#F7FFFB] pl-9 focus-visible:ring-0"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+  </div>
+</div>
+
+      <DateRangePicker
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
+      />
+    </div>
+
+    <Table className="overflow-clip rounded-2xl bg-[#F7FFFB]">
+      <TableHeader>
+        <TableRow className="bg-[#B9DCCC]">
+          <TableHead className="pl-8">Waktu Aktivitas</TableHead>
+          <TableHead>Informasi Pengguna</TableHead>
+          <TableHead>Tipe Aktivitas</TableHead>
+          <TableHead>Aksi</TableHead>
+          <TableHead className="pr-8">Status</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredLogs.map((log) => (
+          <TableRow key={log.id}>
+            <TableCell className="pl-8">{log.time}</TableCell>
+            <TableCell>{log.email}</TableCell>
+            <TableCell>{log.type}</TableCell>
+            <TableCell>{log.action}</TableCell>
+            <TableCell className="pr-8">{log.status}</TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {logs.map((log) => (
-            <TableRow key={log.id}>
-              <TableCell className="pl-8">{log.time}</TableCell>
-              <TableCell>{log.email}</TableCell>
-              <TableCell>{log.type}</TableCell>
-              <TableCell>{log.action}</TableCell>
-              <TableCell className="pr-8">{log.status}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </section>
-  );
+        ))}
+      </TableBody>
+    </Table>
+  </section>
+);
 }
