@@ -13,7 +13,6 @@ interface AnalyticPieChartProps {
   data: {
     name: string;
     value: number;
-    fill: string;
   }[];
   config: ChartConfig;
   className?: string;
