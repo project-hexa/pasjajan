@@ -141,6 +141,67 @@ class CustomerController extends Controller
         }
     }
 
+    public function exportCustomers(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'search' => 'nullable|string|max:255',
+            ]);
+
+            if ($validator->fails()) {
+                return ApiResponse::validationError($validator->errors()->toArray());
+            }
+
+            $search = $request->input('search');
+
+            $query = Order::query()
+                ->join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('users', 'customers.user_id', '=', 'users.id')
+                ->select(
+                    'orders.id',
+                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as customer_name"),
+                    'orders.created_at as transaction_date',
+                    'orders.grand_total as total_payment'
+                )
+                ->where('users.role', 'customer')
+                ->whereIn('orders.status', ['COMPLETED']);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(users.first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(users.last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
+            }
+
+            $orders = $query->orderBy('orders.created_at', 'desc')->get();
+
+            $csvData = "No,Nama Customer,Tanggal Transaksi,Total Item,Total Bayar\n";
+
+            foreach ($orders as $index => $order) {
+                $totalItems = OrderItem::where('order_id', $order->id)->sum('quantity');
+
+                $csvData .= sprintf(
+                    "%d,%s,%s,%d,%s\n",
+                    $index + 1,
+                    '"' . str_replace('"', '""', $order->customer_name) . '"',
+                    Carbon::parse($order->transaction_date)->format('Y-m-d H:i:s'),
+                    $totalItems,
+                    number_format($order->total_payment, 0, ',', '.')
+                );
+            }
+
+            return response($csvData, 200)
+                ->header('Content-Type', 'text/csv; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="customer-transactions-' . now()->format('Y-m-d-His') . '.csv"');
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Gagal export data customers',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
+
 
     public function search(Request $request)
     {
