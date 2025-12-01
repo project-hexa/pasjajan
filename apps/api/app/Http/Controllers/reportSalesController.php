@@ -12,6 +12,75 @@ use App\Models\OrderItem;
 
 class reportSalesController extends Controller
 {
+    public function exportSales(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'period' => 'nullable|in:daily,monthly,yearly,custom',
+                'from' => 'required_if:period,custom|date',
+                'to' => 'required_if:period,custom|date|after_or_equal:from',
+                'store_id' => 'nullable|integer|exists:stores,id',
+            ]);
+
+            if ($validator->fails()) {
+                return ApiResponse::validationError($validator->errors()->toArray());
+            }
+
+            $period = $request->input('period', 'monthly');
+
+            [$from, $to] = match ($period) {
+                'daily' => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
+                'monthly' => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
+                'yearly' => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
+                'custom' => [
+                    Carbon::parse($request->input('from'))->startOfDay(),
+                    Carbon::parse($request->input('to'))->endOfDay()
+                ],
+                default => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
+            };
+
+            $query = OrderItem::query()
+                ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->whereBetween('orders.created_at', [$from, $to])
+                ->whereIn('orders.status', ['COMPLETED'])
+                ->select(
+                    'products.name as product_name',
+                    DB::raw('SUM(order_items.quantity) as total_quantity'),
+                    DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue')
+                )
+                ->groupBy('products.id', 'products.name')
+                ->orderByDesc('total_quantity');
+
+            if ($request->filled('store_id')) {
+                $query->where('orders.store_id', $request->integer('store_id'));
+            }
+
+            $products = $query->get();
+
+            $csvData = "No,Nama Produk,Total Terjual,Total Revenue\n";
+
+            foreach ($products as $index => $product) {
+                $csvData .= sprintf(
+                    "%d,%s,%d,%s\n",
+                    $index + 1,
+                    '"' . str_replace('"', '""', $product->product_name) . '"',
+                    $product->total_quantity,
+                    number_format($product->total_revenue, 0, ',', '.')
+                );
+            }
+
+            return response($csvData, 200)
+                ->header('Content-Type', 'text/csv; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="sales-report-products-' . now()->format('Y-m-d-His') . '.csv"');
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Gagal export sales report',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
+
     public function reportSales(Request $request)
     {
 
