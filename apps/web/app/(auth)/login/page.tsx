@@ -1,89 +1,71 @@
 "use client";
 
-import { Password } from "@/components/password";
+import { Password } from "@/components/auth/password";
+import { useAuth } from "@/hooks/contollers/useAuth";
 import { loginSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@workspace/ui/components/card";
+import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
+import { Checkbox } from "@workspace/ui/components/checkbox";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@workspace/ui/components/input-group";
-import { ChevronLeftCircle } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
+import { Input } from "@workspace/ui/components/input";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import z from "zod";
 
 export default function LoginPage() {
-  const [showPhoneCode, setShowPhoneCode] = useState<boolean>(false);
+  const { login } = useAuth();
 
-  const loginForm = useForm({
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      UET: "",
+      email: "",
       password: "",
+      rememberMe: false,
     },
   });
 
   const handleOnSubmit = (data: z.infer<typeof loginSchema>) => {
-    data.UET = "62" + data.UET;
-    console.log(data);
+    if (data.email === typeof Number) {
+      data.email = "+62" + data.email;
+    }
+
+    login({
+      email: data.email,
+      password: data.password,
+      rememberMe: data.rememberMe ?? false,
+    });
   };
 
-  const UET = loginForm.watch("UET");
-
-  useEffect(() => {
-    if (UET && UET.length > 0) {
-      if (/^(\+628|628|08)/.test(UET)) {
-        setShowPhoneCode(true);
-      } else {
-        setShowPhoneCode(false);
-      }
-
-      const newValue = UET.replace(/^(?:\+628|628|08)/, "8");
-      loginForm.setValue("UET", newValue);
-    }
-
-    if (/^8/.test(UET)) {
-      setShowPhoneCode(true);
-    } else {
-      setShowPhoneCode(false);
-    }
-  }, [UET]);
-
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
-      <Card className="p-0 w-2/3 h-2/3 overflow-hidden flex flex-col">
-        <CardContent className="p-0 flex-1 min-h-0">
-          <div className="flex h-full">
-            <div className="bg-primary flex justify-center flex-1 items-center relative">
+    <div className="md:flex md:h-screen md:w-screen items-center justify-center">
+      <Card className="flex md:h-2/3 md:w-2/3 flex-col overflow-hidden p-0">
+        <CardContent className="min-h-0 flex-1 p-0">
+          <div className="flex h-full max-sm:py-10">
+            <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
               <Link href="/">
                 <Button
                   variant="ghost"
-                  className="absolute top-4 left-4 text-accent"
+                  className="text-accent absolute left-4 top-4"
                 >
-                  <ChevronLeftCircle className="size-5" />
+                  <Icon
+                    icon="lucide:circle-chevron-left"
+                    width="24"
+                    height="24"
+                  />
                   <span>Kembali ke Beranda</span>
                 </Button>
               </Link>
-              <div className="flex flex-col items-center text-white gap-5">
-                <h1 className="text-4xl font-bold">Selamat datang</h1>
+              <div className="flex flex-col items-center gap-5 text-white">
+                <h1 className="lg:text-4xl md:text-2xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
                   <Image src="/logo.png" alt="Logo" width={128} height={128} />
                   <div className="flex flex-col text-center">
@@ -94,46 +76,33 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex flex-col flex-1 items-center justify-center gap-4">
-              <div className="flex flex-col shrink-0 items-center gap-4">
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <div className="flex shrink-0 flex-col items-center gap-4">
                 <CardTitle className="text-2xl">Masuk</CardTitle>
-                <CardDescription>
-                  Belum punya akun Pasjajan?{" "}
-                  <Link href="/register">
-                    <Button variant="link">Daftar</Button>
-                  </Link>
-                </CardDescription>
               </div>
 
               <form
-                className="w-full px-10 space-y-5"
+                className="w-full space-y-5 px-10"
                 id="register-form"
                 onSubmit={loginForm.handleSubmit(handleOnSubmit)}
               >
                 <FieldGroup>
                   <Controller
-                    name={"UET"}
+                    name={"email"}
                     control={loginForm.control}
                     render={({ field, fieldState }) => {
                       return (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="UET">
-                            Username/Email/No Telepon
+                          <FieldLabel htmlFor="email">
+                            Email
                             <span className="text-destructive">*</span>
                           </FieldLabel>
-                          <InputGroup className="relative">
-                            {showPhoneCode && (
-                              <InputGroupAddon className="bg-accent pr-3 rounded-l-md">
-                                <InputGroupText>+62</InputGroupText>
-                              </InputGroupAddon>
-                            )}
-                            <InputGroupInput
-                              id="UET"
-                              placeholder="johndoe_123 / john@example.com / 08123456789"
-                              aria-invalid={fieldState.invalid}
-                              {...field}
-                            />
-                          </InputGroup>
+                          <Input
+                            id="email"
+                            placeholder="johndoe_123 / john@example.com / 08123456789"
+                            aria-invalid={fieldState.invalid}
+                            {...field}
+                          />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}
@@ -160,19 +129,47 @@ export default function LoginPage() {
                       </Field>
                     )}
                   />
-                </FieldGroup>
 
-                <div className="flex flex-col items-center gap-2 justify-center">
-                  <Button form="register-form" type="submit">
-                    Masuk
-                  </Button>
-                  <p className="text-muted-foreground text-sm">
-                    atau masuk menggunakan:
-                  </p>
-                  <Button variant={"ghost"} size="icon" className="size-14">
-                    <FcGoogle className="size-10" />
-                  </Button>
-                </div>
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Button form="register-form" type="submit">
+                      Masuk
+                    </Button>
+                    <p>
+                      Belum punya akun Pasjajan?{" "}
+                      <Link href="/register">
+                        <Button variant="link">Daftar</Button>
+                      </Link>
+                    </p>
+                    <div className="flex w-full justify-between">
+                      <Controller
+                        control={loginForm.control}
+                        name="rememberMe"
+                        render={({ field }) => (
+                          <Field orientation={"horizontal"}>
+                            <Checkbox
+                              id="rememberMe"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                            <FieldLabel htmlFor="rememberMe">
+                              Ingat Saya
+                            </FieldLabel>
+                          </Field>
+                        )}
+                      />
+
+                      <Link href="/forgot-password">
+                        <Button variant="link">Lupa Password?</Button>
+                      </Link>
+                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      atau masuk menggunakan:
+                    </p>
+                    <Button variant={"ghost"} size="icon" className="size-14">
+                      <FcGoogle className="size-10" />
+                    </Button>
+                  </div>
+                </FieldGroup>
               </form>
             </div>
           </div>
