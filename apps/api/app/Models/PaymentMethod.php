@@ -69,7 +69,12 @@ class PaymentMethod extends Model
             return $this->icon;
         }
 
-        // Jika filename, return path
-        return asset('images/payment-methods/' . $this->icon);
+        // Jika sudah ada path (misalnya: images/payment/bca.png), return dengan asset()
+        if (str_contains($this->icon, '/')) {
+            return asset($this->icon);
+        }
+
+        // Fallback: jika hanya filename, tambahkan path default
+        return asset('images/payment/' . $this->icon);
     }
 }
