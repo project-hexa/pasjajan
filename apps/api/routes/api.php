@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\DeliveryController;
 
 /*
 Route::get('/user', function (Request $request) {
@@ -35,4 +36,17 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
 		Route::post('/user/{username}/change-password', 'changePassword');
 	});
+});
+
+// Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::controller(DeliveryController::class)->group(function () {
+        // Get Status Pengiriman
+        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+        // Kirim Ulasan
+        Route::post('/delivery/{order_id}/review', 'submitReview');
+    });
+
 });
