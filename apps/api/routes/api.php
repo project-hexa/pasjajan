@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\reportSalesController;
+use App\Http\Controllers\LogController;
 
 
 /*
@@ -64,4 +65,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 	//Sales Report
 	Route::get('/sales/export', [\App\Http\Controllers\reportSalesController::class, 'exportSales'])->name('sales.export');
+
+	// Activity Logs
+	Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });

@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Store;
 use Illuminate\Validation\Rule;
+use App\Traits\LogsActivity;
 
 class BranchController extends Controller
 {
+    use LogsActivity;
 
     public function index(Request $request)
     {
@@ -83,6 +85,9 @@ class BranchController extends Controller
             $validated['is_active'] = true;
 
             $store = Store::create($validated);
+
+            // Log activity
+            $this->logActivity('CREATE', "Membuat cabang baru: {$store->name} ({$store->code})");
 
             return ApiResponse::created(
                 'Cabang berhasil ditambahkan',
@@ -170,6 +175,9 @@ class BranchController extends Controller
 
             $store->update($validator->validated());
 
+            // Log activity
+            $this->logActivity('UPDATE', "Memperbarui data cabang: {$store->name} ({$store->code})");
+
             return ApiResponse::success(
                 'Cabang berhasil diperbarui',
                 [
@@ -211,6 +219,9 @@ class BranchController extends Controller
 
             $store->update(['is_active' => false]);
 
+            // Log activity
+            $this->logActivity('UPDATE', "Menonaktifkan cabang: {$store->name} ({$store->code})");
+
             return ApiResponse::success(
                 'Cabang berhasil dinonaktifkan',
                 [
@@ -245,6 +256,9 @@ class BranchController extends Controller
             }
 
             $store->update(['is_active' => true]);
+
+            // Log activity
+            $this->logActivity('UPDATE', "Mengaktifkan cabang: {$store->name} ({$store->code})");
 
             return ApiResponse::success(
                 'Cabang berhasil diaktifkan',
