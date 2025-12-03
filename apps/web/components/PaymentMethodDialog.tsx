@@ -18,59 +18,62 @@ import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@workspace/ui/lib/utils";
 
-type MethodKey = "ewallet" | "va" | "qris";
-type Option = { id: string; label: string; iconUrl?: string };
-
-const EWALLET_OPTIONS: Option[] = [
-  { id: "gopay", label: "Gopay", iconUrl: "https://logo.clearbit.com/gopay.co.id" },
-  { id: "dana", label: "Dana", iconUrl: "https://logo.clearbit.com/dana.id" },
-  { id: "shopeepay", label: "Shopee Pay", iconUrl: "https://logo.clearbit.com/shopee.co.id" },
-  { id: "ovo", label: "OVO", iconUrl: "https://logo.clearbit.com/ovo.id" },
-];
-
-const VA_OPTIONS: Option[] = [
-  { id: "bca", label: "BCA", iconUrl: "https://logo.clearbit.com/bca.co.id" },
-  { id: "bni", label: "BNI", iconUrl: "https://logo.clearbit.com/bni.co.id" },
-  { id: "permata", label: "Permata Bank", iconUrl: "https://logo.clearbit.com/permatabank.com" },
-  { id: "bri", label: "BRI", iconUrl: "https://logo.clearbit.com/bri.co.id" },
-];
+interface BackendPayment {
+  id: number;
+  code: string;            // gopay, shopeepay, va_bca, qris
+  payment_type: string;    // e_wallet, bank_transfer, qris
+  method_name: string;     // "BCA Virtual Account"
+  icon: string;            // images/payment/bca.png
+}
 
 interface Props {
   trigger?: React.ReactNode;
-  onConfirm?: (p: { method: MethodKey; option?: string }) => void;
+  onConfirm?: (p: { method: string; option: string }) => void;
 }
 
-export default function PaymentMethodDialog({
-  trigger = <Button variant="outline" className="w-full">Pilih Metode Pembayaran</Button>,
-  onConfirm,
-}: Props) {
+export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
   const [open, setOpen] = React.useState(false);
+  const [methods, setMethods] = React.useState<BackendPayment[]>([]);
 
-  // ========= STATE TUNGGAL YANG BENAR =========
-  const [method, setMethod] = React.useState<MethodKey | undefined>();
-  const [option, setOption] = React.useState<string | undefined>();
+  // pilihan
+  const [selectedMethod, setSelectedMethod] = React.useState<string>();
+  const [selectedOption, setSelectedOption] = React.useState<string>();
+
+  // Ambil dari backend
+  React.useEffect(() => {
+    fetch("http://localhost:8000/api/payment-methods")
+      .then((res) => res.json())
+      .then((res) => {
+        setMethods(res.data.payment_methods);
+      })
+      .catch(console.error);
+  }, []);
 
   const confirm = () => {
-    if (!method) return setOpen(false);
-    onConfirm?.({ method, option });
+    if (!selectedMethod || !selectedOption) return setOpen(false);
+
+    onConfirm?.({
+      method: selectedMethod,   // e_wallet | bank_transfer | qris
+      option: selectedOption,   // gopay | va_bca | qris
+    });
+
     setOpen(false);
   };
+
+  // kelompokkan metode
+  const wallets = methods.filter((m) => m.payment_type === "e_wallet");
+  const vas = methods.filter((m) => m.payment_type === "bank_transfer");
+  const qris = methods.filter((m) => m.payment_type === "qris");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent
-        className="
-          p-0 border-0 shadow-xl bg-transparent
-          w-[480px] h-[400px] max-w-[92vw]
-          flex flex-col items-stretch
-        "
-      >
+      <DialogContent className="p-0 border-0 shadow-xl bg-transparent w-[480px] h-[400px] max-w-[92vw] flex flex-col">
         <DialogTitle className="sr-only">Pilih Metode Pembayaran</DialogTitle>
 
         <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white">
-
+          
           {/* HEADER */}
           <div className="border-b bg-white flex items-center justify-center relative h-[48px]">
             <button
@@ -86,124 +89,80 @@ export default function PaymentMethodDialog({
 
           {/* BODY */}
           <div className="flex-1 overflow-y-auto px-5 py-3 scrollbar-none">
-            <div className="flex flex-col gap-4">
 
-              {/* === E-WALLET === */}
-              <Accordion type="single" collapsible>
-                <AccordionItem value="ewallet">
-                  <AccordionTrigger
-                    className="
-                      w-full rounded-xl border shadow-sm bg-emerald-50
-                      px-5 py-5 text-left flex items-center justify-between
-                      hover:bg-emerald-100
-                    "
-                  >
-                    <span className="font-semibold text-base text-slate-900">
-                      E-Wallet
-                    </span>
-                  </AccordionTrigger>
+            {/* E-WALLET */}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="ewallet">
+                <AccordionTrigger className="rounded-xl border shadow-sm bg-emerald-50 px-5 py-5">
+                  <span className="font-semibold text-base">E-Wallet</span>
+                </AccordionTrigger>
 
-                  <AccordionContent
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
-                  >
-                    <div className="mt-2 rounded-xl border border-emerald-100 bg-white p-2">
-                      <RadioGroup value={option}>
-                        <div className="space-y-2">
-                          {EWALLET_OPTIONS.map((o) => (
-                            <OptionRow
-                              key={o.id}
-                              id={`ew-${o.id}`}
-                              label={o.label}
-                              iconUrl={o.iconUrl}
-                              value={o.id}
-                              selectedValue={option}
-                              onSelect={() => {
-                                setMethod("ewallet");
-                                setOption(o.id);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                <AccordionContent>
+                  <div className="mt-2 rounded-xl border p-2">
+                    <RadioGroup value={selectedOption}>
+                      {wallets.map((m) => (
+                        <OptionRow
+                          key={m.code}
+                          label={m.method_name}
+                          iconUrl={`http://localhost:8000/${m.icon}`}
+                          value={m.code}
+                          selectedValue={selectedOption}
+                          onSelect={() => {
+                            setSelectedMethod("e_wallet");
+                            setSelectedOption(m.code);
+                          }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
-              {/* === VIRTUAL ACCOUNT === */}
-              <Accordion type="single" collapsible>
-                <AccordionItem value="va">
-                  <AccordionTrigger
-                    className="
-                      w-full rounded-xl border shadow-sm bg-emerald-50
-                      px-5 py-5 text-left flex items-center justify-between
-                      hover:bg-emerald-100
-                    "
-                  >
-                    <span className="font-semibold text-base text-slate-900">
-                      Virtual Account
-                    </span>
-                  </AccordionTrigger>
+            {/* VA */}
+            <Accordion type="single" collapsible>
+              <AccordionItem value="va">
+                <AccordionTrigger className="rounded-xl border shadow-sm bg-emerald-50 px-5 py-5">
+                  <span className="font-semibold text-base">
+                    Virtual Account
+                  </span>
+                </AccordionTrigger>
 
-                  <AccordionContent
-                    onClick={(e) => e.stopPropagation()}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onMouseUp={(e) => e.stopPropagation()}
-                  >
-                    <div className="mt-2 rounded-xl border border-emerald-100 bg-white p-2">
-                      <RadioGroup value={option}>
-                        <div className="space-y-2">
-                          {VA_OPTIONS.map((o) => (
-                            <OptionRow
-                              key={o.id}
-                              id={`va-${o.id}`}
-                              label={o.label}
-                              iconUrl={o.iconUrl}
-                              value={o.id}
-                              selectedValue={option}
-                              onSelect={() => {
-                                setMethod("va");
-                                setOption(o.id);
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </RadioGroup>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                <AccordionContent>
+                  <div className="mt-2 rounded-xl border p-2">
+                    <RadioGroup value={selectedOption}>
+                      {vas.map((m) => (
+                        <OptionRow
+                          key={m.code}
+                          label={m.method_name}
+                          iconUrl={`http://localhost:8000/${m.icon}`}
+                          value={m.code}
+                          selectedValue={selectedOption}
+                          onSelect={() => {
+                            setSelectedMethod("bank_transfer");
+                            setSelectedOption(m.code);
+                          }}
+                        />
+                      ))}
+                    </RadioGroup>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
 
-              {/* === QRIS === */}
-              <div
-                onClick={() => {
-                  setMethod("qris");
-                  setOption("qris");
+            {/* QRIS */}
+            {qris.length > 0 && (
+              <OptionRow
+                label={qris[0].method_name}
+                iconUrl={`http://localhost:8000/${qris[0].icon}`}
+                value="qris"
+                selectedValue={selectedOption}
+                onSelect={() => {
+                  setSelectedMethod("qris");
+                  setSelectedOption("qris");
                 }}
-                className={cn(
-                  "w-full rounded-xl border shadow-sm px-5 py-5 flex items-center justify-between cursor-pointer",
-                  method === "qris"
-                    ? "bg-emerald-100 border-emerald-300"
-                    : "bg-emerald-50 hover:bg-emerald-100"
-                )}
-              >
-                <span className="font-semibold text-base text-slate-900">
-                  QRIS
-                </span>
-
-                <RadioGroup value={method}>
-                  <RadioGroupItem
-                    id="m-qris"
-                    value="qris"
-                    checked={method === "qris"}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </RadioGroup>
-              </div>
-
-            </div>
+              />
+            )}
           </div>
 
           {/* FOOTER */}
@@ -215,23 +174,19 @@ export default function PaymentMethodDialog({
               OK
             </Button>
           </div>
-
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-/* ------- OPTION ITEM ------- */
 function OptionRow({
-  id,
   label,
   iconUrl,
   value,
   selectedValue,
   onSelect,
 }: {
-  id: string;
   label: string;
   iconUrl?: string;
   value: string;
@@ -242,23 +197,16 @@ function OptionRow({
     <div
       onClick={onSelect}
       className={cn(
-        "flex items-center justify-between rounded-lg border bg-white px-3 py-3 hover:bg-slate-50 cursor-pointer",
+        "flex items-center justify-between rounded-lg border bg-white px-3 py-3 cursor-pointer",
         selectedValue === value && "border-emerald-300 bg-emerald-50"
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="h-6 w-6 rounded-sm overflow-hidden bg-slate-100 ring-1 ring-slate-200">
-          {iconUrl && <img src={iconUrl} alt={label} className="h-full w-full object-contain" />}
-        </div>
-        <span className="text-sm text-slate-800">{label}</span>
+        <img src={iconUrl} className="h-6 w-6" />
+        <span className="text-sm">{label}</span>
       </div>
 
-      <RadioGroupItem
-        id={id}
-        value={value}
-        checked={selectedValue === value}
-        onClick={(e) => e.stopPropagation()}
-      />
+      <RadioGroupItem checked={selectedValue === value} value={value} />
     </div>
   );
 }

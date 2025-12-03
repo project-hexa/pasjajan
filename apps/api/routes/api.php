@@ -8,6 +8,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\DB;
 
 /*
 Route::get('/user', function (Request $request) {
@@ -93,4 +94,13 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
 		Route::post('/user/{username}/change-password', 'changePassword');
 	});
+});
+
+Route::get('/products', function () {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'products' => DB::table('products')->get()
+        ]
+    ]);
 });

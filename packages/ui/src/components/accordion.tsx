@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
-import { ChevronDownIcon } from "lucide-react"
 import { Slot } from "@radix-ui/react-slot";
 
 import { cn } from "@workspace/ui/lib/utils"
+import { Icon } from "@iconify-icon/react";
 
 function Accordion({
   ...props
@@ -45,7 +45,7 @@ function AccordionTrigger({
         {...props}
       >
         {children}
-        <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
+        <Icon icon="lucide:chevron-down" className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
       </Comp>
     </AccordionPrimitive.Header>
   )

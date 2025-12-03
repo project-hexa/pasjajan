@@ -19,8 +19,9 @@
     "init:web": "cd apps/web && pnpm install && cd ../..",
     "init:api": "cd apps/api && composer setup && cd ../..",
     "radix:add": "pnpm add --filter=ui",
-    "create:fitur": "turbo gen 'Templating Frontend Dev Pasjajan'"
+    "create:fitur": "turbo gen \"Templating Frontend Dev Pasjajan\""
   },
+  
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
