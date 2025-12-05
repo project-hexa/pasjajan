@@ -16,6 +16,7 @@ Route::get('/user', function (Request $request) {
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
 	Route::post('/auth/register', 'registerPost');
+	Route::post('/auth/login/google', 'loginViaGoogle');
 	Route::post('/auth/forgot-password', 'forgotPassword');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');

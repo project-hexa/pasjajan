@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Session;
 use Hash;
+use Google\Client as GoogleClient;
 use App\Models\User;
 use App\Models\Customer;
 use App\Models\Otp;
@@ -79,7 +80,7 @@ class AuthController extends BaseController
 
 		// Membuat token auth untuk user
 		$result['token'] = $user->createToken('auth_token')->plainTextToken;
-		$result['user_role'] = $user['role'];
+		$result['user_data'] = $user->load($user['role']);
 
 		//return response()->json(["ok" => true, "token" => $token, "status" => 200]);
 		return $this->sendSuccessResponse("User berhasil login.", $result);
@@ -128,8 +129,53 @@ class AuthController extends BaseController
 
 		// Membuat token auth untuk user
 		$result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
+		$result['customer_data'] = $customer->load('user');
 
 		return $this->sendSuccessResponse("User berhasil register.", $result);
+	}
+
+	public function loginViaGoogle(Request $request): JsonResponse
+	{
+		$request->validate([
+            'id_token' => 'required'
+        ]);
+
+        $client = new GoogleClient(['client_id' => config('services.google.client_id')]);
+        $payload = $client->verifyIdToken($request->id_token);
+
+        if (!$payload) {
+            return $this->sendFailResponse('Google Token Invalid.', code: 401);
+        }
+
+        // Google user info
+        $googleId = $payload['sub'];
+        $email = $payload['email'];
+        $name = $payload['name'] ?? '';
+        //$nickname = $payload['nickname'];
+		//$avatar = $payload['avatar'];
+
+        // Create or fetch user
+        $user = User::firstOrCreate(
+            [
+                'first_name' => $name,
+				'email' => $email,
+				'phone_number' => '',
+				'username' => '',
+                'google_id' => $googleId,
+                'password' => bcrypt(Str::random(16)),
+				'last_login_date' => now(),
+            ]
+        );
+
+        // Issue your API token (JWT, Sanctum, Passport)
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+		$result = [
+            'token' => $token,
+            'user_data'  => $user->load($user['role']),
+		];
+
+        return $this->sendSuccessResponse('User berhasil login via google.', $result);
 	}
 
 	public function logout(Request $request): JsonResponse

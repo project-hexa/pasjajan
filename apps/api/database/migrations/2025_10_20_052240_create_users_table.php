@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone_number')->unique();
 			$table->string('username')->unique();
+			$table->string('google_id')->unique()->nullable();
             $table->string('password');
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['Laki-Laki', 'Perempuan'])->nullable();

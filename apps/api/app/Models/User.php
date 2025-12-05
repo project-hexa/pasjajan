@@ -20,6 +20,7 @@ class User extends Authenticatable
 		'phone_number',
 		'email',
 		'username',
+		'google_id',
 		'password',
 		'birth_date',
 		'gender',
