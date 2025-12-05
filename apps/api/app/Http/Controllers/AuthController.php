@@ -33,7 +33,6 @@ class AuthController extends BaseController
 				Rule::anyOf([
 					['string', 'email'],
 					['string', 'numeric'],
-					['string', 'alpha_num:ascii'],
 				]),
 			],
 			'password' => 'required|string',
@@ -53,18 +52,16 @@ class AuthController extends BaseController
 		// Ambil data credentials (inputan) milik user yang sudah divalidasi
 		$credentials = $validator->validated();
 
-		// Mengidentifikasi jenis inputan 'identitas user' yang dimasukkan user, apakah email, nomor telp atau username
+		// Mengidentifikasi jenis inputan 'identitas user' yang dimasukkan user, apakah email atau nomor telp
 		$userIdentityIs = '';
 		if (Str::contains($credentials['user_identity'], '@')) {
 			$userIdentityIs = 'email';
 		} else if (Str::is('8*', $credentials['user_identity'])) {
 			$userIdentityIs = 'phone_number';
 			$credentials['user_identity'] = Str::start($credentials['user_identity'], '+62');
-		} else {
-			$userIdentityIs = 'username';
 		}
 
-		// Cari user yang sesuai dengan email/username/phone_number hasil inputan user
+		// Cari user yang sesuai dengan email/phone_number hasil inputan user
 		$user = User::where($userIdentityIs, $credentials['user_identity'])->first();
 
 		// Mengecek apakah inputan user sesuai atau tidak dengan data dari database
@@ -95,9 +92,7 @@ class AuthController extends BaseController
 
 		// Menetapkan aturan (rules) validasi register
 		$rules = [
-			'username' => 'required|string|alpha_dash:ascii|unique:users,username',
-			'first_name' => 'required|string|alpha:ascii',
-			'last_name' => 'string|alpha:ascii',
+			'full_name' => 'required|string',
 			'phone_number' => 'required|string|string|unique:users,phone_number',
 			'address' => 'required|string',
 			'email' => 'required|string|email|unique:users,email',
@@ -151,23 +146,18 @@ class AuthController extends BaseController
         $googleId = $payload['sub'];
         $email = $payload['email'];
         $name = $payload['name'] ?? '';
-        //$nickname = $payload['nickname'];
-		//$avatar = $payload['avatar'];
 
-        // Create or fetch user
         $user = User::firstOrCreate(
             [
-                'first_name' => $name,
+                'full_name' => $name,
 				'email' => $email,
 				'phone_number' => '',
-				'username' => '',
                 'google_id' => $googleId,
                 'password' => bcrypt(Str::random(16)),
 				'last_login_date' => now(),
             ]
         );
 
-        // Issue your API token (JWT, Sanctum, Passport)
         $token = $user->createToken('auth_token')->plainTextToken;
 
 		$result = [
@@ -336,9 +326,7 @@ class AuthController extends BaseController
 	{
 		// Memasukkan (insert) isi parameter array $data ke database
 		$user = User::create([
-			'username' => $data['username'],
-			'first_name' => $data['first_name'],
-			'last_name' => $data['last_name'],
+			'full_name' => $data['full_name'],
 			'phone_number' => $data['phone_number'],
 			'email' => $data['email'],
 			'password' => Hash::make($data['password']),
@@ -356,7 +344,7 @@ class AuthController extends BaseController
 			'customer_id' => $customer['id'],
 			'label' => 'Rumah',
 			'detail_address' => $data['address'],
-			'recipient_name' => $user['first_name'] . ' ' . $user['last_name'],
+			'recipient_name' => $user['full_name'],
 			'phone_number' => $user['phone_number'],
 			'is_default' => true,
 		]);

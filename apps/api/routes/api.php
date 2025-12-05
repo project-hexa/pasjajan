@@ -31,13 +31,13 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/user/{username}/profile', 'getProfile');
-		Route::post('/user/{username}/change-profile', 'changeProfile');
-		Route::post('/user/{username}/add-address', 'createAddress');
-		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/{username}/change-password', 'changePassword');
-		Route::get('/user/{username}/total-point', 'getPoint');
-		Route::get('/user/{username}/order-history', 'getOrderHistory');
+		Route::get('/user/profile', 'getProfile');
+		Route::post('/user/change-profile', 'changeProfile');
+		Route::post('/user/add-address', 'createAddress');
+		Route::post('/user/change-address/{addressId}', 'changeAddress');
+		Route::post('/user/change-password', 'changePassword');
+		Route::get('/user/total-point', 'getPoint');
+		Route::get('/user/order-history', 'getOrderHistory');
 	});
 });
 

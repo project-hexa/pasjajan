@@ -53,14 +53,32 @@ class UserController extends BaseController
         //
     }
 
-	public function getProfile(string $username): JsonResponse
+	public function getProfile(Request $request): JsonResponse
 	{
-		// Mencari user di database dengan username yang terdapat pada url
-		$user = User::where('username', $username)->first();
+		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
+		];
+
+		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
+		$validator = $this->makeValidator($request->all(), $rules);
+
+		// Jika validasi gagal, maka
+		if ($validator->fails()) {
+			$errors['validation_errors'] = $validator->errors();
+
+			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
+		}
+
+		// Jika validasi berhasil, maka
+		// Ambil inputan user yang telah divalidasi
+		$data = $validator->validated();
+
+		// Mencari user di database dengan email yang terdapat pada url
+		$user = User::where('email', $data['email'])->first();
 
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
-			return $this->sendFailResponse("Tidak menemukan user dengan username $username. Gagal mendapatkan data profile.");
+			return $this->sendFailResponse("Tidak menemukan user dengan email " . $data['email'] . ". Gagal mendapatkan data profile.");
 		}
 
 		// Jika user ditemukan, maka
@@ -74,15 +92,14 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
 	}
 
-	public function changeProfile(Request $request, string $username): JsonResponse
+	public function changeProfile(Request $request): JsonResponse
 	{
 		// Tetapkan aturan (rules) untuk validasi ganti profile
 		$rules = [
-			'username' => 'nullable|unique:App\Models\User,username|string|alpha_dash:ascii',
-			'first_name' => 'nullable|string|alpha:ascii',
-			'last_name' => 'nullable|string|alpha:ascii',
+			'full_name' => 'nullable|string',
 			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
 			'address' => 'nullable|string',
+			'email_before' => 'required|exists:App\Models\User,email|string|email',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
 		];
 
@@ -100,21 +117,19 @@ class UserController extends BaseController
 		// Ambil data inputan user
 		$data = $validator->validated();
 
-		// Cari user dengan username yang sesuai dengan username dari url
-		$user = User::where('username', $username)->first();
+		// Cari user dengan email yang sesuai dengan email dari database
+		$user = User::where('email', $data['email_before'])->first();
 
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
-			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal mengganti profile.");
+			return $this->sendFailResponse("User dengan email " . $data['email_before'] . " tidak ditemukan. Gagal mengganti profile.");
 		}
 
 		// Jika user ditemukan, maka
 		// Ganti data user di database dengan data inputan user
-		$user['first_name'] = $data['first_name'] ?? $user['first_name'];
-		$user['last_name'] = $data['last_name'] ?? $user['last_name'];
+		$user['full_name'] = $data['full_name'] ?? $user['full_name'];
 		$user['phone_number'] = isset($data['phone_number']) ? Str::start($data['phone_number'], '+62') : $user['phone_number'];
 		$user['email'] = $data['email'] ?? $user['email'];
-		$user['username'] = $data['username'] ?: $user['username'];
 		$user['birth_date'] = $data['birth_date'] ?? $user['birth_date'];
 		$user['gender'] = $data['gender'] ?? $user['gender'];
 		$user['avatar'] = $data['avatar'] ?? $user['avatar'];
@@ -128,9 +143,10 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mengganti profile.", $result);
 	}
 
-	public function createAddress(Request $request, string $username): JsonResponse
+	public function createAddress(Request $request): JsonResponse
 	{
 		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
 			'label' => 'required|string',
 			'detail_address' => 'required|string',
 			'notes_address' => 'nullable|string',
@@ -152,13 +168,13 @@ class UserController extends BaseController
 		}
 
 		// Jika validasi berhasil, maka
-		// Ambil data inputan user, lalu cari user berikut customernya di dalam database dengan username dari parameter string query
+		// Ambil data inputan user, lalu cari user berikut customernya di dalam database dengan email dari parameter string query
 		$data = $validator->validated();
-		$user = User::where('username', $username)->first()->load('customer');
+		$user = User::where('email', $data['email'])->first()->load('customer');
 
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
-			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal menambah alamat.");
+			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal menambah alamat.");
 		}
 
 		// Jika user ditemukan, maka
@@ -168,7 +184,7 @@ class UserController extends BaseController
 			'label' => $data['label'],
 			'detail_address' => $data['detail_address'],
 			'notes_address' => $data['notes_address'],
-			'recipient_name' => $data['recipient_name'] ?? $user['first_name'] . ' ' . $user['last_name'],
+			'recipient_name' => $data['recipient_name'] ?? $user['full_name'],
 			'phone_number' => $data['phone_number'] ?? $user['phone_number'],
 			'latitude' => $data['latitude'],
 			'longitude' => $data['longitude'],
@@ -180,7 +196,7 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil menambah alamat.", $result);
 	}
 
-	public function changeAddress(Request $request, string $username, string $addressId): JsonResponse
+	public function changeAddress(Request $request, string $addressId): JsonResponse
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti alamat
 		$rules = [
@@ -233,7 +249,7 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mengganti alamat.", $result);
 	}
 
-	public function changePassword(Request $request, string $username): JsonResponse
+	public function changePassword(Request $request): JsonResponse
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti password
 		$rules = [
@@ -260,14 +276,32 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mengganti password.");
 	}
 
-	public function getPoint(string $username): JsonResponse
+	public function getPoint(Request $request): JsonResponse
 	{
-		// Mencari user di database dengan username yang terdapat pada url
-		$user = User::where('username', $username)->first()->load('customer');
+		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
+		];
+
+		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
+		$validator = $this->makeValidator($request->all(), $rules);
+
+		// Jika validasi gagal, maka
+		if ($validator->fails()) {
+			$errors['validation_errors'] = $validator->errors();
+
+			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
+		}
+
+		// Jika validasi berhasil, maka
+		// Ambil inputan user yang telah divalidasi
+		$data = $validator->validated();
+
+		// Mencari user di database dengan email
+		$user = User::where('email', $data['email'])->first()->load('customer');
 		
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
-			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal mendapatkan data point milik $username");
+			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data point user.");
 		}
 
 		// Jika user ditemukan, maka
@@ -279,14 +313,32 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mendapatkan data point user.", $result);
 	}
 
-	public function getOrderHistory(string $username): JsonResponse
+	public function getOrderHistory(Request $request): JsonResponse
 	{
-		// Mencari user di database dengan username yang terdapat pada url
-		$user = User::where('username', $username)->first()->load('customer');
+		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
+		];
+
+		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
+		$validator = $this->makeValidator($request->all(), $rules);
+
+		// Jika validasi gagal, maka
+		if ($validator->fails()) {
+			$errors['validation_errors'] = $validator->errors();
+
+			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
+		}
+
+		// Jika validasi berhasil, maka
+		// Ambil inputan user yang telah divalidasi
+		$data = $validator->validated();
+
+		// Mencari user di database dengan email
+		$user = User::where('email', $data['email'])->first()->load('customer');
 		
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
-			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal mendapatkan data riwayat transaksi milik $username");
+			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data riwayat transaksi user.");
 		}
 
 		// Jika user ditemukan, maka
