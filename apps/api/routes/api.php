@@ -16,6 +16,7 @@ Route::get('/user', function (Request $request) {
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
 	Route::post('/auth/register', 'registerPost');
+	Route::post('/auth/login/google', 'loginViaGoogle');
 	Route::post('/auth/forgot-password', 'forgotPassword');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
@@ -30,11 +31,13 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/user/{username}/profile', 'getProfile');
-		Route::post('/user/{username}/change-profile', 'changeProfile');
-		Route::post('/user/{username}/add-address', 'createAddress');
-		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/{username}/change-password', 'changePassword');
+		Route::get('/user/profile', 'getProfile');
+		Route::post('/user/change-profile', 'changeProfile');
+		Route::post('/user/add-address', 'createAddress');
+		Route::post('/user/change-address/{addressId}', 'changeAddress');
+		Route::post('/user/change-password', 'changePassword');
+		Route::get('/user/total-point', 'getPoint');
+		Route::get('/user/order-history', 'getOrderHistory');
 	});
 });
 
