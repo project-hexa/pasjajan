@@ -31,7 +31,7 @@ import { useEffect, useState } from "react";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -42,41 +42,32 @@ export const Navbar = ({ className }: { className?: string }) => {
 
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
-      <nav className="flex h-full items-center justify-between px-4 md:px-10">
-        <div className="flex w-full items-center gap-2 max-md:justify-between">
-          <Link href="/">
-            <Image
-              src={"/logo.png"}
-              alt="logo"
-              width={64}
-              height={64}
-              sizes="50vw"
+      <nav className="flex h-full items-center justify-between gap-5 px-4 md:px-10 lg:gap-10">
+        <Link
+          href="/"
+          className="flex flex-col items-center text-xs font-bold text-white md:text-sm"
+        >
+          <Image
+            src={"/logo.png"}
+            alt="logo"
+            width={64}
+            height={64}
+            sizes="50vw"
+            className="max-md:size-1/2"
+          />
+          PasJajan
+        </Link>
+
+        <div className="flex w-full">
+          <ButtonGroup className="w-full [&>*:not(:first-child)]:-ml-5 [&>*:not(:first-child)]:rounded-bl-full">
+            <Input
+              placeholder="Cari produk yang anda inginkan disini"
+              className="bg-card w-full rounded-full placeholder:max-sm:text-xs"
             />
-          </Link>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="p-0">
-                  <Icon icon="lucide:grid-2x2" />
-                  Kategori
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-card text-accent-foreground">
-                <DropdownMenuItem>Category 1</DropdownMenuItem>
-                <DropdownMenuItem>Category 2</DropdownMenuItem>
-                <DropdownMenuItem>Category 3</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <ButtonGroup>
-              <Input
-                placeholder="Cari produk yang anda inginkan disini"
-                className="bg-card w-24 placeholder:max-sm:text-xs md:w-36 lg:w-96"
-              />
-              <Button variant={"secondary"} size={"icon"}>
-                <Icon icon="lucide:search" className="size-4" />
-              </Button>
-            </ButtonGroup>
-          </div>
+            <Button className="rounded-full border-t border-r border-b">
+              <Icon icon="lucide:search" className="size-4" />
+            </Button>
+          </ButtonGroup>
         </div>
 
         <div className="flex h-10 items-center gap-2 max-sm:hidden">
@@ -144,20 +135,22 @@ export const Navbar = ({ className }: { className?: string }) => {
           </div>
           <Separator orientation="vertical" />
           {!isLoggedIn ? (
-            <ButtonGroup>
+            <div className="ml-2 flex items-center gap-5">
               <Button
-                variant={"outline"}
+                variant={"link"}
+                className="text-white"
                 onClick={() => router.push("/register")}
               >
                 Daftar
               </Button>
               <Button
-                variant={"secondary"}
+                variant={"link"}
+                className="text-white"
                 onClick={() => router.push("/login")}
               >
                 Masuk
               </Button>
-            </ButtonGroup>
+            </div>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
