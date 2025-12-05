@@ -36,6 +36,8 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/{username}/add-address', 'createAddress');
 		Route::post('/user/{username}/change-address/{addressId}', 'changeAddress');
 		Route::post('/user/{username}/change-password', 'changePassword');
+		Route::get('/user/{username}/total-point', 'getPoint');
+		Route::get('/user/{username}/order-history', 'getOrderHistory');
 	});
 });
 

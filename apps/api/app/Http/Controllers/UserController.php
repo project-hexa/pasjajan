@@ -8,6 +8,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use App\Models\User;
 use App\Models\Address;
+use App\Models\HistoryPoint;
+use App\Models\Order;
 
 class UserController extends BaseController
 {
@@ -256,5 +258,42 @@ class UserController extends BaseController
 		// Jika validasi berhasil,maka
 
 		return $this->sendSuccessResponse("Berhasil mengganti password.");
+	}
+
+	public function getPoint(string $username): JsonResponse
+	{
+		// Mencari user di database dengan username yang terdapat pada url
+		$user = User::where('username', $username)->first()->load('customer');
+		
+		// Jika user tidak ditemukan, maka
+		if (!$user) {
+			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal mendapatkan data point milik $username");
+		}
+
+		// Jika user ditemukan, maka
+		// Ambil data terbaru dari riwayat point milik user, lalu ambil nilai dari kolom total_point saja
+		$point = HistoryPoint::select('total_point')->where('customer_id', $user->customer['id'])->latest()->first();
+
+		$result['total_point'] = $point;
+
+		return $this->sendSuccessResponse("Berhasil mendapatkan data point user.", $result);
+	}
+
+	public function getOrderHistory(string $username): JsonResponse
+	{
+		// Mencari user di database dengan username yang terdapat pada url
+		$user = User::where('username', $username)->first()->load('customer');
+		
+		// Jika user tidak ditemukan, maka
+		if (!$user) {
+			return $this->sendFailResponse("User dengan username $username tidak ditemukan. Gagal mendapatkan data riwayat transaksi milik $username");
+		}
+
+		// Jika user ditemukan, maka
+		$orders = Order::where('customer_id', $user->customer['id'])->latest()->get()->load('orderItems');
+
+		$result['order'] = $orders;
+
+		return $this->sendSuccessResponse("Berhasil mendapatkan data riwayat transaksi milik user.", $result);
 	}
 }
