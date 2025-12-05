@@ -16,9 +16,9 @@ return new class extends Migration
     {
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Order::class);
-            $table->foreignIdFor(ShipmentMethod::class);
-            $table->foreignIdFor(Staff::class);
+            $table->foreignIdFor(Order::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(ShipmentMethod::class, 'method_id')->constrained('shipment_methods');
+            $table->foreignIdFor(Staff::class)->nullable()->constrained()->cascadeOnDelete();
             $table->string('completion_status');
             $table->decimal('cost', total: 10, places: 2);
             $table->timestamps();
