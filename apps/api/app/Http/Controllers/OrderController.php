@@ -48,7 +48,7 @@ class OrderController extends Controller
                 'grand_total' => $request->grand_total,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
-                'expired_at' => now()->addHours(24), // Order expire 24 jam
+                'expired_at' => now()->addMinutes(3), // Order expire 24 jam
                 'notes' => $request->notes ?? null,
             ]);
 
