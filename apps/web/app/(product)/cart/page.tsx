@@ -96,8 +96,6 @@ export default function CartPage() {
   // ---- CHECKOUT ----
   
   const handleCheckout = async () => {
-    localStorage.setItem("pasjajan_cart", JSON.stringify(cart));
-  router.push("/payment");
     console.log("CHECKOUT CLICKED");
     console.log("Cart:", cart);
   
@@ -106,6 +104,9 @@ export default function CartPage() {
       return;
     }
   
+    // Save to localStorage as backup
+    localStorage.setItem("pasjajan_cart", JSON.stringify(cart));
+
     const items = cart.map((item) => ({
       product_id: item.product_id,
       price: item.price,
@@ -157,7 +158,12 @@ export default function CartPage() {
       const orderCode = data.data.order.code;
       console.log("Order Code:", orderCode);
   
-      window.location.href = `/payment?order=${orderCode}`;
+      // Clear cart after successful checkout
+      setCart([]);
+      localStorage.removeItem("pasjajan_cart");
+
+      // Redirect to payment page with order code
+      router.push(`/payment?order=${orderCode}`);
     } catch (error) {
       console.error("Checkout Error:", error);
       alert("Gagal menghubungi server");

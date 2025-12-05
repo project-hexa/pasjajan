@@ -21,49 +21,72 @@ import { cn } from "@workspace/ui/lib/utils";
 interface BackendPayment {
   id: number;
   code: string;            // gopay, shopeepay, va_bca, qris
-  payment_type: string;    // e_wallet, bank_transfer, qris
-  method_name: string;     // "BCA Virtual Account"
-  icon: string;            // images/payment/bca.png
+  category: string;        // e_wallet, bank_transfer, qris
+  name: string;            // "BCA Virtual Account"
+  icon: string;            // full URL: http://localhost:8000/images/payment/bca.png
+  fee: string;
+  min_amount: number;
+  max_amount: number;
 }
 
 interface Props {
   trigger?: React.ReactNode;
-  onConfirm?: (p: { method: string; option: string }) => void;
+  onConfirm?: (p: { method: string; option: string; name: string }) => void;
 }
 
 export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
   const [open, setOpen] = React.useState(false);
   const [methods, setMethods] = React.useState<BackendPayment[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   // pilihan
   const [selectedMethod, setSelectedMethod] = React.useState<string>();
   const [selectedOption, setSelectedOption] = React.useState<string>();
+  const [selectedName, setSelectedName] = React.useState<string>();
 
   // Ambil dari backend
   React.useEffect(() => {
+    setLoading(true);
+    setError(null);
+    
     fetch("http://localhost:8000/api/payment-methods")
-      .then((res) => res.json())
       .then((res) => {
-        setMethods(res.data.payment_methods);
+        if (!res.ok) throw new Error("Failed to fetch payment methods");
+        return res.json();
       })
-      .catch(console.error);
+      .then((res) => {
+        if (res.success && res.data.payment_methods) {
+          setMethods(res.data.payment_methods);
+        } else {
+          throw new Error("Invalid response format");
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching payment methods:", err);
+        setError("Gagal memuat metode pembayaran");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const confirm = () => {
-    if (!selectedMethod || !selectedOption) return setOpen(false);
+    if (!selectedMethod || !selectedOption || !selectedName) return setOpen(false);
 
     onConfirm?.({
       method: selectedMethod,   // e_wallet | bank_transfer | qris
       option: selectedOption,   // gopay | va_bca | qris
+      name: selectedName,       // "BCA Virtual Account" | "GoPay" | "QRIS (Semua E-Wallet)"
     });
 
     setOpen(false);
   };
 
   // kelompokkan metode
-  const wallets = methods.filter((m) => m.payment_type === "e_wallet");
-  const vas = methods.filter((m) => m.payment_type === "bank_transfer");
-  const qris = methods.filter((m) => m.payment_type === "qris");
+  const wallets = methods.filter((m) => m.category === "e_wallet");
+  const vas = methods.filter((m) => m.category === "bank_transfer");
+  const qris = methods.filter((m) => m.category === "qris");
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,79 +112,122 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
 
           {/* BODY */}
           <div className="flex-1 overflow-y-auto px-5 py-3 scrollbar-none">
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-sm text-gray-500">Memuat metode pembayaran...</p>
+              </div>
+            )}
 
-            {/* E-WALLET */}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="ewallet">
-                <AccordionTrigger className="rounded-xl border shadow-sm bg-emerald-50 px-5 py-5">
-                  <span className="font-semibold text-base">E-Wallet</span>
-                </AccordionTrigger>
+            {/* Error State */}
+            {error && !loading && (
+              <div className="flex flex-col items-center justify-center h-full gap-2">
+                <p className="text-sm text-red-600">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="text-sm text-emerald-700 hover:underline"
+                >
+                  Muat ulang halaman
+                </button>
+              </div>
+            )}
 
-                <AccordionContent>
-                  <div className="mt-2 rounded-xl border p-2">
-                    <RadioGroup value={selectedOption}>
-                      {wallets.map((m) => (
-                        <OptionRow
-                          key={m.code}
-                          label={m.method_name}
-                          iconUrl={`http://localhost:8000/${m.icon}`}
-                          value={m.code}
-                          selectedValue={selectedOption}
-                          onSelect={() => {
-                            setSelectedMethod("e_wallet");
-                            setSelectedOption(m.code);
-                          }}
-                        />
-                      ))}
-                    </RadioGroup>
+            {/* Payment Methods */}
+            {!loading && !error && (
+              <>
+                {/* E-WALLET */}
+                {wallets.length > 0 && (
+                  <Accordion type="single" collapsible className="mb-3">
+                    <AccordionItem value="ewallet">
+                      <AccordionTrigger className="rounded-xl border shadow-sm bg-white px-5 py-5">
+                        <span className="font-semibold text-base">E-Wallet</span>
+                      </AccordionTrigger>
+
+                      <AccordionContent>
+                        <div className="mt-2 rounded-xl border p-2">
+                          <RadioGroup value={selectedOption}>
+                            {wallets.map((m) => (
+                              <OptionRow
+                                key={m.code}
+                                label={m.name}
+                                iconUrl={m.icon}
+                                value={m.code}
+                                selectedValue={selectedOption}
+                                onSelect={() => {
+                                  setSelectedMethod("e_wallet");
+                                  setSelectedOption(m.code);
+                                  setSelectedName(m.name);
+                                }}
+                              />
+                            ))}
+                          </RadioGroup>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+
+                {/* VA */}
+                {vas.length > 0 && (
+                  <Accordion type="single" collapsible className="mb-3">
+                    <AccordionItem value="va">
+                      <AccordionTrigger className="rounded-xl border shadow-sm bg-white px-5 py-5">
+                        <span className="font-semibold text-base">
+                          Virtual Account
+                        </span>
+                      </AccordionTrigger>
+
+                      <AccordionContent>
+                        <div className="mt-2 rounded-xl border p-2">
+                          <RadioGroup value={selectedOption}>
+                            {vas.map((m) => (
+                              <OptionRow
+                                key={m.code}
+                                label={m.name}
+                                iconUrl={m.icon}
+                                value={m.code}
+                                selectedValue={selectedOption}
+                                onSelect={() => {
+                                  setSelectedMethod("bank_transfer");
+                                  setSelectedOption(m.code);
+                                  setSelectedName(m.name);
+                                }}
+                              />
+                            ))}
+                          </RadioGroup>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                )}
+
+                {/* QRIS */}
+                {qris.length > 0 && (
+                  <RadioGroup value={selectedOption}>
+                    <div
+                      onClick={() => {
+                        setSelectedMethod("qris");
+                        setSelectedOption("qris");
+                        setSelectedName(qris[0]?.name || "QRIS");
+                      }}
+                      className={cn(
+                        "rounded-xl border shadow-sm bg-white px-5 py-5 cursor-pointer flex items-center justify-between",
+                        selectedOption === "qris" && "border-emerald-300 bg-emerald-50"
+                      )}
+                    >
+                      <span className="font-semibold text-base">QRIS</span>
+                      <RadioGroupItem checked={selectedOption === "qris"} value="qris" />
+                    </div>
+                  </RadioGroup>
+                )}
+
+                {/* Empty State */}
+                {methods.length === 0 && (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-sm text-gray-500">Tidak ada metode pembayaran tersedia</p>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* VA */}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="va">
-                <AccordionTrigger className="rounded-xl border shadow-sm bg-emerald-50 px-5 py-5">
-                  <span className="font-semibold text-base">
-                    Virtual Account
-                  </span>
-                </AccordionTrigger>
-
-                <AccordionContent>
-                  <div className="mt-2 rounded-xl border p-2">
-                    <RadioGroup value={selectedOption}>
-                      {vas.map((m) => (
-                        <OptionRow
-                          key={m.code}
-                          label={m.method_name}
-                          iconUrl={`http://localhost:8000/${m.icon}`}
-                          value={m.code}
-                          selectedValue={selectedOption}
-                          onSelect={() => {
-                            setSelectedMethod("bank_transfer");
-                            setSelectedOption(m.code);
-                          }}
-                        />
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* QRIS */}
-            {qris.length > 0 && (
-              <OptionRow
-                label={qris[0].method_name}
-                iconUrl={`http://localhost:8000/${qris[0].icon}`}
-                value="qris"
-                selectedValue={selectedOption}
-                onSelect={() => {
-                  setSelectedMethod("qris");
-                  setSelectedOption("qris");
-                }}
-              />
+                )}
+              </>
             )}
           </div>
 
@@ -202,7 +268,13 @@ function OptionRow({
       )}
     >
       <div className="flex items-center gap-3">
-        <img src={iconUrl} className="h-6 w-6" />
+        <div className="h-8 w-8 flex items-center justify-center">
+          <img 
+            src={iconUrl} 
+            alt={label}
+            className="max-h-full max-w-full object-contain" 
+          />
+        </div>
         <span className="text-sm">{label}</span>
       </div>
 

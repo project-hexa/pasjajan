@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
 } from "@workspace/ui/components/card";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { MapPin, PencilLine } from "lucide-react";
+import { MapPin, ArrowLeft } from "lucide-react";
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog from "@/components/AddressDialog";
@@ -23,71 +23,101 @@ const currency = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-// ====== DUMMY ITEMS (ganti dengan API) ======
-const items = [
-  {
-    id: "1",
-    name: "Chitato Rasa Sapi Panggang 68g",
-    variant: "1 pcs",
-    price: 12500,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Oreo Original 137g",
-    variant: "1 pcs",
-    price: 15000,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1610440042657-612c9f47d409?q=80&w=640&auto=format&fit=crop",
-  },
-  {
-    id: "3",
-    name: "Teh Pucuk Harum 350ml",
-    variant: "1 pcs",
-    price: 6000,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1570197769439-532a1bfe3a5a?q=80&w=640&auto=format&fit=crop",
-  },
-  {
-    id: "4",
-    name: "Indomie Goreng Original",
-    variant: "1 pcs",
-    price: 3500,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
-  },
-  {
-    id: "5",
-    name: "Aqua Botol 600ml",
-    variant: "1 pcs",
-    price: 5000,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1610440042657-612c9f47d409?q=80&w=640&auto=format&fit=crop",
-  },
-  {
-    id: "6",
-    name: "SilverQueen Chunky Bar 100g",
-    variant: "1 pcs",
-    price: 25000,
-    qty: 1,
-    image_url:
-      "https://images.unsplash.com/photo-1613666817995-a7c79e92724d?q=80&w=640&auto=format&fit=crop",
-  },
-];
+// ====== INTERFACE ======
+interface OrderItem {
+  product_id: number;
+  price: number;
+  quantity: number;
+  sub_total: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  image_url: string | null;
+}
+
+interface PaymentItem {
+  id: string;
+  name: string;
+  variant: string;
+  price: number;
+  qty: number;
+  image_url: string;
+}
 
 export default function CheckoutPage() {
-  const productTotal =
-    items.reduce((s, i) => s + i.price * (i.qty ?? 1), 0) || 0;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderCode = searchParams.get("order");
+  
+  // ====== FETCH ORDER DATA FROM API ======
+  const [items, setItems] = React.useState<PaymentItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [orderData, setOrderData] = React.useState<any>(null);
 
-  const shipping = 10000;
-  const adminFee = 1000;
-  const grandTotal = productTotal + shipping + adminFee;
+  React.useEffect(() => {
+    const loadOrderData = async () => {
+      try {
+        if (!orderCode) {
+          alert("Order code tidak ditemukan!");
+          router.push("/cart");
+          return;
+        }
+
+        // Fetch order detail from API
+        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+        const result = await response.json();
+
+        if (!result.success || !result.data.order) {
+          alert("Order tidak ditemukan!");
+          router.push("/cart");
+          return;
+        }
+
+        const order = result.data.order;
+        setOrderData(order);
+
+        // Fetch all products to get names and images
+        const productsResponse = await fetch("http://localhost:8000/api/products");
+        const productsResult = await productsResponse.json();
+
+        if (productsResult.success && productsResult.data.products) {
+          const products: Product[] = productsResult.data.products;
+          
+          // Map order items with product details
+          const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => {
+            const product = products.find((p) => p.id === orderItem.product_id);
+            return {
+              id: orderItem.product_id.toString(),
+              name: product?.name || "Unknown Product",
+              variant: "1 pcs",
+              price: orderItem.price,
+              qty: orderItem.quantity,
+              image_url: product?.image_url || "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+            };
+          });
+
+          setItems(paymentItems);
+        }
+      } catch (error) {
+        console.error("Error loading order data:", error);
+        alert("Gagal memuat data order!");
+        router.push("/cart");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrderData();
+  }, [orderCode, router]);
+
+  const productTotal = orderData?.sub_total || 0;
+  const shipping = orderData?.shipping_fee || 10000;
+  const adminFee = orderData?.admin_fee || 1000;
+  const grandTotal = orderData?.grand_total || productTotal + shipping + adminFee;
 
   // ALAMAT
   const [address, setAddress] = React.useState({
@@ -101,34 +131,65 @@ export default function CheckoutPage() {
   const [payChoice, setPayChoice] = React.useState<{
     method?: string;
     option?: string;
+    name?: string;
   }>({});
 
-  const paymentLabel = payChoice.method
-    ? `${payChoice.method.toUpperCase()} ${payChoice.option ?? ""}`
-    : "-";
+  const paymentLabel = payChoice.name || "-";
 
   // VOUCHER
   const [voucher, setVoucher] = React.useState<VoucherChoice | null>(null);
 
-  // REMOVE GLOBAL SCROLLBAR
-  React.useEffect(() => {
-    const styleEl = document.createElement("style");
-    styleEl.innerHTML = `
-      html::-webkit-scrollbar { display: none; }
-      body::-webkit-scrollbar { display: none; }
-      html { scrollbar-width: none; }
-      body { scrollbar-width: none; }
-    `;
-    document.head.appendChild(styleEl);
-  
-    return () => {
-      document.head.removeChild(styleEl);
-    };
-  }, []);
-  
+  // Handle Payment Process
+  const handlePayment = async () => {
+    if (!payChoice.option) {
+      alert("Silakan pilih metode pembayaran terlebih dahulu!");
+      return;
+    }
+
+    if (!orderCode) {
+      alert("Order code tidak ditemukan!");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/api/payment/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_code: orderCode,
+          payment_method_code: payChoice.option,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        alert(result.message || "Gagal memproses pembayaran!");
+        return;
+      }
+
+      // Save payment data to localStorage for waiting page
+      localStorage.setItem("payment_data", JSON.stringify(result.data));
+
+      // Redirect to waiting page
+      router.push(`/payment/Waiting?order=${orderCode}`);
+    } catch (error) {
+      console.error("Payment process error:", error);
+      alert("Gagal menghubungi server!");
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-lg">Memuat data keranjang...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-200">
+    <div className="min-h-screen bg-gray-50">
       {/* NAVBAR */}
       <div className="w-full border-b bg-emerald-700 text-white">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
@@ -145,182 +206,199 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* MAIN */}
-      <main className="mx-auto max-w-6xl p-4 md:p-6">
-        <h1 className="text-xl font-semibold mb-4">Checkout</h1>
+      {/* MAIN CONTENT */}
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        {/* HEADER */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => router.back()}
+            className="h-10 w-10 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold">Checkout</h1>
+        </div>
 
-        {/* ========== LEVEL 1: layout vertical ========== */}
-        <div className="space-y-4">
+        {/* TWO COLUMN LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* LEFT COLUMN - Address & Orders */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* ALAMAT PENGIRIMAN */}
+            <Card className="bg-white shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-emerald-700 text-base font-semibold">
+                  Alamat Pengiriman
+                </CardTitle>
+              </CardHeader>
 
-          {/* ========== ALAMAT FULL WIDTH ========== */}
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Alamat Pengiriman</CardTitle>
-            </CardHeader>
-
-            <CardContent className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-              <div className="flex gap-3">
-                <MapPin className="h-5 w-5 mt-1 text-emerald-700" />
-                <div>
-                  <p className="font-medium">{address.name}</p>
-                  <p className="text-sm text-slate-600 leading-snug">
-                    {address.address}
-                  </p>
-                  <p className="text-sm text-slate-600 mt-1">
-                    {address.phone}
-                  </p>
-                </div>
-              </div>
-
-              <AddressDialog
-                trigger={
-                  <button className="px-3 py-2 rounded-md border text-sm">
-                    <PencilLine className="h-4 w-4 inline mr-1" />
-                    Ubah
-                  </button>
-                }
-                onSelect={(data) =>
-                  setAddress({
-                    name: data.name,
-                    address: data.address,
-                    phone: data.phone,
-                  })
-                }
-              />
-            </CardContent>
-          </Card>
-
-          {/* ========== LEVEL 2: kiri & kanan ========== */}
-          <div className="flex flex-col md:flex-row md:items-start gap-4">
-
-            {/* ==================== KIRI: PESANAN ==================== */}
-            <div className="flex-1">
-              <Card className="shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Pesanan</CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-3">
-                    {items.map((it, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-4 border border-[#E5E7EB] rounded-xl bg-white p-4 shadow-sm"
-                      >
-                        <div className="h-14 w-14 rounded-lg overflow-hidden bg-gray-100 border flex items-center justify-center">
-                          <img
-                            src={it.image_url}
-                            alt={it.name}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-
-                        <div className="flex-1">
-                          <p className="font-semibold text-[14px] leading-tight">
-                            {it.name}
-                          </p>
-
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="px-2 py-[1px] text-[11px] rounded-md bg-emerald-100 text-emerald-700 font-medium">
-                              {it.qty} pcs
-                            </span>
-                            <span className="text-[12px] text-slate-500">
-                              {currency(it.price)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <p className="text-[14px] font-semibold text-slate-900">
-                          {currency(it.price * it.qty)}
-                        </p>
-                      </div>
-                    ))}
+              <CardContent className="flex items-start justify-between gap-8">
+                <div className="flex gap-3 w-1/2">
+                  <MapPin className="h-6 w-6 text-emerald-700 flex-shrink-0 mt-1" />
+                  <div>
+                    <p className="font-semibold text-gray-900">{address.name}</p>
+                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                      {address.address}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">{address.phone}</p>
                   </div>
+                </div>
+
+                <AddressDialog
+                  trigger={
+                    <button className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 whitespace-nowrap flex-shrink-0">
+                      Ubah
+                    </button>
+                  }
+                  onSelect={(data) =>
+                    setAddress({
+                      name: data.name,
+                      address: data.address,
+                      phone: data.phone,
+                    })
+                  }
+                />
+              </CardContent>
+            </Card>
+
+            {/* PESANAN */}
+            <div className="space-y-3">
+              {/* Header Card */}
+              <Card className="bg-white shadow-sm py-2">
+                <CardContent className="px-4 py-2">
+                  <h2 className="text-emerald-700 text-sm font-semibold">
+                    Pesanan
+                  </h2>
                 </CardContent>
               </Card>
+
+              {/* Individual Product Cards */}
+              {items.map((item, idx) => (
+                <Card key={idx} className="bg-white shadow-sm py-1">
+                  <CardContent className="p-4">
+                    <div className="flex items-stretch gap-4">
+                      {/* Product Image */}
+                      <div className="h-16 w-16 rounded-lg overflow-hidden bg-white flex-shrink-0">
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+
+                      {/* Product Details */}
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {item.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge
+                            variant="secondary"
+                            className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5"
+                          >
+                            {item.variant}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {currency(item.price)}
+                        </p>
+                      </div>
+
+                      {/* Quantity & Total - Vertical with space */}
+                      <div className="flex flex-col justify-between items-end text-right">
+                        <p className="text-sm text-gray-600">x{item.qty}</p>
+                        <p className="font-semibold text-gray-900 text-sm">
+                          Total {item.qty} Produk {currency(item.price * item.qty)}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+          </div>
 
-            {/* ==================== KANAN ==================== */}
-            <div className="w-full md:w-[330px] space-y-4">
+          {/* RIGHT COLUMN - Payment Info */}
+          <div className="lg:col-span-1">
+            {/* Combined Card: Payment Method + Voucher + Summary */}
+            <Card className="bg-white shadow-sm">
+              <CardContent className="p-4 space-y-5">
+                {/* Metode Pembayaran */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-emerald-700">
+                      Metode Pembayaran
+                    </p>
+                    <PaymentMethodDialog
+                      trigger={
+                        <button className="px-4 py-1.5 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
+                          Pilih
+                        </button>
+                      }
+                      onConfirm={(sel) => setPayChoice(sel)}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {payChoice.method ? paymentLabel : "-"}
+                  </p>
+                </div>
 
-              {/* Metode Pembayaran */}
-              <Card className="bg-white shadow-none border border-[#E5E7EB] rounded-md p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[14px] font-semibold text-[#0E9F6E]">
-                    Metode Pembayaran
+                {/* Voucher dan Promo */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-semibold text-emerald-700">
+                      Voucher dan Promo
+                    </p>
+                    <VoucherDialog
+                      current={voucher}
+                      onApply={setVoucher}
+                      trigger={
+                        <button className="px-4 py-1.5 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
+                          Pilih
+                        </button>
+                      }
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {voucher ? voucher.title : "-"}
+                  </p>
+                </div>
+
+                {/* Ringkasan Transaksi */}
+                <div>
+                  <p className="text-sm font-semibold text-emerald-700 mb-3">
+                    Ringkasan transaksi
                   </p>
 
-                  <PaymentMethodDialog
-                    trigger={
-                      <button className="px-3 h-[30px] border border-[#C6D9D2] rounded-md bg-white text-[13px]">
-                        Pilih
-                      </button>
-                    }
-                    onConfirm={(sel) => setPayChoice(sel)}
-                  />
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Total Harga Pesanan</span>
+                      <span className="font-medium">{currency(productTotal)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Biaya Pengiriman</span>
+                      <span className="font-medium">{currency(shipping)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Biaya Admin</span>
+                      <span className="font-medium">{currency(adminFee)}</span>
+                    </div>
+
+                    <div className="flex justify-between text-base font-bold text-gray-900 pt-2">
+                      <span>Total Pembayaran</span>
+                      <span>{currency(grandTotal)}</span>
+                    </div>
+
+                    <button 
+                      onClick={handlePayment}
+                      className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors">
+                      Bayar Sekarang
+                    </button>
+                  </div>
                 </div>
-
-                <p className="text-[13px] text-slate-600">
-                  {payChoice.method ? paymentLabel : "-"}
-                </p>
-              </Card>
-
-              {/* Voucher */}
-              <Card className="bg-white shadow-none border border-[#E5E7EB] rounded-md p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[14px] font-semibold text-[#0E9F6E]">
-                    Voucher dan Promo
-                  </p>
-
-                  <VoucherDialog
-                    current={voucher}
-                    onApply={setVoucher}
-                    trigger={
-                      <button className="px-3 h-[30px] border border-[#C6D9D2] rounded-md bg-white text-[13px]">
-                        Pilih
-                      </button>
-                    }
-                  />
-                </div>
-
-                <p className="text-[13px] text-slate-600">
-                  {voucher ? voucher.title : "-"}
-                </p>
-              </Card>
-
-              {/* Ringkasan */}
-              <Card className="bg-white shadow-none border border-[#E5E7EB] rounded-md p-4 space-y-3">
-                <p className="text-[14px] font-semibold text-[#0E9F6E]">
-                  Ringkasan transaksi
-                </p>
-
-                <div className="flex justify-between text-[13px]">
-                  <span>Total Harga Pesanan</span>
-                  <span>{currency(productTotal)}</span>
-                </div>
-
-                <div className="flex justify-between text-[13px]">
-                  <span>Biaya Pengiriman</span>
-                  <span>{currency(shipping)}</span>
-                </div>
-
-                <div className="flex justify-between text-[13px]">
-                  <span>Biaya Admin</span>
-                  <span>{currency(adminFee)}</span>
-                </div>
-
-                <div className="border-t border-gray-300 my-1" />
-
-                <div className="flex justify-between text-[14px] font-bold">
-                  <span>Total Pembayaran</span>
-                  <span>{currency(grandTotal)}</span>
-                </div>
-
-                <button className="w-full py-2 rounded-md bg-[#0E9F6E] text-white font-semibold text-[14px]">
-                  Bayar Sekarang
-                </button>
-              </Card>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
