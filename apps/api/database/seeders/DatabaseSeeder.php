@@ -20,5 +20,26 @@ class DatabaseSeeder extends Seeder
 
         // Seed test data for development
         $this->call(TestDataSeeder::class);
+
+        User::factory()->create([
+            "username" => "admin",
+            "first_name" => "Admin",
+            "last_name" => "Satu",
+            "role" => "admin",
+            "phone_number" => "081234567890",
+            "email" => "noreply@pasjajan.com",
+            "password" => bcrypt("Admin123!"),
+        ]);
+
+        User::factory()->create([
+            "username" => "john_doe",
+            "first_name" => "john",
+            "last_name" => "doe",
+            "phone_number" => "085712348765",
+            "email" => "john@gmail.com",
+            "password" => bcrypt("User123!"),
+        ]);
+
+        User::factory(8)->create();
     }
 }
