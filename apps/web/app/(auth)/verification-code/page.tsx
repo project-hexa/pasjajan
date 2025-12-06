@@ -14,7 +14,6 @@ import {
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -25,7 +24,6 @@ export default function VerificationCodePage() {
       email: "",
     },
   });
-  const router = useRouter();
   const { verificationCode } = useAuth();
 
   const handleSubmit = (data: z.infer<typeof verificationCodeSchema>) => {
