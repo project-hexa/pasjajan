@@ -45,7 +45,7 @@ class OrderSeeder extends Seeder
       $status = $statuses[array_rand($statuses)];
 
       $itemsCount = rand(1, 5);
-      $subtotal = 0;
+      $sub_total = 0;
       $orderItems = [];
 
       for ($j = 0; $j < $itemsCount; $j++) {
@@ -53,29 +53,31 @@ class OrderSeeder extends Seeder
         $quantity = rand(1, 3);
         $price = $product->price;
         $total = $price * $quantity;
-        $subtotal += $total;
+        $sub_total += $total;
 
         $orderItems[] = [
           'product_id' => $product->id,
           'quantity' => $quantity,
           'price' => $price,
-          'subtotal' => $total,
+          'sub_total' => $total,
         ];
       }
 
       $discount = rand(0, 10) > 7 ? rand(5000, 50000) : 0;
       $shippingFee = rand(10000, 50000);
-      $grandTotal = $subtotal - $discount + $shippingFee;
+      $grandTotal = $sub_total - $discount + $shippingFee;
 
+      $address = Address::where('customer_id', $customer->id)->first();
       $order = Order::create([
         'customer_id' => $customer->id,
         'voucher_id' => Voucher::inRandomOrder()->first()?->id,
-        'address_id' => Address::where('customer_id', $customer->id)->first()?->id,
+        'address_id' => $address?->id,
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
+        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
         'status' => $status,
-        'subtotal' => $subtotal,
+        'sub_total' => $sub_total,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
         'created_at' => $orderDate,
@@ -88,7 +90,7 @@ class OrderSeeder extends Seeder
           'product_id' => $item['product_id'],
           'quantity' => $item['quantity'],
           'price' => $item['price'],
-          'subtotal' => $item['subtotal'],
+          'sub_total' => $item['sub_total'],
         ]);
       }
     }
@@ -101,7 +103,7 @@ class OrderSeeder extends Seeder
 
       $status = $statuses[array_rand($statuses)];
       $itemsCount = rand(1, 5);
-      $subtotal = 0;
+      $sub_total = 0;
       $orderItems = [];
 
       for ($j = 0; $j < $itemsCount; $j++) {
@@ -109,29 +111,31 @@ class OrderSeeder extends Seeder
         $quantity = rand(1, 3);
         $price = $product->price;
         $total = $price * $quantity;
-        $subtotal += $total;
+        $sub_total += $total;
 
         $orderItems[] = [
           'product_id' => $product->id,
           'quantity' => $quantity,
           'price' => $price,
-          'subtotal' => $total,
+          'sub_total' => $total,
         ];
       }
 
       $discount = rand(0, 10) > 7 ? rand(5000, 50000) : 0;
       $shippingFee = rand(10000, 50000);
-      $grandTotal = $subtotal - $discount + $shippingFee;
+      $grandTotal = $sub_total - $discount + $shippingFee;
 
+      $address = Address::where('customer_id', $customer->id)->first();
       $order = Order::create([
         'customer_id' => $customer->id,
         'voucher_id' => Voucher::inRandomOrder()->first()?->id,
-        'address_id' => Address::where('customer_id', $customer->id)->first()?->id,
+        'address_id' => $address?->id,
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
+        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
         'status' => $status,
-        'subtotal' => $subtotal,
+        'sub_total' => $sub_total,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
         'created_at' => $orderDate,
@@ -144,7 +148,7 @@ class OrderSeeder extends Seeder
           'product_id' => $item['product_id'],
           'quantity' => $item['quantity'],
           'price' => $item['price'],
-          'subtotal' => $item['subtotal'],
+          'sub_total' => $item['sub_total'],
         ]);
       }
     }
@@ -169,7 +173,7 @@ class OrderSeeder extends Seeder
 
       $status = $statuses[array_rand($statuses)];
       $itemsCount = rand(1, 5);
-      $subtotal = 0;
+      $sub_total = 0;
       $orderItems = [];
 
       for ($j = 0; $j < $itemsCount; $j++) {
@@ -177,29 +181,31 @@ class OrderSeeder extends Seeder
         $quantity = rand(1, 3);
         $price = $product->price;
         $total = $price * $quantity;
-        $subtotal += $total;
+        $sub_total += $total;
 
         $orderItems[] = [
           'product_id' => $product->id,
           'quantity' => $quantity,
           'price' => $price,
-          'subtotal' => $total,
+          'sub_total' => $total,
         ];
       }
 
       $discount = rand(0, 10) > 7 ? rand(5000, 50000) : 0;
       $shippingFee = rand(10000, 50000);
-      $grandTotal = $subtotal - $discount + $shippingFee;
+      $grandTotal = $sub_total - $discount + $shippingFee;
 
+      $address = Address::where('customer_id', $customer->id)->first();
       $order = Order::create([
         'customer_id' => $customer->id,
         'voucher_id' => Voucher::inRandomOrder()->first()?->id,
-        'address_id' => Address::where('customer_id', $customer->id)->first()?->id,
+        'address_id' => $address?->id,
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
+        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
         'status' => $status,
-        'subtotal' => $subtotal,
+        'sub_total' => $sub_total,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
         'created_at' => $orderDate,
@@ -212,7 +218,7 @@ class OrderSeeder extends Seeder
           'product_id' => $item['product_id'],
           'quantity' => $item['quantity'],
           'price' => $item['price'],
-          'subtotal' => $item['subtotal'],
+          'sub_total' => $item['sub_total'],
         ]);
       }
     }
