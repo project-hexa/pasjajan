@@ -28,11 +28,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Logout } from "./auth/logout";
 import { useEffect, useState } from "react";
+import { useUser } from "@/hooks/contollers/useUser";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     setMounted(true);
@@ -156,9 +158,9 @@ export const Navbar = ({ className }: { className?: string }) => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant={"ghost"}
-                  size={"icon"}
                   className="text-primary-foreground"
                 >
+                  {user?.full_name}
                   <Icon icon="lucide:user" />
                 </Button>
               </DropdownMenuTrigger>
