@@ -63,11 +63,12 @@ const products = [
   },
 ];
 
-export default function PromoDetailPage({
+export default async function PromoDetailPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   return (
     <>
       <Navbar />
@@ -75,7 +76,7 @@ export default function PromoDetailPage({
         <div className="mb-8 w-full overflow-hidden rounded-xl shadow-md">
           <Image
             src="/promo/bannerpromo.jpg"
-            alt={params.slug}
+            alt={slug}
             width={1200}
             height={400}
             className="w-full object-cover"
