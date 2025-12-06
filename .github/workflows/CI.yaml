@@ -31,6 +31,9 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: '8.4'
+        run: 
+             cd apps/api
+             composer install
 
       - name: Setup FE and BE
         run: pnpm init:all
