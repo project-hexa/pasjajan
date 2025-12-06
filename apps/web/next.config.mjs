@@ -2,6 +2,7 @@
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
   images: {
+    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
