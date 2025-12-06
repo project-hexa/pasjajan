@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('shipment_reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Shipment::class);
+            $table->foreignIdFor(Shipment::class)->constrained()->cascadeOnDelete();
             $table->integer('rating');
             $table->text('comment')->nullable();
             $table->dateTime('review_date');
