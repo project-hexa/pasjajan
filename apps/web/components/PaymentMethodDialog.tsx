@@ -15,7 +15,7 @@ import {
   AccordionTrigger,
 } from "@workspace/ui/components/accordion";
 import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
-import { ChevronLeft } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
 
 interface BackendPayment {
@@ -103,7 +103,7 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
               onClick={() => setOpen(false)}
               className="absolute left-4 grid h-8 w-8 place-items-center rounded-full text-slate-800 hover:bg-slate-100"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <Icon icon="lucide:chevron-left" width={16} height={16} />
             </button>
             <p className="text-sm font-semibold text-slate-900">
               Pilih Metode Pembayaran
@@ -140,7 +140,7 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
                   <Accordion type="single" collapsible className="mb-3">
                     <AccordionItem value="ewallet">
                       <AccordionTrigger className="rounded-xl border shadow-sm bg-white px-5 py-5">
-                        <span className="font-semibold text-base">E-Wallet</span>
+                        <span className="font-semibold text-base">Dompet Digital</span>
                       </AccordionTrigger>
 
                       <AccordionContent>
@@ -173,7 +173,7 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
                     <AccordionItem value="va">
                       <AccordionTrigger className="rounded-xl border shadow-sm bg-white px-5 py-5">
                         <span className="font-semibold text-base">
-                          Virtual Account
+                          Bank Transfer
                         </span>
                       </AccordionTrigger>
 

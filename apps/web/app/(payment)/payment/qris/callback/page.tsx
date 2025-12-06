@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Icon } from "@workspace/ui/components/icon";
 
 export default function QrisCallbackPage() {
     const router = useRouter();
@@ -19,7 +19,7 @@ export default function QrisCallbackPage() {
                     try {
                         const data = JSON.parse(paymentData);
                         if (data.order_code) {
-                            router.push(`/payment/Waiting?order=${data.order_code}`);
+                            router.push(`/payment/waiting?order=${data.order_code}`);
                         }
                     } catch (e) {
                         console.error('Failed to parse payment_data:', e);
@@ -33,11 +33,21 @@ export default function QrisCallbackPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50">
-            <div className="text-center">
-                <Loader2 className="w-16 h-16 text-emerald-700 animate-spin mx-auto mb-4" />
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">Pembayaran Diproses</h1>
-                <p className="text-gray-600 mb-2">Tab ini akan tertutup otomatis...</p>
-                <p className="text-sm text-gray-500">Silakan kembali ke tab sebelumnya</p>
+            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 text-center">
+                <div className="flex justify-center mb-6">
+                    <div className="w-16 h-16 rounded-full border-4 border-emerald-600 flex items-center justify-center">
+                        <Icon icon="lucide:loader-2" width={32} height={32} className="text-emerald-600 animate-spin" />
+                    </div>
+                </div>
+                <h1 className="text-xl font-bold text-gray-800 mb-2">
+                    Pembayaran Diproses
+                </h1>
+                <p className="text-gray-600 mb-2">
+                    Tab ini akan tertutup otomatis...
+                </p>
+                <p className="text-sm text-gray-500">
+                    Silakan kembali ke tab sebelumnya
+                </p>
             </div>
         </div>
     );

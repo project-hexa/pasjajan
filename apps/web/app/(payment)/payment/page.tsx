@@ -10,7 +10,7 @@ import {
 } from "@workspace/ui/components/card";
 
 import { Badge } from "@workspace/ui/components/badge";
-import { MapPin, ArrowLeft } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog from "@/components/AddressDialog";
@@ -138,9 +138,14 @@ export default function CheckoutPage() {
 
   // VOUCHER
   const [voucher, setVoucher] = React.useState<VoucherChoice | null>(null);
+  
+  // LOADING STATE FOR PAYMENT BUTTON
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
   // Handle Payment Process
   const handlePayment = async () => {
+    if (isProcessing) return; // Prevent double clicks
+    
     if (!payChoice.option) {
       alert("Silakan pilih metode pembayaran terlebih dahulu!");
       return;
@@ -151,6 +156,8 @@ export default function CheckoutPage() {
       return;
     }
 
+    setIsProcessing(true); // Start loading
+    
     try {
       const response = await fetch("http://localhost:8000/api/payment/process", {
         method: "POST",
@@ -165,6 +172,7 @@ export default function CheckoutPage() {
 
       if (!result.success) {
         alert(result.message || "Gagal memproses pembayaran!");
+        setIsProcessing(false); // Stop loading on failure
         return;
       }
 
@@ -172,10 +180,11 @@ export default function CheckoutPage() {
       localStorage.setItem("payment_data", JSON.stringify(result.data));
 
       // Redirect to waiting page
-      router.push(`/payment/Waiting?order=${orderCode}`);
+      router.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
       alert("Gagal menghubungi server!");
+      setIsProcessing(false); // Stop loading on error
     }
   };
 
@@ -214,7 +223,7 @@ export default function CheckoutPage() {
             onClick={() => router.back()}
             className="h-10 w-10 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <Icon icon="lucide:arrow-left" width={20} height={20} />
           </button>
           <h1 className="text-2xl font-bold">Checkout</h1>
         </div>
@@ -233,7 +242,7 @@ export default function CheckoutPage() {
 
               <CardContent className="flex items-start justify-between gap-8">
                 <div className="flex gap-3 w-1/2">
-                  <MapPin className="h-6 w-6 text-emerald-700 flex-shrink-0 mt-1" />
+                  <Icon icon="lucide:map-pin" width={24} height={24} className="text-emerald-700 flex-shrink-0 mt-1" />
                   <div>
                     <p className="font-semibold text-gray-900">{address.name}</p>
                     <p className="text-sm text-gray-600 mt-1 leading-relaxed">
@@ -392,8 +401,12 @@ export default function CheckoutPage() {
 
                     <button 
                       onClick={handlePayment}
-                      className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors">
-                      Bayar Sekarang
+                      disabled={isProcessing}
+                      className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      {isProcessing && (
+                        <Icon icon="lucide:loader-2" width={18} height={18} className="animate-spin" />
+                      )}
+                      {isProcessing ? 'Memproses...' : 'Bayar Sekarang'}
                     </button>
                   </div>
                 </div>

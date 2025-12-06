@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { DollarSign } from 'lucide-react';
+import { Icon } from "@workspace/ui/components/icon";
 
 interface PaymentInstructionsModalProps {
     isOpen: boolean;
@@ -96,9 +96,7 @@ export const PaymentInstructionsModal: React.FC<PaymentInstructionsModalProps> =
                     className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
                     aria-label="Tutup"
                 >
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="lucide:x" width={20} height={20} className="text-gray-600" />
                 </button>
 
                 {/* Title */}
@@ -109,7 +107,7 @@ export const PaymentInstructionsModal: React.FC<PaymentInstructionsModalProps> =
                 {/* Payment Method Info */}
                 <div className="bg-emerald-50 rounded-lg p-3 mb-6 flex items-center gap-3">
                     <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-                        <DollarSign className="w-5 h-5 text-white" />
+                        <Icon icon="lucide:wallet" width={20} height={20} className="text-white" />
                     </div>
                     <div>
                         <p className="font-semibold text-emerald-900">{paymentMethod.name}</p>
