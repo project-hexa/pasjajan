@@ -2,21 +2,24 @@
 
 "use client";
 
+import Image from "next/image";
 // Import lucide-react (Package, Truck, etc.) SUDAH DIHAPUS
 import React from "react"; // Penting untuk file .tsx
 
 // Ganti nama fungsinya menjadi "Page"
 export default function Page() {
   // ======================================================
-  // ||     PERUBAHAN: Ikon diubah menjadi <img>         ||
+  // ||     PERUBAHAN: Ikon diubah menjadi <Image>         ||
   // ======================================================
   const steps = [
     {
       icon: (
-        <img
+        <Image
           src="/img/icon-proses-1.png"
           alt="Pesanan dibuat"
           className="h-8 w-8"
+          width={32}
+          height={32}
         />
       ),
       label: "Pesanan dibuat",
@@ -24,10 +27,12 @@ export default function Page() {
     },
     {
       icon: (
-        <img
+        <Image
           src="/img/icon-proses-2.png"
           alt="Sedang dikirim"
           className="h-8 w-8"
+          width={32}
+          height={32}
         />
       ),
       label: "Sedang dikirim",
@@ -35,10 +40,12 @@ export default function Page() {
     },
     {
       icon: (
-        <img
+        <Image
           src="/img/icon-proses-3.png"
           alt="Kurir menerima"
           className="h-8 w-8"
+          width={32}
+          height={32}
         />
       ),
       label: "Kurir menerima",
@@ -46,10 +53,12 @@ export default function Page() {
     },
     {
       icon: (
-        <img
+        <Image
           src="/img/icon-proses-4.png"
           alt="Tiba di tujuan"
           className="h-8 w-8"
+          width={32}
+          height={32}
         />
       ),
       label: "Tiba di tujuan",
@@ -138,7 +147,7 @@ export default function Page() {
         <div className="flex items-center gap-6">
           {/* Logo Utama (Sudah Diubah) */}
           <div className="flex flex-col items-center">
-            <img src="/img/logo2.png" alt="pasjajan" className="h-8" />
+            <Image src="/img/logo2.png" alt="pasjajan" className="h-8" height={32} width={32} />
             {/* INI YANG SAYA TAMBAHKAN */}
             <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
           </div>
@@ -168,7 +177,7 @@ export default function Page() {
               placeholder="Cari produk yang anda inginkan"
               className="flex-grow bg-transparent text-base text-gray-800 placeholder-gray-500 outline-none"
             />
-            {/* Ikon <img> diganti dengan <svg> di bawah */}
+            {/* Ikon <Image> diganti dengan <svg> di bawah */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -188,10 +197,12 @@ export default function Page() {
             className="flex items-center gap-10 font-semibold text-white"
           >
             <span>Promo</span>
-            <img
+            <Image
               src="/img/icon-promo.png" // GANTI DENGAN NAMA FILE IKON PROMO ANDA
               alt="Promo"
               className="h-8"
+              width={32}
+              height={32}
             />
           </a>
           {/* ====================================================== */}
@@ -373,7 +384,7 @@ export default function Page() {
           <div>
             {/* Logo (Bukan Button) & Teks "pasjajan" (Lebih presisi) */}
             <div className="flex flex-col items-center">
-              <img src="/img/logo2.png" className="w-36" alt="PasJajan" />
+              <Image src="/img/logo2.png" className="w-36" width={144} height={144} alt="PasJajan" />
               {/* Teks "pasjajan" dibuat lebih presisi & centered */}
               <span className="mt-1 text-xl font-semibold">pasjajan</span>
             </div>
@@ -387,17 +398,21 @@ export default function Page() {
             <div className="flex gap-3">
               {/* Ikon Sosmed */}
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img
+                <Image
                   src="/img/ig.png" // GANTI DENGAN NAMA FILE IKON IG ANDA
                   alt="Instagram"
                   className="h-6 w-6" // Atur ukuran ikon
+                  height={24}
+                  width={24}
                 />
               </a>
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img
+                <Image
                   src="/img/tiktok.png" // GANTI DENGAN NAMA FILE IKON TIKTOK ANDA
                   alt="TikTok"
                   className="h-6 w-6" // Atur ukuran ikon
+                  width={24}
+                  height={24}
                 />
               </a>
             </div>
@@ -428,38 +443,48 @@ export default function Page() {
           {/* ====================================================== */}
 
           {/* ====================================================== */}
-          {/* ||     PERUBAHAN: Metode Pembayaran diubah ke <img>   || */}
+          {/* ||     PERUBAHAN: Metode Pembayaran diubah ke <Image>   || */}
           {/* ====================================================== */}
           <div>
             <p className="mb-2 font-semibold">Metode Pembayaran</p>
             <div className="flex flex-wrap gap-2">
               {" "}
               {/* flex-wrap agar rapi jika tidak muat */}
-              {/* Ganti <span> dengan <img> */}
-              <img
+              {/* Ganti <span> dengan <Image> */}
+              <Image
                 src="/img/qris.png" // GANTI DENGAN NAMA FILE ANDA
                 alt="QRIS"
                 className="h-6" // Atur tinggi ikon
+                height={32}
+                width={32}
               />
-              <img
+              <Image
                 src="/img/shopeepay.png" // GANTI DENGAN NAMA FILE ANDA
                 alt="ShopeePay"
                 className="h-6" // Atur tinggi ikon
+                height={32}
+                width={32}
               />
-              <img
+              <Image
                 src="/img/dana.png" // GANTI DENGAN NAMA FILE ANDA
                 alt="DANA"
                 className="h-6" // Atur tinggi ikon
+                height={32}
+                width={32}
               />
-              <img
+              <Image
                 src="/img/gopay.png" // GANTI DENGAN NAMA FILE ANDA
                 alt="Gopay"
                 className="h-6" // Atur tinggi ikon
+                height={32}
+                width={32}
               />
-              <img
+              <Image
                 src="/img/dana.png" // GANTI DENGAN NAMA FILE ANDA
                 alt="OVO"
                 className="h-6" // Atur tinggi ikon
+                height={32}
+                width={32}
               />
             </div>
           </div>
