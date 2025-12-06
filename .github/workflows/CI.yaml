@@ -27,6 +27,11 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      - name: Setup Composer
+        uses: php-actions/composer@v6
+        with:
+          php_version: '8.4'
+
       - name: Setup FE and BE
         run: pnpm init:all
 
