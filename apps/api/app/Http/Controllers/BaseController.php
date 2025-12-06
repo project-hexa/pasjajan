@@ -36,6 +36,25 @@ class BaseController extends Controller
 		return ValidatorFacade::make($input, $rules, $messages);
 	}
 
+	public function execValidation($requestData, $rules): array
+	{
+		// Validasi inputan user berdasarkan aturan (rules) validasi yang telah ditetapkan sebelumnya
+		$validator = $this->makeValidator($requestData, $rules);
+
+		// Jika validasi gagal, maka
+		if ($validator->fails()) {
+			$errors['validation_errors'] = $validator->errors();
+
+			$data['errors'] = $errors;
+		}
+
+		// Jika validasi berhasil, maka
+		// Ambil inputan user yang telah divalidasi
+		$data['result'] = $validator->validated();
+
+		return $data;
+	}
+
 	public function sendSuccessResponse(string $message, array $result = [], $code=200): JsonResponse
 	{
 		$response = [

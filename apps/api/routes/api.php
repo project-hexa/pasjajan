@@ -38,6 +38,11 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
+		Route::get('/admin/users/{role}', 'index');
+		Route::get('/admin/user/{id}', 'show');
+		Route::post('/admin/add-user', 'store');
+		Route::post('/admin/edit-user/{id}', 'update');
+		Route::get('/admin/delete-user/{id}', 'destroy');
 	});
 });
 

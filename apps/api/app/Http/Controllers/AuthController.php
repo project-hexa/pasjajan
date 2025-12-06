@@ -75,9 +75,19 @@ class AuthController extends BaseController
 		// Hapus token auth sebelumnya milik user terkait, jika ada
 		$user->tokens()->delete();
 
+		// Muat entitas role terkait jika ada
+		switch ($user['role']) {
+			case 'Customer':
+			case 'Staff':
+				$user = $user->load($user['role']);
+				break;
+			default:
+				break;
+		}
+
 		// Membuat token auth untuk user
 		$result['token'] = $user->createToken('auth_token')->plainTextToken;
-		$result['user_data'] = $user->load($user['role']);
+		$result['user_data'] = $user;
 
 		//return response()->json(["ok" => true, "token" => $token, "status" => 200]);
 		return $this->sendSuccessResponse("User berhasil login.", $result);
@@ -124,7 +134,7 @@ class AuthController extends BaseController
 
 		// Membuat token auth untuk user
 		$result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
-		$result['customer_data'] = $customer->load('user');
+		$result['customer_data'] = $customer;
 
 		return $this->sendSuccessResponse("User berhasil register.", $result);
 	}
