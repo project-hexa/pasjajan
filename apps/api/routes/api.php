@@ -8,6 +8,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\NotificationController;
 
 
 /*
@@ -68,4 +69,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
 	// Activity Logs
 	Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+
+	// Notifications
+	Route::get('/notifications/metrics', [NotificationController::class, 'metrics'])->name('notifications.metrics');
+	Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
+	Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+	Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 });
