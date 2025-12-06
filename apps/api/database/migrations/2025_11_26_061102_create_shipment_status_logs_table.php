@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('shipment_status_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Shipment::class);
+            $table->foreignIdFor(Shipment::class)->constrained()->cascadeOnDelete();
             $table->string('status_name');
             $table->timestamps();
         });
