@@ -3,12 +3,17 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\reportSalesController;
+use App\Http\Controllers\NotificationController;
 
 /*
 Route::get('/user', function (Request $request) {

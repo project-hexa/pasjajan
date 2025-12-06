@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helpers\ApiResponse;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Store;
@@ -214,7 +214,7 @@ class BranchController extends Controller
             }
 
             if (!$store->is_active) {
-                return ApiResponse::error('Cabang sudah dalam status tidak aktif', [], 400);
+                return ApiResponse::error('Cabang sudah dalam status tidak aktif', 400);
             }
 
             $store->update(['is_active' => false]);
@@ -252,7 +252,7 @@ class BranchController extends Controller
             }
 
             if ($store->is_active) {
-                return ApiResponse::error('Cabang sudah dalam status aktif', [], 400);
+                return ApiResponse::error('Cabang sudah dalam status aktif', 400);
             }
 
             $store->update(['is_active' => true]);

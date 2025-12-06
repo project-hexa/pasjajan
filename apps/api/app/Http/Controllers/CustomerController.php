@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Http\Helpers\ApiResponse;
+use App\Helpers\ApiResponse;
 
 class CustomerController extends Controller
 {

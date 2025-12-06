@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ApiResponse;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class LogController extends BaseController
+class LogController extends Controller
 {
     /**
      * Get activity logs with search and filter
@@ -55,7 +56,7 @@ class LogController extends BaseController
         $perPage = $request->get('per_page', 15);
         $logs = $query->paginate($perPage);
 
-        return $this->sendSuccessResponse(
+        return ApiResponse::success(
             'Data log aktivitas berhasil diambil',
             [
                 'logs' => $logs->items(),
