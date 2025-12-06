@@ -9,11 +9,13 @@ class Otp extends Model
 {
 	protected $fillable = [
 		'user_id',
+		'email',
 		'otp',
 		'expires_at',
+		'is_verified',
 	];
 
-	public function users(): BelongsTo
+	public function user(): BelongsTo
 	{
 		return $this->belongsTo(User::class);
 	}

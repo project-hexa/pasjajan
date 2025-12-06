@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Validation\Validator;
+use App\Models\User;
 
 class BaseController extends Controller
 {
@@ -36,7 +37,7 @@ class BaseController extends Controller
 		return ValidatorFacade::make($input, $rules, $messages);
 	}
 
-	public function execValidation($requestData, $rules): array
+	public function execValidation(array $requestData, array $rules): array
 	{
 		// Validasi inputan user berdasarkan aturan (rules) validasi yang telah ditetapkan sebelumnya
 		$validator = $this->makeValidator($requestData, $rules);
@@ -53,6 +54,14 @@ class BaseController extends Controller
 		$data['result'] = $validator->validated();
 
 		return $data;
+	}
+
+	public function deleteVerifiedOtp(User $userOtp): void
+	{
+		$otp = $userOtp->otps()->latest()->first();
+		if ($otp['is_verified']) {
+			$otp->delete();
+		}
 	}
 
 	public function sendSuccessResponse(string $message, array $result = [], $code=200): JsonResponse

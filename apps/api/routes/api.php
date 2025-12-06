@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\EnsureOtpIsVerified;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DeliveryController;
@@ -15,11 +16,15 @@ Route::get('/user', function (Request $request) {
 // Membungkus route yang berkaitan dengan autentifikasi user ke route group yang menjalankan AuthController
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
-	Route::post('/auth/register', 'registerPost');
 	Route::post('/auth/login/google', 'loginViaGoogle');
-	Route::post('/auth/forgot-password', 'forgotPassword');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
+
+	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
+	Route::middleware(EnsureOtpIsVerified::class)->group(function() {
+		Route::post('/auth/register', 'registerPost');
+		Route::post('/auth/forgot-password', 'forgotPassword');
+	});
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function() {
