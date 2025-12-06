@@ -83,7 +83,7 @@ class CustomerController extends Controller
                 ];
             });
 
-            return ApiResponse::success('Data pelanggan berhasil diambil', [
+            return ApiResponse::success([
                 'period' => [
                     'filter' => $period,
                     'from' => $from->format('Y-m-d'),
@@ -98,7 +98,7 @@ class CustomerController extends Controller
                     'from' => $ordersPaginated->firstItem(),
                     'to' => $ordersPaginated->lastItem(),
                 ],
-            ]);
+            ], 'Data pelanggan berhasil diambil');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data pelanggan',
@@ -132,7 +132,7 @@ class CustomerController extends Controller
             $categoryComposition = $this->getCategoryComposition($from, $to);
             $purchaseFrequency = $this->getPurchaseFrequency($from, $to);
 
-            return ApiResponse::success('Data analytics berhasil diambil', [
+            return ApiResponse::success([
                 'period' => [
                     'filter' => $period,
                     'from' => $from->format('Y-m-d'),
@@ -144,7 +144,7 @@ class CustomerController extends Controller
                     'category_composition' => $categoryComposition,
                     'purchase_frequency' => $purchaseFrequency,
                 ],
-            ]);
+            ], 'Data analytics berhasil diambil');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data analytics',
@@ -248,7 +248,7 @@ class CustomerController extends Controller
 
             $customers = $query->get();
 
-            return ApiResponse::success('Hasil pencarian pelanggan', [
+            return ApiResponse::success([
                 'customers' => $customers->map(function ($customer) {
                     return [
                         'id' => $customer->id,
@@ -262,7 +262,7 @@ class CustomerController extends Controller
                     ];
                 }),
                 'total' => $customers->count(),
-            ]);
+            ], 'Hasil pencarian pelanggan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mencari pelanggan',
@@ -301,7 +301,7 @@ class CustomerController extends Controller
                 ->whereIn('status', ['COMPLETED'])
                 ->sum('grand_total');
 
-            return ApiResponse::success('Detail pelanggan ditemukan', [
+            return ApiResponse::success([
                 'customer' => [
                     'id' => $customer->id,
                     'name' => $customer->user->first_name . ' ' . $customer->user->last_name,
@@ -313,7 +313,7 @@ class CustomerController extends Controller
                     'member_since' => $customer->created_at->format('Y-m-d'),
                 ],
                 'recent_orders' => $orders,
-            ]);
+            ], 'Detail pelanggan ditemukan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil detail pelanggan',
@@ -339,7 +339,7 @@ class CustomerController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
-            return ApiResponse::success('Data pembelian pelanggan', [
+            return ApiResponse::success([
                 'purchases' => $orders->map(function ($order) {
                     return [
                         'id' => $order->id,
@@ -363,7 +363,7 @@ class CustomerController extends Controller
                     'current_page' => $orders->currentPage(),
                     'last_page' => $orders->lastPage(),
                 ],
-            ]);
+            ], 'Data pembelian pelanggan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data pembelian',

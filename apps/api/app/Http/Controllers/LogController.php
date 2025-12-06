@@ -57,7 +57,6 @@ class LogController extends Controller
         $logs = $query->paginate($perPage);
 
         return ApiResponse::success(
-            'Data log aktivitas berhasil diambil',
             [
                 'logs' => $logs->items(),
                 'pagination' => [
@@ -66,7 +65,8 @@ class LogController extends Controller
                     'total' => $logs->total(),
                     'last_page' => $logs->lastPage(),
                 ]
-            ]
+            ],
+            'Data log aktivitas berhasil diambil'
         );
     }
 }

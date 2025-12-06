@@ -35,7 +35,6 @@ class NotificationController extends Controller
             : 0;
 
         return ApiResponse::success(
-            'Data metrik notifikasi berhasil diambil',
             [
                 'total_notifications' => $currentMetrics->total,
                 'active_users' => $currentMetrics->active_users,
@@ -44,7 +43,8 @@ class NotificationController extends Controller
                     'from' => $from,
                     'to' => $to
                 ]
-            ]
+            ],
+            'Data metrik notifikasi berhasil diambil'
         );
     }
 
@@ -100,13 +100,13 @@ class NotificationController extends Controller
             }
 
             return ApiResponse::success(
-                'Notifikasi berhasil dikirim',
                 [
                     'total_recipients' => count($targetUsers),
                     'total_sent' => $insertedNotifications->count(),
                     'total_failed' => 0,
                     'status' => 'success',
-                ]
+                ],
+                'Notifikasi berhasil dikirim'
             );
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error saat mengirim notifikasi', [
@@ -187,7 +187,6 @@ class NotificationController extends Controller
         });
 
         return ApiResponse::success(
-            'Data riwayat notifikasi berhasil diambil',
             [
                 'notifications' => $notifications->items(),
                 'pagination' => [
@@ -196,7 +195,8 @@ class NotificationController extends Controller
                     'total' => $notifications->total(),
                     'last_page' => $notifications->lastPage(),
                 ]
-            ]
+            ],
+            'Data riwayat notifikasi berhasil diambil'
         );
     }
 
@@ -212,8 +212,8 @@ class NotificationController extends Controller
         $notification->status = 'sent';
 
         return ApiResponse::success(
-            'Detail notifikasi berhasil diambil',
-            ['notification' => $notification]
+            ['notification' => $notification],
+            'Detail notifikasi berhasil diambil'
         );
     }
 }

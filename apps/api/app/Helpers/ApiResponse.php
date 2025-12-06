@@ -9,12 +9,12 @@ class ApiResponse
     /**
      * Return success response
      *
-     * @param string $message
      * @param mixed $data
+     * @param string $message
      * @param int $statusCode
      * @return JsonResponse
      */
-    public static function success(string $message = 'Success', $data = null, int $statusCode = 200): JsonResponse
+    public static function success($data = null, string $message = 'Success', int $statusCode = 200): JsonResponse
     {
         $response = [
             'success' => true,
@@ -99,23 +99,22 @@ class ApiResponse
      * Return server error response
      *
      * @param string $message
-     * @param mixed $errors
      * @return JsonResponse
      */
-    public static function serverError(string $message = 'Internal server error', $errors = null): JsonResponse
+    public static function serverError(string $message = 'Internal server error'): JsonResponse
     {
-        return self::error($message, 500, $errors);
+        return self::error($message, 500);
     }
 
     /**
      * Return created response
      *
-     * @param string $message
      * @param mixed $data
+     * @param string $message
      * @return JsonResponse
      */
-    public static function created(string $message = 'Resource created successfully', $data = null): JsonResponse
+    public static function created($data = null, string $message = 'Resource created successfully'): JsonResponse
     {
-        return self::success($message, $data, 201);
+        return self::success($data, $message, 201);
     }
 }
