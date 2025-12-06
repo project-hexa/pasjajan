@@ -17,7 +17,7 @@ class LogController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = ActivityLog::with('user:id,first_name,last_name,email');        // Search by user email
+        $query = ActivityLog::with('user:id,full_name,email');        // Search by user email
         if ($request->has('email') && !empty($request->email)) {
             $query->whereHas('user', function ($q) use ($request) {
                 $q->where('email', 'like', '%' . $request->email . '%');
@@ -27,8 +27,7 @@ class LogController extends Controller
         // Search by user name
         if ($request->has('user') && !empty($request->user)) {
             $query->whereHas('user', function ($q) use ($request) {
-                $q->where('first_name', 'like', '%' . $request->user . '%')
-                    ->orWhere('last_name', 'like', '%' . $request->user . '%');
+                $q->where('full_name', 'like', '%' . $request->user . '%');
             });
         }        // Search by activity type (aksi)
         if ($request->has('activity_type') && !empty($request->activity_type)) {
