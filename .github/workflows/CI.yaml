@@ -24,16 +24,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: lts/*
           cache: 'pnpm'
-
-      - name: Setup Composer
-        uses: php-actions/composer@v6
-        with:
-          php_version: '8.4'
-        run: 
-             cd apps/api
-             composer install
 
       - name: Setup FE and BE
         run: pnpm init:all
