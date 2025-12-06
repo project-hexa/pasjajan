@@ -79,8 +79,8 @@ class PaymentController extends Controller
                 );
             }
 
-            // Check if order expired
-            if ($order->isExpired()) {
+            // Check if order expired (hanya jika expired_at sudah di-set)
+            if ($order->expired_at && $order->isExpired()) {
                 $order->update(['status' => 'cancelled', 'payment_status' => 'expired']);
                 return ApiResponse::error('Order sudah kadaluarsa', 400);
             }
@@ -125,6 +125,7 @@ class PaymentController extends Controller
                 'midtrans_order_id' => $result->order_id,
                 'payment_instructions' => $result->payment_instructions,
                 'payment_status' => 'pending',
+                'expired_at' => now()->addHours(1), // Set expire time saat payment process
             ]);
 
             // Prepare response
