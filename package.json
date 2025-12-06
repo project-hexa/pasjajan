@@ -23,6 +23,7 @@
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
     "prettier": "^3.6.2",
     "turbo": "^2.6.0",
     "prettier-plugin-tailwindcss": "^0.7.1",

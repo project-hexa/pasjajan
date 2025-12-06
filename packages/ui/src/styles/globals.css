@@ -196,3 +196,18 @@
     @apply cursor-pointer;
   }
 }
+
+/* Hide native browser clear/decoration for search inputs so only our custom clear button shows */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* IE/Edge */
+input[type="search"]::-ms-clear,
+input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
