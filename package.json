@@ -15,7 +15,7 @@
     "test:api": "turbo test -filter=api",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx,php}\"",
     "shadcn:add": "pnpm dlx shadcn add -c apps/web",
-    "init:all": "pnpm install && cd apps/api && composer setup && cd ../..",
+    "init:all": "pnpm install && cd apps/api && composer setup && composer update && cd ../..",
     "init:web": "cd apps/web && pnpm install && cd ../..",
     "init:api": "cd apps/api && composer setup && cd ../..",
     "radix:add": "pnpm add --filter=ui",
