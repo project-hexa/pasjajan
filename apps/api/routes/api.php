@@ -16,6 +16,10 @@ use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
 
+use App\Http\Controllers\Product\StoreController;
+use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\Product\ProductCategoryController;
+use App\Http\Controllers\Product\CartController;
 /*
 Route::get('/user', function (Request $request) {
 	return $request->user();
@@ -175,3 +179,27 @@ Route::controller(PromoController::class)->group(function () {
 	Route::delete('/admin/promos/{id}', 'destroy');
 });
 // });
+
+
+
+// ================= PRODUCT ROUTES =================
+//Stores
+Route::get('/stores', [StoreController::class, 'index']);
+Route::get('/stores/{id}', [StoreController::class, 'show']);
+
+//Products
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
+// Categories
+Route::get('/categories', [ProductCategoryController::class, 'index']);
+Route::get('/categories/{id}', [ProductCategoryController::class, 'show']);
+
+//Cart
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index']);
+    Route::post('/add', [CartController::class, 'add']);
+    Route::patch('/{cartId}', [CartController::class, 'update']);
+    Route::delete('/{cartId}', [CartController::class, 'remove']);
+    Route::post('/clear', [CartController::class, 'clear']);
+});
