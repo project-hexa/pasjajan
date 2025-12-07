@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HeroBanner } from "./components/hero-banner";
 import { TopRatedCarousel } from "./components/top-rated-carousel";
+import SiteFooter from "../components/site-footer";
 
 
 
@@ -42,15 +43,15 @@ const promoBanners = [
 ];
 
 const topRatedRestaurants = [
-  { id: 1, title: "Sushi Day - Bandung", image: "/images/Screenshot 2025-11-10 083417.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
-  { id: 2, title: "Burger Baik - Cimahi", image: "/images/Screenshot 2025-11-10 083650.png", offers: ["Diskon 20%", "Diskon Ongkir"] },
-  { id: 3, title: "Warkop - Bandung", image: "/images/Screenshot 2025-11-10 084035.png", offers: ["Diskon 15%", "Diskon Ongkir"] },
-  { id: 4, title: "Jus 1L - Gerlong", image: "/images/Screenshot 2025-11-10 084135.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
-  { id: 5, title: "Pizza Cuy - Bandung", image: "/images/Screenshot 2025-11-10 084728.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
-  { id: 6, title: "Roti H - Gerlong", image: "/images/Screenshot 2025-11-10 084920.png", offers: ["Diskon 30%", "Diskon Ongkir"] },
-  { id: 7, title: "Ayam Bakar Mantap - Bandung", image: "/images/Screenshot 2025-11-10 085035.png", offers: ["Diskon 30%", "Diskon Ongkir"] },
-  { id: 8, title: "Dimsum Suka - Bandung", image: "/images/Screenshot 2025-11-10 085143.png", offers: ["Diskon 20%", "Diskon Ongkir"] },
-  { id: 9, title: "Toko Manis - Bandung", image: "/images/Screenshot 2025-11-10 085301.png", offers: ["Diskon 15%", "Diskon Ongkir"] },
+  { id: 1, slug: "sushi-day-bandung", title: "Sushi Day - Bandung", image: "/images/Screenshot 2025-11-10 083417.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
+  { id: 2, slug: "burger-baik-cimahi", title: "Burger Baik - Cimahi", image: "/images/Screenshot 2025-11-10 083650.png", offers: ["Diskon 20%", "Diskon Ongkir"] },
+  { id: 3, slug: "warkop-bandung", title: "Warkop - Bandung", image: "/images/Screenshot 2025-11-10 084035.png", offers: ["Diskon 15%", "Diskon Ongkir"] },
+  { id: 4, slug: "jus-1l-gerlong", title: "Jus 1L - Gerlong", image: "/images/Screenshot 2025-11-10 084135.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
+  { id: 5, slug: "pizza-cuy-bandung", title: "Pizza Cuy - Bandung", image: "/images/Screenshot 2025-11-10 084728.png", offers: ["Diskon 25%", "Diskon Ongkir"] },
+  { id: 6, slug: "roti-h-gerlong", title: "Roti H - Gerlong", image: "/images/Screenshot 2025-11-10 084920.png", offers: ["Diskon 30%", "Diskon Ongkir"] },
+  { id: 7, slug: "ayam-bakar-mantap-bandung", title: "Ayam Bakar Mantap - Bandung", image: "/images/Screenshot 2025-11-10 085035.png", offers: ["Diskon 30%", "Diskon Ongkir"] },
+  { id: 8, slug: "dimsum-suka-bandung", title: "Dimsum Suka - Bandung", image: "/images/Screenshot 2025-11-10 085143.png", offers: ["Diskon 20%", "Diskon Ongkir"] },
+  { id: 9, slug: "toko-manis-bandung", title: "Toko Manis - Bandung", image: "/images/Screenshot 2025-11-10 085301.png", offers: ["Diskon 15%", "Diskon Ongkir"] },
 ];
 
 const mockProducts = [
@@ -157,6 +158,7 @@ export default function CataloguePage() {
     return () => clearTimeout(t);
   }, [q]);
   const matchedFirst = matchedRestaurants.length > 0 ? matchedRestaurants[0] : null;
+  const storeHref = matchedFirst ? `/store/${matchedFirst.slug}` : "#";
 
   React.useEffect(() => {
     setSearchValue(q);
@@ -285,49 +287,55 @@ export default function CataloguePage() {
             {matchedRestaurants.length > 0 ? (
               <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-12">
                 <div className="md:col-span-3">
-                  <article className="rounded-lg border bg-white p-6 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      {matchedFirst?.image ? (
-                        <Image
-                          src={matchedFirst.image}
-                          alt={matchedFirst.title ?? "store"}
-                          width={80}
-                          height={80}
-                          className="h-20 w-20 rounded-md object-cover"
-                        />
-                      ) : (
-                        <div className="h-20 w-20 rounded-md bg-black flex items-center justify-center text-white">PJ</div>
-                      )}
-                      <div>
-                        <h4 className="text-lg font-semibold">{matchedFirst?.title}</h4>
-                        <p className="text-sm text-[#6B7280]">Snack</p>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#6B7280]">
-                          <span>★ 4.8 (1.4RB)</span>
-                          <span>· 1km · 15min</span>
-                        </div>
-                        <div className="mt-3 flex gap-2 text-sm text-[#009F4D]">
-                          <span>Diskon 25%</span>
-                          <span>Diskon Ongkir</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="flex w-full gap-4 overflow-x-auto pb-2">
-                        {mockProducts.slice(0, 6).map((p) => (
-                          <div key={p.id} className="min-w-[140px]">
-                            <div className="rounded-lg bg-white p-2 shadow-sm">
-                              <img src={p.image} alt={p.name} className="h-24 w-full object-cover rounded" />
-                              <h5 className="mt-2 text-sm font-medium">{p.name}</h5>
-                              <p className="text-xs text-[#6B7280]">{p.description}</p>
-                              <p className="mt-1 font-bold text-red-600">Rp. {p.price.toLocaleString('id-ID')}</p>
-                            </div>
+                  <Link
+                    href={storeHref}
+                    prefetch={false}
+                    className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0A6B3C]"
+                  >
+                    <article className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm transition-transform duration-200 group-hover:-translate-y-1 group-hover:shadow-lg">
+                      <div className="flex items-center gap-4">
+                        {matchedFirst?.image ? (
+                          <Image
+                            src={matchedFirst.image}
+                            alt={matchedFirst.title ?? "store"}
+                            width={80}
+                            height={80}
+                            className="h-20 w-20 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-black text-white">PJ</div>
+                        )}
+                        <div>
+                          <h4 className="text-lg font-semibold leading-tight text-[#111827]">{matchedFirst?.title}</h4>
+                          <p className="text-sm text-[#6B7280]">Snack</p>
+                          <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#6B7280]">
+                            <span>★ 4.8 (1.4RB)</span>
+                            <span>· 1km · 15min</span>
                           </div>
-                        ))}
+                          <div className="mt-3 flex gap-2 text-sm text-[#009F4D]">
+                            <span>Diskon 25%</span>
+                            <span>Diskon Ongkir</span>
+                          </div>
+                        </div>
                       </div>
-                      <a className="mt-3 inline-block text-sm text-[#6B7280]">Lihat 120 gerai &gt;</a>
-                    </div>
-                  </article>
+
+                      <div className="mt-6">
+                        <div className="flex w-full gap-4 overflow-x-auto pb-2">
+                          {mockProducts.slice(0, 4).map((p) => (
+                            <div key={p.id} className="min-w-[128px] rounded-2xl border border-[#E5E7EB] bg-white/90 p-3 shadow-sm">
+                              <img src={p.image} alt={p.name} className="h-24 w-full rounded-xl object-cover" />
+                              <h5 className="mt-3 text-sm font-semibold text-[#111827]">{p.name}</h5>
+                              <p className="text-xs text-[#6B7280]">{p.description}</p>
+                              <p className="mt-2 text-sm font-bold text-[#DC2626]">Rp. {p.price.toLocaleString('id-ID')}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <span className="mt-4 inline-block text-sm font-medium text-[#6B7280] transition-colors group-hover:text-[#0A6B3C]">
+                          Lihat 120 gerai &gt;
+                        </span>
+                      </div>
+                    </article>
+                  </Link>
                 </div>
 
                 <div className="md:col-span-9">
@@ -363,149 +371,7 @@ export default function CataloguePage() {
           <TopRatedCarousel restaurants={topRatedRestaurants} />
         )}
       </div>
-      <footer className="mt-16 w-full bg-[#125635]">
-        <div className="relative isolate mx-auto max-w-[1920px] overflow-hidden px-6 pb-16 pt-20 text-white sm:px-10 lg:px-16">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="hidden h-full w-full lg:block">
-              <div
-                aria-hidden
-                className="absolute"
-                style={{
-                  width: 2303,
-                  height: 839,
-                  top: -484,
-                  left: -653,
-                  borderRadius: 302,
-                  background: "#FFFFFF",
-                  zIndex: 1,
-                }}
-              />
-              <div
-                aria-hidden
-                className="absolute"
-                style={{
-                  width: 1393,
-                  height: 957,
-                  top: -642,
-                  left: -732,
-                  borderRadius: 302,
-                  background: "#125635",
-                  zIndex: 3,
-                }}
-              />
-              <div
-                aria-hidden
-                className="absolute"
-                style={{
-                  width: 1430,
-                  height: 540,
-                  top: -305,
-                  left: -646,
-                  borderRadius: 302,
-                  background: "#FDDE13",
-                  zIndex: 2,
-                }}
-              />
-            </div>
-
-            <div className="h-full w-full lg:hidden">
-              <div
-                aria-hidden
-                className="absolute -left-2/3 inset-y-0 w-[160%] rounded-r-full bg-[#125635]"
-                style={{ zIndex: 3 }}
-              />
-              <div
-                aria-hidden
-                className="absolute -top-24 right-[20%] h-64 w-64 rounded-full bg-[#FDDE13]"
-                style={{ zIndex: 2 }}
-              />
-              <div
-                aria-hidden
-                className="absolute -right-[35%] bottom-[-35%] h-72 w-[120%] rounded-t-[240px] bg-[#125635]"
-                style={{ zIndex: 2 }}
-              />
-              <div
-                aria-hidden
-                className="absolute -top-[18%] -left-[15%] h-[140%] w-[140%] rounded-[220px] bg-white"
-                style={{ zIndex: 1 }}
-              />
-            </div>
-          </div>
-
-          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 md:flex-row md:items-center md:justify-between">
-            <div className="flex flex-col gap-6 text-white md:max-w-sm">
-              <div className="flex items-center gap-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 p-2 backdrop-blur-sm">
-                  <Image
-                    src="/img/logo2.png"
-                    alt="PasJajan"
-                    width={88}
-                    height={88}
-                    className="h-full w-full object-contain"
-                    priority
-                  />
-                </div>
-                <span className="text-3xl font-semibold">PasJajan</span>
-              </div>
-              <p className="text-lg font-semibold leading-relaxed md:text-xl">
-                Solusi Belanja Kelontong
-                <span className="block">dalam Genggaman.</span>
-              </p>
-            </div>
-
-            <div className="grid w-full gap-10 text-[#0A1F14] md:grid-cols-3 md:gap-12">
-              <div className="flex flex-col gap-3">
-                <h3 className="text-lg font-semibold text-[#111827]">Bantuan</h3>
-                <ul className="space-y-2 text-sm text-[#1F2937]">
-                  {supportLinks.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="text-lg font-semibold text-[#111827]">Metode Pembayaran</h3>
-                <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-[#1F2937]">
-                  {paymentMethods.map((method) => (
-                    <li key={method}>{method}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
-                <div className="flex items-center gap-4">
-                  {socialLinks.map(({ name, href, icon }) => (
-                    <Link
-                      key={name}
-                      href={href}
-                      aria-label={name}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      prefetch={false}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
-                    >
-                      <Image
-                        src={icon}
-                        alt={name}
-                        width={20}
-                        height={20}
-                        className="h-5 w-5 object-contain"
-                      />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#125635] py-4">
-          <p className="text-center text-xs font-medium text-white">
-            © 2025 PasJajan – All Right Reserved
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
