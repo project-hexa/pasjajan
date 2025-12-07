@@ -14,9 +14,11 @@ return new class extends Migration
     {
         Schema::create('otps', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class); // Create unsigned BIGINT
+            $table->foreignIdFor(User::class)->nullable(); // Create unsigned BIGINT
+			$table->string('email')->nullable();
 			$table->string('otp');
 			$table->timestamp('expires_at');
+			$table->boolean('is_verified')->default(false);
             $table->timestamps();
 			$table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });

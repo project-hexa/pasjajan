@@ -73,11 +73,15 @@ if (config('app.env') !== 'production') {
 // Membungkus route yang berkaitan dengan autentifikasi user ke route group yang menjalankan AuthController
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
-	Route::post('/auth/register', 'registerPost');
 	Route::post('/auth/login/google', 'loginViaGoogle');
-	Route::post('/auth/forgot-password', 'forgotPassword');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
+
+	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
+	Route::middleware(EnsureOtpIsVerified::class)->group(function() {
+		Route::post('/auth/register', 'registerPost');
+		Route::post('/auth/forgot-password', 'forgotPassword');
+	});
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function() {
@@ -96,6 +100,11 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
+		Route::get('/admin/users/{role}', 'index');
+		Route::get('/admin/user/{id}', 'show');
+		Route::post('/admin/add-user', 'store');
+		Route::post('/admin/edit-user/{id}', 'update');
+		Route::get('/admin/delete-user/{id}', 'destroy');
 	});
 });
 
