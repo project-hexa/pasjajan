@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-		$this->call([
-			UserSeeder::class,
-		]);
+        // Seed payment methods
+        $this->call(PaymentMethodSeeder::class);
+
+        // Seed test data for development
+        $this->call(TestDataSeeder::class);
     }
 }
