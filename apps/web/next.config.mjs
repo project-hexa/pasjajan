@@ -2,6 +2,7 @@
 const nextConfig = {
   transpilePackages: ["@workspace/ui"],
   images: {
+    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,6 +12,11 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "dummyimage.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },

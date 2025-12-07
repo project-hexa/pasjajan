@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Store extends Model
 {
+
+	protected $fillable = [
+		'code',
+		'name',
+		'address',
+		'phone_number',
+		'latitude',
+		'longitude',
+		'is_active',
+	];
+
 	public function staffs(): HasMany
 	{
 		return $this->HasMany(Staff::class);

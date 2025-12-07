@@ -12,7 +12,6 @@ export default function HomeLayout({
       <Navbar className="sticky top-0 z-50" />
       <main className="flex-1 overflow-y-auto">
         {children}
-        <Footer />
       </main>
       <BottomBar />
     </>

@@ -4,6 +4,7 @@
 
 // Import lucide-react (Package, Truck, etc.) SUDAH DIHAPUS
 import React from "react"; // Penting untuk file .tsx
+import Image from "next/image";
 
 // Ganti nama fungsinya menjadi "Page"
 export default function Page() {
@@ -13,44 +14,28 @@ export default function Page() {
   const steps = [
     {
       icon: (
-        <img
-          src="/img/icon-proses-1.png"
-          alt="Pesanan dibuat"
-          className="h-8 w-8"
-        />
+        <Image src="/img/icon-proses-1.png" alt="Pesanan dibuat" width={32} height={32} className="h-8 w-8" />
       ),
       label: "Pesanan dibuat",
       active: true,
     },
     {
       icon: (
-        <img
-          src="/img/icon-proses-2.png"
-          alt="Sedang dikirim"
-          className="h-8 w-8"
-        />
+        <Image src="/img/icon-proses-2.png" alt="Sedang dikirim" width={32} height={32} className="h-8 w-8" />
       ),
       label: "Sedang dikirim",
       active: true,
     },
     {
       icon: (
-        <img
-          src="/img/icon-proses-3.png"
-          alt="Kurir menerima"
-          className="h-8 w-8"
-        />
+        <Image src="/img/icon-proses-3.png" alt="Kurir menerima" width={32} height={32} className="h-8 w-8" />
       ),
       label: "Kurir menerima",
       active: true, // <-- Diubah jadi true
     },
     {
       icon: (
-        <img
-          src="/img/icon-proses-4.png"
-          alt="Tiba di tujuan"
-          className="h-8 w-8"
-        />
+        <Image src="/img/icon-proses-4.png" alt="Tiba di tujuan" width={32} height={32} className="h-8 w-8" />
       ),
       label: "Tiba di tujuan",
       active: true, // <-- Diubah jadi true
@@ -137,11 +122,11 @@ export default function Page() {
         {/* --- BAGIAN KIRI --- */}
         <div className="flex items-center gap-6">
           {/* Logo Utama (Sudah Diubah) */}
-          <div className="flex flex-col items-center">
-            <img src="/img/logo2.png" alt="pasjajan" className="h-8" />
-            {/* INI YANG SAYA TAMBAHKAN */}
-            <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
-          </div>
+            <div className="flex flex-col items-center">
+              <Image src="/img/logo2.png" alt="pasjajan" className="h-8" width={32} height={32} />
+              {/* INI YANG SAYA TAMBAHKAN */}
+              <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
+            </div>
 
           {/* Tombol Kategori */}
           <a
@@ -183,16 +168,9 @@ export default function Page() {
             </svg>
           </div>
 
-          <a
-            href="#"
-            className="flex items-center gap-10 font-semibold text-white"
-          >
+          <a href="#" className="flex items-center gap-10 font-semibold text-white">
             <span>Promo</span>
-            <img
-              src="/img/icon-promo.png" // GANTI DENGAN NAMA FILE IKON PROMO ANDA
-              alt="Promo"
-              className="h-8"
-            />
+            <Image src="/img/icon-promo.png" alt="Promo" className="h-8" width={32} height={32} />
           </a>
           {/* ====================================================== */}
         </div>
@@ -372,11 +350,11 @@ export default function Page() {
         <div className="grid grid-cols-4 gap-8 text-sm">
           <div>
             {/* Logo (Bukan Button) & Teks "pasjajan" (Lebih presisi) */}
-            <div className="flex flex-col items-center">
-              <img src="/img/logo2.png" className="w-36" alt="PasJajan" />
-              {/* Teks "pasjajan" dibuat lebih presisi & centered */}
-              <span className="mt-1 text-xl font-semibold">pasjajan</span>
-            </div>
+                <div className="flex flex-col items-center">
+                  <Image src="/img/logo2.png" className="w-36" alt="PasJajan" width={144} height={48} />
+                  {/* Teks "pasjajan" dibuat lebih presisi & centered */}
+                  <span className="mt-1 text-xl font-semibold">pasjajan</span>
+                </div>
           </div>
 
           {/* ====================================================== */}
@@ -387,18 +365,10 @@ export default function Page() {
             <div className="flex gap-3">
               {/* Ikon Sosmed */}
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img
-                  src="/img/ig.png" // GANTI DENGAN NAMA FILE IKON IG ANDA
-                  alt="Instagram"
-                  className="h-6 w-6" // Atur ukuran ikon
-                />
+                <Image src="/img/ig.png" alt="Instagram" className="h-6 w-6" width={24} height={24} />
               </a>
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img
-                  src="/img/tiktok.png" // GANTI DENGAN NAMA FILE IKON TIKTOK ANDA
-                  alt="TikTok"
-                  className="h-6 w-6" // Atur ukuran ikon
-                />
+                <Image src="/img/tiktok.png" alt="TikTok" className="h-6 w-6" width={24} height={24} />
               </a>
             </div>
 
@@ -436,31 +406,11 @@ export default function Page() {
               {" "}
               {/* flex-wrap agar rapi jika tidak muat */}
               {/* Ganti <span> dengan <img> */}
-              <img
-                src="/img/qris.png" // GANTI DENGAN NAMA FILE ANDA
-                alt="QRIS"
-                className="h-6" // Atur tinggi ikon
-              />
-              <img
-                src="/img/shopeepay.png" // GANTI DENGAN NAMA FILE ANDA
-                alt="ShopeePay"
-                className="h-6" // Atur tinggi ikon
-              />
-              <img
-                src="/img/dana.png" // GANTI DENGAN NAMA FILE ANDA
-                alt="DANA"
-                className="h-6" // Atur tinggi ikon
-              />
-              <img
-                src="/img/gopay.png" // GANTI DENGAN NAMA FILE ANDA
-                alt="Gopay"
-                className="h-6" // Atur tinggi ikon
-              />
-              <img
-                src="/img/dana.png" // GANTI DENGAN NAMA FILE ANDA
-                alt="OVO"
-                className="h-6" // Atur tinggi ikon
-              />
+              <Image src="/img/qris.png" alt="QRIS" className="h-6" width={24} height={24} />
+              <Image src="/img/shopeepay.png" alt="ShopeePay" className="h-6" width={24} height={24} />
+              <Image src="/img/dana.png" alt="DANA" className="h-6" width={24} height={24} />
+              <Image src="/img/gopay.png" alt="Gopay" className="h-6" width={24} height={24} />
+              <Image src="/img/dana.png" alt="OVO" className="h-6" width={24} height={24} />
             </div>
           </div>
           {/* ====================================================== */}

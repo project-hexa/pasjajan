@@ -37,6 +37,9 @@
   --chart-3: oklch(0.7408 0.1183 263.4613);
   --chart-4: oklch(0.7503 0.1312 24.616);
   --chart-5: oklch(0.8646 0.043 165.9815);
+  --chart-6: oklch(0.6912 0.1825 142.8765);
+  --chart-7: oklch(0.6254 0.1542 291.3287);
+  --chart-8: oklch(0.7821 0.1456 53.2319);
   --sidebar: oklch(0.9929 0.0099 164.8798);
   --sidebar-foreground: oklch(0.3092 0 0);
   --sidebar-primary: oklch(0.9929 0.0099 164.8798);
@@ -98,6 +101,9 @@
   --chart-3: oklch(0.7408 0.1183 263.4613);
   --chart-4: oklch(0.7503 0.1312 24.616);
   --chart-5: oklch(0.8646 0.043 165.9815);
+  --chart-6: oklch(0.6912 0.1825 142.8765);
+  --chart-7: oklch(0.6254 0.1542 291.3287);
+  --chart-8: oklch(0.7821 0.1456 53.2319);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -157,6 +163,9 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -212,4 +221,19 @@
     width: 16px;
     height: 16px;
   }
+}
+
+/* Hide native browser clear/decoration for search inputs so only our custom clear button shows */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* IE/Edge */
+input[type="search"]::-ms-clear,
+input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
 }
