@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed payment methods
+
 
         $this->call([
             UserSeeder::class,
@@ -27,5 +27,13 @@ class DatabaseSeeder extends Seeder
             OrderSeeder::class,
             ActivityLogSeeder::class,
         ]);
+
+
+        // // Seed payment methods
+        // $this->call(PaymentMethodSeeder::class);
+
+        // // Seed test data for development
+        // $this->call(TestDataSeeder::class);
+
     }
 }
