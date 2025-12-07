@@ -1,5 +1,4 @@
 import { Toaster } from "@workspace/ui/components/sonner";
-import "@workspace/ui/globals.css";
 import { ThemeProviders } from "@/components/theme-providers";
 import "@workspace/ui/styles/globals.css";
 import { Poppins } from "next/font/google";
