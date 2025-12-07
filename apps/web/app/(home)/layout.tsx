@@ -7,7 +7,6 @@ export default function HomeLayout({children}: {children: React.ReactNode}) {
       <Navbar />
       <main className="overflow-y-auto flex-1">
         {children}
-        <Footer />
       </main>
     </>
   )
