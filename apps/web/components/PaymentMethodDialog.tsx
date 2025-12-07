@@ -92,7 +92,7 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="p-0 border-0 shadow-xl bg-transparent w-[480px] h-[400px] max-w-[92vw] flex flex-col">
+      <DialogContent showCloseButton={false} className="p-0 border-0 shadow-xl bg-transparent w-[480px] h-[400px] max-w-[92vw] flex flex-col">
         <DialogTitle className="sr-only">Pilih Metode Pembayaran</DialogTitle>
 
         <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white">
@@ -103,7 +103,7 @@ export default function PaymentMethodDialog({ trigger, onConfirm }: Props) {
               onClick={() => setOpen(false)}
               className="absolute left-4 grid h-8 w-8 place-items-center rounded-full text-slate-800 hover:bg-slate-100"
             >
-              <Icon icon="lucide:chevron-left" width={16} height={16} />
+              <Icon icon="lucide:arrow-left" width={16} height={16} />
             </button>
             <p className="text-sm font-semibold text-slate-900">
               Pilih Metode Pembayaran

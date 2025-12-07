@@ -379,6 +379,13 @@ export default function WaitingPage() {
                     {/* Bank Transfer Layout */}
                     {payment_method.category === 'bank_transfer' && (
                         <>
+                        {/* Amount - divider dibawah jumlah pembayaran */}
+                            <div className="flex justify-between items-center pt-4 mt-4 pb-4 mb-4 border-b">
+                                <span className="font-semibold text-gray-700">Jumlah Pembayaran</span>
+                                <span className="text-xl font-bold text-emerald-600">
+                                    {currency(grand_total).replace('Rp', 'Rp.')}
+                                </span>
+                            </div>
                             {/* VA/Payment Code Display */}
                             {company_code && (
                                 <DetailRow label="Kode Perusahaan" value={company_code} isCopyable />
@@ -393,13 +400,7 @@ export default function WaitingPage() {
                             <DetailRow label="ID Pesanan" value={paymentData.order_code} />
                             <DetailRow label="Status Pesanan" value="Menunggu Pembayaran" />
 
-                            {/* Amount - divider dibawah jumlah pembayaran */}
-                            <div className="flex justify-between items-center pt-4 mt-4 pb-4 mb-4 border-b">
-                                <span className="font-semibold text-gray-700">Jumlah Pembayaran</span>
-                                <span className="text-xl font-bold text-emerald-600">
-                                    {currency(grand_total).replace('Rp', 'Rp.')}
-                                </span>
-                            </div>
+                            
 
                             {/* Action Buttons - centered with max-width */}
                             <div className="flex justify-center">

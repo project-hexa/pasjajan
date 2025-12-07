@@ -33,15 +33,15 @@ export const PaymentInstructionsModal: React.FC<PaymentInstructionsModalProps> =
                 return [
                     'Klik tombol "Buka GoPay" untuk membuka aplikasi',
                     'Anda akan diarahkan ke aplikasi Gojek/GoPay',
-                    'Konfirmasi pembayaran di aplikasi GoPay',
+                    'Konfirmasi pembayaran di aplikasi Gojek/GoPay',
                     'Tunggu hingga pembayaran berhasil diproses'
                 ];
             }
             if (code === 'shopeepay') {
                 return [
                     'Klik tombol "Buka ShopeePay" untuk membuka aplikasi',
-                    'Anda akan diarahkan ke aplikasi Shopee',
-                    'Konfirmasi pembayaran di aplikasi ShopeePay',
+                    'Anda akan diarahkan ke aplikasi Shopee/ShopeePay',
+                    'Konfirmasi pembayaran di aplikasi Shopee/ShopeePay',
                     'Tunggu hingga pembayaran berhasil diproses'
                 ];
             }

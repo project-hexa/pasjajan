@@ -4,24 +4,11 @@ import * as React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
 import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import {
-  BadgePercent,
-  Truck,
-  ShoppingCart,
-  ArrowLeft,
-} from "lucide-react";
-
-// helper kecil pengganti clsx
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
+import { Icon } from "@workspace/ui/components/icon";
 
 export type VoucherChoice = {
   id: string;
@@ -50,21 +37,19 @@ const VOUCHERS: VoucherChoice[] = [
   },
   {
     id: "v2",
-    title: "Diskon 10%",
-    subtitle: "Tanpa minimum",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
     expires: "S/D: 30-12-2025",
-    kind: "percent",
-    value: 10,
-    code: "HEMAT10",
+    kind: "free_shipping",
+    code: "ONGKIRFREE2",
   },
   {
     id: "v3",
-    title: "Diskon 20RB",
-    subtitle: "Minimal Belanja 120RB",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
     expires: "S/D: 30-12-2025",
-    kind: "flat",
-    value: 20000,
-    code: "HEMAT20K",
+    kind: "free_shipping",
+    code: "ONGKIRFREE3",
   },
   {
     id: "v4",
@@ -72,13 +57,113 @@ const VOUCHERS: VoucherChoice[] = [
     subtitle: "Minimal Belanja 100RB",
     expires: "S/D: 30-12-2025",
     kind: "free_shipping",
-    code: "ONGKIRFREE2",
+    code: "ONGKIRFREE4",
+  },
+  {
+    id: "v5",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
+    expires: "S/D: 30-12-2025",
+    kind: "percent",
+    value: 10,
+    code: "HEMAT10",
+  },
+  {
+    id: "v6",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
+    expires: "S/D: 30-12-2025",
+    kind: "percent",
+    value: 10,
+    code: "HEMAT10B",
+  },
+  {
+    id: "v7",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
+    expires: "S/D: 30-12-2025",
+    kind: "percent",
+    value: 20,
+    code: "HEMAT20",
+  },
+  {
+    id: "v8",
+    title: "Gratis Ongkir",
+    subtitle: "Minimal Belanja 100RB",
+    expires: "S/D: 30-12-2025",
+    kind: "percent",
+    value: 20,
+    code: "HEMAT20B",
   },
 ];
 
+// Voucher ticket card component
+function VoucherTicket({
+  voucher,
+  isSelected,
+  onSelect,
+}: {
+  voucher: VoucherChoice;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const isShipping = voucher.kind === "free_shipping";
+  const bgColor = isShipping ? "bg-red-500" : "bg-yellow-400";
+  const badgeText = isShipping ? "Free" : `${voucher.value}%`;
+  const badgeBg = isShipping ? "bg-yellow-400 text-red-600" : "bg-red-500 text-white";
+
+  return (
+    <button
+      onClick={onSelect}
+      className="flex w-full overflow-hidden border border-gray-200 bg-white text-left transition-all hover:shadow-md h-[80px]"
+    >
+      {/* Colored ticket part with torn edge */}
+      <div className={`relative ${bgColor} w-[68px] flex-shrink-0 flex flex-col items-center justify-center`}>
+        {/* Torn edge - white semicircles cutting into colored section from left */}
+        <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-evenly">
+          <div className="w-2 h-4 bg-white rounded-r-full" />
+          <div className="w-2 h-4 bg-white rounded-r-full" />
+          <div className="w-2 h-4 bg-white rounded-r-full" />
+          <div className="w-2 h-4 bg-white rounded-r-full" />
+        </div>
+        
+        {/* Badge */}
+        <div className={`${badgeBg} text-[10px] font-bold px-2 py-0.5 rounded-full mb-1`}>
+          {badgeText}
+        </div>
+        
+        {/* Icon */}
+        <Icon 
+          icon={isShipping ? "lucide:truck" : "lucide:shopping-cart"} 
+          width={24} 
+          height={24} 
+          className={isShipping ? "text-yellow-400" : "text-red-600"}
+        />
+      </div>
+
+      {/* Right content part */}
+      <div className="flex flex-1 items-center gap-2 px-3 py-2">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-gray-900">{voucher.title}</p>
+          <p className="text-xs text-gray-600">{voucher.subtitle}</p>
+          <p className="text-xs text-gray-500">{voucher.expires}</p>
+        </div>
+        
+        {/* Radio button */}
+        <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+          isSelected ? "border-emerald-600 bg-emerald-600" : "border-gray-300 bg-white"
+        }`}>
+          {isSelected && (
+            <div className="w-2 h-2 rounded-full bg-white" />
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function VoucherDialog({ trigger, onApply, current }: Props) {
   const [open, setOpen] = React.useState(false);
-  const [keyword, setKeyword] = React.useState("");
   const [selected, setSelected] = React.useState<VoucherChoice | null>(
     current ?? null
   );
@@ -87,128 +172,56 @@ export default function VoucherDialog({ trigger, onApply, current }: Props) {
     setSelected(current ?? null);
   }, [current]);
 
-  const applyCode = () => {
-    const hit = VOUCHERS.find(
-      (v) => v.code?.toLowerCase() === keyword.trim().toLowerCase()
-    );
-    if (hit) {
-      setSelected(hit);
-    } else {
-      setSelected(null);
-    }
-  };
-
-  const IconBox = ({ kind }: { kind: VoucherChoice["kind"] }) => {
-    const base = "h-12 w-12 rounded-md grid place-items-center";
-    if (kind === "free_shipping") {
-      return (
-        <div className={cn(base, "bg-rose-500/90 text-white")}>
-          <Truck className="h-6 w-6" />
-        </div>
-      );
-    }
-    if (kind === "percent") {
-      return (
-        <div className={cn(base, "bg-yellow-400/90 text-black")}>
-          <BadgePercent className="h-6 w-6" />
-        </div>
-      );
-    }
-    return (
-      <div className={cn(base, "bg-amber-500/90 text-black")}>
-        <ShoppingCart className="h-6 w-6" />
-      </div>
-    );
+  const confirm = () => {
+    onApply(selected ?? null);
+    setOpen(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => setOpen(o)}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 -ml-2 rounded hover:bg-slate-100"
-              onClick={() => setOpen(false)}
-              aria-label="Tutup"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <DialogTitle className="text-base">
-              Pilih Voucher dan Promo
-            </DialogTitle>
-          </div>
-        </DialogHeader>
 
-        {/* Bar Kode */}
-        <div className="mx-4 mb-4 rounded-md bg-emerald-700 p-3">
-          <div className="flex items-center gap-2">
-            <div className="rounded bg-white/20 text-white text-xs px-2 py-1">
-              Kode
-            </div>
-            <Input
-              placeholder="Masukkan Kode"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              className="bg-white text-slate-900 placeholder:text-slate-400"
-            />
-            <Button
-              onClick={applyCode}
-              className="bg-amber-400 text-black hover:bg-amber-300"
+      <DialogContent showCloseButton={false} className="p-0 border-0 shadow-xl bg-transparent w-[900px] h-[500px] max-w-[95vw] flex flex-col">
+        <DialogTitle className="sr-only">Pilih Voucher dan Promo</DialogTitle>
+
+        <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-white">
+          
+          {/* HEADER */}
+          <div className="border-b bg-white flex items-center justify-center relative h-[48px]">
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute left-4 grid h-8 w-8 place-items-center rounded-full text-slate-800 hover:bg-slate-100"
             >
-              Pakai
+              <Icon icon="lucide:arrow-left" width={16} height={16} />
+            </button>
+            <p className="text-sm font-semibold text-slate-900">
+              Pilih Voucher dan Promo
+            </p>
+          </div>
+
+          {/* BODY - Voucher Grid */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
+            <div className="grid grid-cols-2 gap-3">
+              {VOUCHERS.map((v) => (
+                <VoucherTicket
+                  key={v.id}
+                  voucher={v}
+                  isSelected={selected?.id === v.id}
+                  onSelect={() => setSelected(selected?.id === v.id ? null : v)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="h-[60px] bg-emerald-800 flex justify-end items-center px-5">
+            <Button
+              onClick={confirm}
+              className="min-w-[90px] bg-yellow-400 text-slate-900 hover:bg-yellow-300 font-semibold"
+            >
+              OK
             </Button>
           </div>
-        </div>
-
-        {/* List Voucher */}
-        <ScrollArea className="px-4 pb-4 max-h-[52vh]">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {VOUCHERS.map((v) => {
-              const active = selected?.id === v.id;
-              return (
-                <button
-                  key={v.id}
-                  onClick={() => setSelected(active ? null : v)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md border p-3 text-left",
-                    active
-                      ? "ring-2 ring-emerald-600 border-emerald-600"
-                      : "hover:bg-slate-50"
-                  )}
-                >
-                  <IconBox kind={v.kind} />
-                  <div className="flex-1">
-                    <div className="font-medium leading-tight">{v.title}</div>
-                    {v.subtitle && (
-                      <div className="text-xs text-slate-600">
-                        {v.subtitle}
-                      </div>
-                    )}
-                    {v.expires && (
-                      <div className="mt-1 text-[11px] text-slate-500">
-                        {v.expires}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
-
-        {/* Footer hijau + tombol OK */}
-        <div className="flex items-center justify-end gap-3 bg-emerald-800 px-4 py-3">
-          <Button
-            onClick={() => {
-              onApply(selected ?? null);
-              setOpen(false);
-            }}
-            className="bg-amber-400 text-black hover:bg-amber-300"
-          >
-            OK
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
