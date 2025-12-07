@@ -22,7 +22,7 @@ const socialLinks = [
 
 export default function SiteFooter() {
   return (
-    <footer className="mt-16 w-full bg-[#125635]">
+    <footer className="mt-16 w-full bg-[#125635] border-t border-white/20">
       <div className="relative isolate mx-auto max-w-[1920px] overflow-hidden px-6 pb-16 pt-20 text-white sm:px-10 lg:px-16">
         <div className="pointer-events-none absolute inset-0">
           <div className="hidden h-full w-full lg:block">
@@ -92,19 +92,18 @@ export default function SiteFooter() {
         </div>
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-6 text-white md:max-w-sm">
+          <div className="flex flex-col gap-6 text-white md:max-w-sm -ml-6 md:-ml-16">
             <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 p-2 backdrop-blur-sm">
+              <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
                 <Image
-                  src="/img/logo2.png"
+                  src="/img/logo3.png"
                   alt="PasJajan"
-                  width={88}
-                  height={88}
+                  width={112}
+                  height={112}
                   className="h-full w-full object-contain"
                   priority
                 />
               </div>
-              <span className="text-3xl font-semibold">PasJajan</span>
             </div>
             <p className="text-lg font-semibold leading-relaxed md:text-xl">
               Solusi Belanja Kelontong

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@workspace/ui/lib/utils";
-import { Files, ShoppingCart } from "lucide-react";
+import { Files, Package, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,11 @@ const navigation = [
     name: "Dashboard",
     href: "/dashboard",
     icon: ShoppingCart,
+  },
+  {
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: Package,
   },
   {
     name: "Sales Report",

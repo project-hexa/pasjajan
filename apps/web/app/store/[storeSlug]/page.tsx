@@ -2,18 +2,83 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import SiteHeader from "../../components/site-header";
 import SiteFooter from "../../components/site-footer";
+import StoreProductList, { StoreProduct } from "../_components/store-product-list";
 
 const defaultHeroSubtitle = "Belanja semua kebutuhan kelontong favoritmu, langsung dari toko terpercaya di kota kamu.";
 
-const defaultPopularProducts = [
-  { id: "minyak-goreng", name: "Minyak Goreng", description: "Botol 2L", price: 38500, image: "/images/Screenshot 2025-10-25 173437.png" },
-  { id: "fruit-tea", name: "Fruit Tea", description: "Freeze 350 ML", price: 4500, image: "/images/Screenshot 2025-10-25 173713.png" },
-  { id: "happy-tos", name: "Happy Tos", description: "Keripik 140 g", price: 14500, image: "/images/Screenshot 2025-10-25 174230.png" },
-  { id: "mie-sedap", name: "Mie Sedap", description: "Goreng Selection", price: 3500, image: "/images/Screenshot 2025-10-25 174329.png" },
-  { id: "mamy-poko", name: "MamyPoko", description: "X-tra Kering", price: 51700, image: "/images/Screenshot 2025-10-25 175114.png" },
-  { id: "ekonomi", name: "Ekonomi", description: "Sabun Cuci Piring", price: 6800, image: "/images/Screenshot 2025-10-25 175248.png" },
-  { id: "minyak-telon", name: "Minyak Telon", description: "Botol 60 ml", price: 24500, image: "/images/Screenshot 2025-10-25 175308.png" },
-  { id: "yupie", name: "Yupie Permen", description: "Gummy 9 Rasa", price: 14500, image: "/images/Screenshot 2025-10-25 175227.png" },
+const defaultPopularProducts: StoreProduct[] = [
+  {
+    id: "minyak-goreng",
+    name: "Minyak Goreng",
+    description: "Botol 2L",
+    price: 38500,
+    image: "/images/Screenshot 2025-10-25 173437.png",
+    details:
+      "Minyak goreng kemasan 2 liter dengan rasa netral yang cocok untuk menumis maupun menggoreng. Kemasan rapat memudahkan penyimpanan di dapur rumah atau toko.",
+  },
+  {
+    id: "fruit-tea",
+    name: "Fruit Tea",
+    description: "Freeze 350 ML",
+    price: 4500,
+    image: "/images/Screenshot 2025-10-25 173713.png",
+    details:
+      "Minuman rasa buah 350 ml dengan sensasi dingin menyegarkan. Praktis dikonsumsi kapan saja dan jadi favorit pelanggan muda.",
+  },
+  {
+    id: "happy-tos",
+    name: "Happy Tos",
+    description: "Keripik 140 g",
+    price: 14500,
+    image: "/images/Screenshot 2025-10-25 174230.png",
+    details:
+      "Keripik jagung renyah 140 gram dengan bumbu gurih manis. Cocok untuk stok camilan keluarga atau paket hampers sederhana.",
+  },
+  {
+    id: "mie-sedap",
+    name: "Mie Sedap",
+    description: "Goreng Selection",
+    price: 3500,
+    image: "/images/Screenshot 2025-10-25 174329.png",
+    details:
+      "Mi instan goreng dengan bumbu selection kaya rasa dan tekstur kenyal. Topping bawang renyah membuat setiap sajian terasa spesial.",
+  },
+  {
+    id: "mamy-poko",
+    name: "MamyPoko",
+    description: "X-tra Kering",
+    price: 51700,
+    image: "/images/Screenshot 2025-10-25 175114.png",
+    details:
+      "Popok bayi tipe celana dengan daya serap tinggi sehingga kulit tetap kering hingga 12 jam. Desain elastis nyaman untuk aktivitas si kecil.",
+  },
+  {
+    id: "ekonomi",
+    name: "Ekonomi",
+    description: "Sabun Cuci Piring",
+    price: 6800,
+    image: "/images/Screenshot 2025-10-25 175248.png",
+    details:
+      "Sabun cuci piring cair dengan formula konsentrat yang efektif mengangkat lemak. Busanya melimpah namun mudah dibilas tanpa residu.",
+  },
+  {
+    id: "minyak-telon",
+    name: "Minyak Telon",
+    description: "Botol 60 ml",
+    price: 24500,
+    image: "/images/Screenshot 2025-10-25 175308.png",
+    details:
+      "Minyak telon 60 ml untuk menjaga kehangatan bayi serta memberi aroma lembut menenangkan. Diformulasikan dari bahan alami pilihan.",
+  },
+  {
+    id: "yupie",
+    name: "Yupie Permen",
+    description: "Gummy 9 Rasa",
+    price: 14500,
+    image: "/images/Screenshot 2025-10-25 175227.png",
+    details:
+      "Permen gummy dengan sembilan rasa buah berbeda dalam satu kemasan. Teksturnya kenyal dan disukai anak-anak maupun dewasa.",
+  },
 ];
 
 const storeSeeds = [
@@ -40,14 +105,10 @@ const storeCatalogue = storeSeeds.map((seed) => ({
   heroTitle: "Toko Jajanan No.1 di Indonesia",
   heroSubtitle: defaultHeroSubtitle,
   heroImage: "/img/logo2.png",
-  popularProducts: defaultPopularProducts,
+  popularProducts: defaultPopularProducts.map((product) => ({ ...product })),
 }));
 
 const storeIndex = Object.fromEntries(storeCatalogue.map((store) => [store.slug, store]));
-
-const formatPrice = (value: number) => `Rp. ${value.toLocaleString("id-ID")}`;
-
-type Product = (typeof defaultPopularProducts)[number];
 
 export default function StorePage({
   params,
@@ -67,7 +128,7 @@ export default function StorePage({
   const normalizedQuery = trimmedQuery.toLowerCase();
   const hasQuery = normalizedQuery.length > 0;
 
-  const searchResults = hasQuery
+  const searchResults: StoreProduct[] = hasQuery
     ? store.popularProducts.filter((product) => {
         const haystack = `${product.name} ${product.description}`.toLowerCase();
         return haystack.includes(normalizedQuery);
@@ -76,33 +137,6 @@ export default function StorePage({
 
   const hasSearchResults = searchResults.length > 0;
   const heroHidden = hasQuery;
-
-  const ProductCard = ({ product }: { product: Product }) => (
-    <div className="relative flex min-h-[240px] flex-col rounded-2xl border border-[#E5E7EB] bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div className="p-3 pb-16">
-        <div className="relative h-32 w-full overflow-hidden rounded-md bg-white">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 20vw, 15vw"
-            className="object-contain"
-          />
-        </div>
-        <div className="mt-3 space-y-1">
-          <h4 className="text-sm font-semibold text-[#111827]">{product.name}</h4>
-          <p className="text-xs text-[#6B7280]">{product.description}</p>
-          <p className="text-sm font-bold text-[#DC2626]">{formatPrice(product.price)}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        className="absolute inset-x-0 bottom-0 rounded-2xl bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
-      >
-        Tambah
-      </button>
-    </div>
-  );
 
   return (
     <main className="min-h-screen flex flex-col bg-[#F9FAFB] pb-0 pt-0">
@@ -160,35 +194,24 @@ export default function StorePage({
             </div>
 
             {hasSearchResults ? (
-              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4 xl:grid-cols-5">
-                {searchResults.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              <StoreProductList products={searchResults} variant="grid" outerClassName="mt-6" />
             ) : (
               <div className="mt-10">
                 <h3 className="text-2xl font-semibold text-[#111827]">Rekomendasi</h3>
                 <p className="mt-1 text-sm text-[#6B7280]">Produk populer lainnya dari toko ini.</p>
-                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4 xl:grid-cols-5">
-                  {store.popularProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                <StoreProductList products={store.popularProducts} variant="grid" outerClassName="mt-4" />
               </div>
             )}
           </section>
         ) : (
           <section className="mt-12">
             <h3 className="text-2xl font-semibold text-[#111827]">Produk Populer</h3>
-            <div className="mt-6 -mx-4 overflow-x-auto pb-4">
-              <div className="flex gap-4 px-4">
-                {store.popularProducts.map((product) => (
-                  <div key={product.id} className="w-[200px] flex-shrink-0">
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <StoreProductList
+              products={store.popularProducts}
+              variant="scroll"
+              outerClassName="mt-6 -mx-4 pb-4"
+              innerClassName="px-4"
+            />
           </section>
         )}
       </div>

@@ -107,10 +107,17 @@ export default function SiteHeader() {
           </button>
         </form>
 
-        <a href="#" className="flex items-center gap-15 font-semibold text-white ml-6">
-          <span>Promo</span>
-          <img src="/img/icon-promo.png" alt="Promo" className="h-5" />
-        </a>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/cart"
+            prefetch={false}
+            aria-label="Buka keranjang belanja"
+            className="flex items-center gap-15 font-semibold text-white ml-6"
+          >
+            <span>Promo</span>
+            <img src="/img/icon-promo.png" alt="Keranjang" className="h-5" />
+          </Link>
+        </div>
       </div>
 
       <nav className="ml-10 flex items-center gap-6 text-base">

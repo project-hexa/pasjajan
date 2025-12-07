@@ -342,7 +342,6 @@ export default function CataloguePage() {
                   <div className="mb-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-lg font-semibold">{matchedFirst?.title}</h4>
-                      <a className="text-sm text-[#6B7280]">Lihat semua</a>
                     </div>
                   </div>
 
