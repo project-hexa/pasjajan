@@ -312,11 +312,11 @@ class UserController extends BaseController
 			'customer_id' => $user->customer['id'],
 			'label' => $data['label'],
 			'detail_address' => $data['detail_address'],
-			'notes_address' => $data['notes_address'],
+			'notes_address' => $data['notes_address'] ?? null,
 			'recipient_name' => $data['recipient_name'] ?? $user['full_name'],
 			'phone_number' => $data['phone_number'] ?? $user['phone_number'],
-			'latitude' => $data['latitude'],
-			'longitude' => $data['longitude'],
+			'latitude' => $data['latitude'] ?? null,
+			'longitude' => $data['longitude'] ?? null,
 			'is_default' => $data['is_default'],
 		]);
 
@@ -382,6 +382,7 @@ class UserController extends BaseController
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti password
 		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
 			'password' => [
 				'required',
 				'string',
@@ -426,7 +427,7 @@ class UserController extends BaseController
 		$data = $validator->validated();
 
 		// Mencari user di database dengan email
-		$user = User::where('email', $data['email'])->first();
+		$user = User::where('email', $data['email'])->first()->load('customer');
 		
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
@@ -435,7 +436,7 @@ class UserController extends BaseController
 
 		// Jika user ditemukan, maka
 		// Ambil data point milik customer
-		$point = $user->load(['customer' => fn ($query) =>$query->select('point')]);
+		$point = $user->customer['point'];
 
 		$result['total_point'] = $point;
 

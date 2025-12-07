@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator as ValidatorFacade;
 use Illuminate\Validation\Validator;
-use App\Models\User;
+use App\Models\Otp;
 
 class BaseController extends Controller
 {
@@ -56,9 +56,9 @@ class BaseController extends Controller
 		return $data;
 	}
 
-	public function deleteVerifiedOtp(User $userOtp): void
+	public function deleteVerifiedOtp(Otp $otp): void
 	{
-		$otp = $userOtp->otps()->latest()->first();
+		//$otp = $userOtp->otps()->latest()->first();
 		if ($otp['is_verified']) {
 			$otp->delete();
 		}
