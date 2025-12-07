@@ -89,7 +89,9 @@ export default function CartPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-[#F9FAFB]">
-      <SiteHeader />
+      <React.Suspense fallback={null}>
+        <SiteHeader />
+      </React.Suspense>
       <div className="flex-1">
         <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 text-[#111827]">

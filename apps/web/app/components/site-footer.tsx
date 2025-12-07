@@ -15,9 +15,9 @@ const paymentMethods = [
 ];
 
 const socialLinks = [
-  { name: "Instagram", href: "https://www.instagram.com/pasjajan", icon: "/img/ig.png" },
-  { name: "Facebook", href: "https://www.facebook.com/pasjajan", icon: "/img/facebook.svg" },
-  { name: "TikTok", href: "https://www.tiktok.com/@pasjajan", icon: "/img/tiktok.png" },
+  { name: "Instagram", icon: "/img/ig.png" },
+  { name: "Facebook", icon: "/img/facebook.svg" },
+  { name: "TikTok", icon: "/img/tiktok.png" },
 ];
 
 export default function SiteFooter() {
@@ -133,15 +133,13 @@ export default function SiteFooter() {
             <div className="flex flex-col gap-3">
               <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
               <div className="flex items-center gap-4">
-                {socialLinks.map(({ name, href, icon }) => (
-                  <Link
+                {socialLinks.map(({ name, icon }) => (
+                  <button
                     key={name}
-                    href={href}
+                    type="button"
                     aria-label={name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    prefetch={false}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
+                    // intentionally disabled to prevent navigating to external apps
                   >
                     <Image
                       src={icon}
@@ -150,7 +148,7 @@ export default function SiteFooter() {
                       height={20}
                       className="h-5 w-5 object-contain"
                     />
-                  </Link>
+                  </button>
                 ))}
               </div>
             </div>

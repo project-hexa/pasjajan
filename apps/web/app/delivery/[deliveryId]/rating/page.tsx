@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function ReviewPage() {
@@ -22,7 +23,7 @@ export default function ReviewPage() {
         {/* --- BAGIAN KIRI --- */}
         <div className="flex items-center gap-6">
           <div className="flex flex-col items-center">
-            <img src="/img/logo2.png" alt="pasjajan" className="h-8" />
+            <Image src="/img/logo2.png" alt="pasjajan" className="h-8" width={32} height={32} />
             <span className="text-xs font-semibold -mt-0.5">pasjajan</span>
           </div>
 
@@ -45,7 +46,7 @@ export default function ReviewPage() {
 
           <a href="#" className="flex items-center gap-10 font-semibold text-white">
             <span>Promo</span>
-            <img src="/img/icon-promo.png" alt="Promo" className="h-8" />
+            <Image src="/img/icon-promo.png" alt="Promo" className="h-8" width={32} height={32} />
           </a>
         </div>
 
@@ -137,7 +138,7 @@ export default function ReviewPage() {
         <div className="grid grid-cols-4 gap-8 text-sm">
           <div>
             <div className="flex flex-col items-center"> 
-              <img src="/img/logo2.png" className="w-36" alt="PasJajan" />
+              <Image src="/img/logo2.png" className="w-36" alt="PasJajan" width={144} height={48} />
               <span className="text-xl font-semibold mt-1">pasjajan</span> 
             </div>
           </div>
@@ -146,10 +147,10 @@ export default function ReviewPage() {
             <p className="font-semibold mb-2">Ikuti kami</p>
             <div className="flex gap-3">
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img src="/img/ig.png" alt="Instagram" className="w-6 h-6" />
+                <Image src="/img/ig.png" alt="Instagram" className="w-6 h-6" width={24} height={24} />
               </a>
               <a href="#" className="transition-opacity hover:opacity-80">
-                <img src="/img/tiktok.png" alt="TikTok" className="w-6 h-6" />
+                <Image src="/img/tiktok.png" alt="TikTok" className="w-6 h-6" width={24} height={24} />
               </a>
             </div>
             <div className="mt-4"> 
@@ -167,11 +168,11 @@ export default function ReviewPage() {
           <div>
             <p className="font-semibold mb-2">Metode Pembayaran</p>
             <div className="flex gap-2 flex-wrap"> 
-              <img src="/img/qris.png" alt="QRIS" className="h-6" />
-              <img src="/img/shopeepay.png" alt="ShopeePay" className="h-6" />
-              <img src="/img/dana.png" alt="DANA" className="h-6" />
-              <img src="/img/gopay.png" alt="Gopay" className="h-6" />
-              <img src="/img/dana.png" alt="OVO" className="h-6" />
+              <Image src="/img/qris.png" alt="QRIS" className="h-6" width={24} height={24} />
+              <Image src="/img/shopeepay.png" alt="ShopeePay" className="h-6" width={24} height={24} />
+              <Image src="/img/dana.png" alt="DANA" className="h-6" width={24} height={24} />
+              <Image src="/img/gopay.png" alt="Gopay" className="h-6" width={24} height={24} />
+              <Image src="/img/dana.png" alt="OVO" className="h-6" width={24} height={24} />
             </div>
           </div>
 

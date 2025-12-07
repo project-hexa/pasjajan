@@ -17,7 +17,6 @@ const paymentMethods = [
 const socialLinks = [
   {
     name: "Instagram",
-    href: "https://www.instagram.com/pasjajan",
     icon: (
       <Image
         src="/img/ig.png"
@@ -30,7 +29,6 @@ const socialLinks = [
   },
   {
     name: "Facebook",
-    href: "https://www.facebook.com/pasjajan",
     icon: (
       <Image
         src="/img/facebook.svg"
@@ -43,7 +41,6 @@ const socialLinks = [
   },
   {
     name: "TikTok",
-    href: "https://www.tiktok.com/@pasjajan",
     icon: (
       <Image
         src="/img/tiktok.png"
@@ -116,20 +113,17 @@ export const Footer = () => {
             <div className="flex flex-col gap-3">
               <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
               <div className="flex items-center gap-4">
-                {socialLinks.map(({ name, href, icon }) => (
-                  <Link
-                    key={name}
-                    href={href}
-                    aria-label={name}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    prefetch={false}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
-                  >
-                    {icon}
-                  </Link>
-                ))}
-              </div>
+                  {socialLinks.map(({ name, icon }) => (
+                    <button
+                      key={name}
+                      type="button"
+                      aria-label={name}
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
             </div>
           </div>
         </div>

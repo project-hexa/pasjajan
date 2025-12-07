@@ -110,13 +110,8 @@ const storeCatalogue = storeSeeds.map((seed) => ({
 
 const storeIndex = Object.fromEntries(storeCatalogue.map((store) => [store.slug, store]));
 
-export default function StorePage({
-  params,
-  searchParams,
-}: {
-  params: { storeSlug: string };
-  searchParams: { search?: string };
-}) {
+export default function StorePage(props: any) {
+  const { params, searchParams } = props as { params: { storeSlug: string }; searchParams: { search?: string } };
   const store = storeIndex[params.storeSlug];
 
   if (!store) {

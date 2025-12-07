@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -66,10 +67,10 @@ export default function SiteHeader() {
   return (
     <header className="relative flex items-center bg-[#187247] px-8 py-3 text-white">
       <div className="flex items-center gap-10 flex-1">
-        <Link href="/catalogue" prefetch={false} className="flex flex-col items-center" aria-label="Kembali ke Catalogue">
-          <img src="/img/logo2.png" alt="pasjajan" className="h-8" />
-          <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
-        </Link>
+          <Link href="/catalogue" prefetch={false} className="flex flex-col items-center" aria-label="Kembali ke Catalogue">
+            <Image src="/img/logo2.png" alt="pasjajan" className="h-8" width={32} height={32} />
+            <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
+          </Link>
 
         <div
           ref={catButtonRef}
@@ -115,7 +116,7 @@ export default function SiteHeader() {
             className="flex items-center gap-15 font-semibold text-white ml-6"
           >
             <span>Promo</span>
-            <img src="/img/icon-promo.png" alt="Keranjang" className="h-5" />
+            <Image src="/img/icon-promo.png" alt="Keranjang" className="h-5" width={20} height={20} />
           </Link>
         </div>
       </div>

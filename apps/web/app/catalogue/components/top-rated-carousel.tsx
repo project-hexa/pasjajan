@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 
 interface RestaurantCard {
@@ -15,10 +16,9 @@ interface RestaurantCard {
 interface TopRatedCarouselProps {
   restaurants: RestaurantCard[];
   showHeading?: boolean;
-  showSeeAll?: boolean;
 }
 
-export function TopRatedCarousel({ restaurants, showHeading = true, showSeeAll = true }: TopRatedCarouselProps) {
+export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCarouselProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const scrollBy = (direction: "left" | "right") => {
@@ -40,15 +40,6 @@ export function TopRatedCarousel({ restaurants, showHeading = true, showSeeAll =
           <div>
             <h2 className="text-[26px] font-semibold text-[#33363F]">Resto Top Rating</h2>
           </div>
-          {showSeeAll && (
-            <button
-              onClick={() => scrollBy("right")}
-              className="hidden h-11 items-center gap-2 rounded-full border border-[#DADDE6] bg-white px-5 text-sm font-medium text-[#009F4D] transition hover:border-[#009F4D]/50 hover:shadow md:inline-flex"
-            >
-              Lihat Semua
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          )}
         </div>
       )}
 
@@ -75,10 +66,11 @@ export function TopRatedCarousel({ restaurants, showHeading = true, showSeeAll =
             >
               <div>
                 <div className="relative h-[140px] overflow-hidden rounded-[20px] rounded-b-none">
-                  <img
+                  <Image
                     src={restaurant.image}
                     alt={restaurant.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="space-y-2 px-4 py-4">
