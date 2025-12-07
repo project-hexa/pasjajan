@@ -57,6 +57,7 @@ export const Footer = () => {
   return (
     <footer className="mt-16 w-full">
       <div className="relative isolate overflow-hidden rounded-t-[48px] bg-white">
+        {/* Background Shapes */}
         <div
           className="absolute inset-y-0 left-[-8%] w-[70%] rounded-r-[320px] bg-[#0F5230]"
           aria-hidden
@@ -70,7 +71,10 @@ export const Footer = () => {
           aria-hidden
         />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-16 md:flex-row md:items-center md:justify-between lg:px-8">
+        {/* CONTAINER UTAMA */}
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-12 px-6 py-16 md:flex-row md:items-start md:justify-between lg:px-8">
+          
+          {/* BAGIAN KIRI (LOGO) */}
           <div className="flex flex-col gap-6 text-white md:max-w-sm">
             <div className="flex items-center gap-4">
               <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 p-2 backdrop-blur-sm">
@@ -91,8 +95,12 @@ export const Footer = () => {
             </p>
           </div>
 
-          <div className="grid w-full gap-10 text-[#0A1F14] md:grid-cols-3 md:gap-12">
-            <div className="flex flex-col gap-3">
+          {/* BAGIAN KANAN (MENU) */}
+          {/* SAYA GANTI JADI FLEX AGAR LEBIH FLEKSIBEL POSISINYA */}
+          <div className="flex flex-col gap-10 text-[#0A1F14] md:ml-auto md:flex-row md:gap-16 lg:gap-24">
+            
+            {/* Kolom 1: Bantuan */}
+            <div className="flex flex-col gap-3 md:items-end md:text-right">
               <h3 className="text-lg font-semibold text-[#111827]">Bantuan</h3>
               <ul className="space-y-2 text-sm text-[#1F2937]">
                 {supportLinks.map((item) => (
@@ -101,30 +109,37 @@ export const Footer = () => {
               </ul>
             </div>
 
-            <div className="flex flex-col gap-3">
+            {/* Kolom 2: Metode Pembayaran */}
+            <div className="flex flex-col gap-3 md:items-end md:text-right">
               <h3 className="text-lg font-semibold text-[#111827]">Metode Pembayaran</h3>
-              <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-[#1F2937]">
+              {/* grid tetap dipakai untuk list bank, tapi justify content nya kita atur ke kanan */}
+              <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-[#1F2937] md:text-right">
                 {paymentMethods.map((method) => (
                   <li key={method}>{method}</li>
                 ))}
               </ul>
             </div>
 
-            <div className="flex flex-col gap-3">
+            {/* Kolom 3: Ikuti kami */}
+            {/* KHUSUS DISINI SAYA TAMBAHKAN 'pl-4' atau semacamnya jika perlu, 
+                tapi flex parent sudah mendorongnya. 
+                Pastikan items-end aktif. */}
+            <div className="flex flex-col gap-3 md:items-end md:text-right">
               <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
-              <div className="flex items-center gap-4">
-                  {socialLinks.map(({ name, icon }) => (
-                    <button
-                      key={name}
-                      type="button"
-                      aria-label={name}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex items-center gap-4 md:justify-end">
+                {socialLinks.map(({ name, icon }) => (
+                  <button
+                    key={name}
+                    type="button"
+                    aria-label={name}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#111827] shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:bg-white"
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
             </div>
+
           </div>
         </div>
       </div>

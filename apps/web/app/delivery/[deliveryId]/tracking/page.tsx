@@ -1,317 +1,136 @@
-// Lokasi file: apps/web/app/(delivery)/[deliveryId]/tracking/page.tsx
-
 "use client";
 
-// Import lucide-react (Package, Truck, etc.) SUDAH DIHAPUS
-import React from "react"; // Penting untuk file .tsx
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Navbar } from "@/components/navigation-bar";
 
-// Ganti nama fungsinya menjadi "Page"
-export default function Page() {
-  // ======================================================
-  // ||     PERUBAHAN: Ikon diubah menjadi <img>         ||
-  // ======================================================
+export default function TrackingPage() {
+  const router = useRouter();
+
+  const handlePesananSelesai = () => {
+    router.push("/delivery/1/rating");
+  };
+
   const steps = [
     {
-      icon: (
-        <Image src="/img/icon-proses-1.png" alt="Pesanan dibuat" width={32} height={32} className="h-8 w-8" />
-      ),
+      icon: <Image src="/img/icon-proses-1.png" alt="Pesanan dibuat" width={32} height={32} className="h-8 w-8" />,
       label: "Pesanan dibuat",
       active: true,
     },
     {
-      icon: (
-        <Image src="/img/icon-proses-2.png" alt="Sedang dikirim" width={32} height={32} className="h-8 w-8" />
-      ),
+      icon: <Image src="/img/icon-proses-2.png" alt="Sedang dikirim" width={32} height={32} className="h-8 w-8" />,
       label: "Sedang dikirim",
       active: true,
     },
     {
-      icon: (
-        <Image src="/img/icon-proses-3.png" alt="Kurir menerima" width={32} height={32} className="h-8 w-8" />
-      ),
+      icon: <Image src="/img/icon-proses-3.png" alt="Kurir menerima" width={32} height={32} className="h-8 w-8" />,
       label: "Kurir menerima",
-      active: true, // <-- Diubah jadi true
+      active: true,
     },
     {
-      icon: (
-        <Image src="/img/icon-proses-4.png" alt="Tiba di tujuan" width={32} height={32} className="h-8 w-8" />
-      ),
+      icon: <Image src="/img/icon-proses-4.png" alt="Tiba di tujuan" width={32} height={32} className="h-8 w-8" />,
       label: "Tiba di tujuan",
-      active: true, // <-- Diubah jadi true
+      active: true,
     },
   ];
-  // ======================================================
-  // ||                AKHIR PERUBAHAN                   ||
-  // ======================================================
 
-  // Data untuk Status Box (BARU)
   const statusUpdates = [
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
     {
       active: true,
       title: "PasJajan – Senin, 7 November 2025",
-      description:
-        "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
     },
-    // Tambahkan status lain di sini
   ];
 
-  // ======================================================
-  // ||         PERUBAHAN: Menghitung Garis Aktif        ||
-  // ======================================================
-  // Cari index terakhir yang aktif (manual loop for compatibility)
-  let lastActiveIndex = -1;
-  for (let i = steps.length - 1; i >= 0; i--) {
-    if (steps[i]!.active) {
-      lastActiveIndex = i;
-      break;
-    }
-  }
-  // Hitung jumlah segmen garis (3 segmen di antara 4 ikon)
+  const lastActiveIndex = steps.findLastIndex((step) => step.active);
   const totalSegments = steps.length - 1;
+  const progressPercentage = (lastActiveIndex / totalSegments) * 80;
 
-  // Menghitung persentase lebar garis aktif.
-  // Garisnya sendiri memiliki lebar total 80% (karena left-[10%] dan right-[10%]).
-  // Jadi, kita hitung (indexAktif / totalSegmen) * 80%
-  let progressPercentage = 0;
-  if (lastActiveIndex > 0 && totalSegments > 0) {
-    // Jika semua aktif (lastActiveIndex == 3), kita buat 100% dari 80% = 80%
-    if (lastActiveIndex === totalSegments) {
-      progressPercentage = 80;
-    } else {
-      progressPercentage = (lastActiveIndex / totalSegments) * 80;
-    }
-  }
+  const supportLinks = ["Tentang Kami", "Keamanan dan Privasi"];
+  const faqList = [
+    "Apa itu PasJajan?", "Bagaimana cara berbelanja", "di PasJajan?",
+    "Metode pembayaran apa", "saja yang", "tersedia di PasJajan?",
+    "Bagaimana cara melacak", "status pesanan saya?",
+  ];
+
+  const socialLinks = [
+    { name: "Instagram", icon: (<svg fill="currentColor" viewBox="0 0 24 24" className="h-6 w-6"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>) },
+    { name: "Facebook", icon: (<svg fill="currentColor" viewBox="0 0 24 24" className="h-6 w-6"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036c-2.148 0-2.797 1.603-2.797 4.16v1.972h3.618l-.298 3.667h-3.32v7.98h-5.018z" /></svg>) },
+    { name: "TikTok", icon: (<svg fill="currentColor" viewBox="0 0 24 24" className="h-6 w-6"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>) },
+  ];
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* Perubahan hanya ada di bagian "Logo Utama".
-        Warna Anda (#1B8150) dan logo Anda (/img/logo2.png) tetap saya gunakan.
-      */}
-      <header className="flex items-center justify-between bg-[#1B8150] p-4 text-white">
-        {/* --- BAGIAN KIRI --- */}
-        <div className="flex items-center gap-6">
-          {/* Logo Utama (Sudah Diubah) */}
-            <div className="flex flex-col items-center">
-              <Image src="/img/logo2.png" alt="pasjajan" className="h-8" width={32} height={32} />
-              {/* INI YANG SAYA TAMBAHKAN */}
-              <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
-            </div>
+    <div className="min-h-screen bg-white font-sans flex flex-col">
+      <Navbar />
 
-          {/* Tombol Kategori */}
-          <a
-            href="#"
-            className="flex items-center gap-2 rounded-lg border border-white px-3 py-1.5 text-sm font-semibold transition-all hover:bg-white hover:text-[#0A6B3C]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-5 w-5" // Ukuran sama
-            >
-              <rect x="3" y="3" width="6" height="6" rx="1.5" />
-              <rect x="11" y="3" width="6" height="6" rx="1.5" />
-              <rect x="3" y="11" width="6" height="6" rx="1.5" />
-              <rect x="11" y="11" width="6" height="6" rx="1.5" />
-            </svg>
-            <span>Kategori</span>
-          </a>
-
-          <div className="flex w-[450px] items-center rounded-lg bg-white px-4 py-2 shadow">
-            <input
-              type="text"
-              placeholder="Cari produk yang anda inginkan"
-              className="flex-grow bg-transparent text-base text-gray-800 placeholder-gray-500 outline-none"
-            />
-            {/* Ikon <img> diganti dengan <svg> di bawah */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="ml-3 h-5 w-5 cursor-pointer text-gray-500" // Ukuran sama, warna abu-abu
-            >
-              <path
-                fillRule="evenodd"
-                d="M9 3.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <a href="#" className="flex items-center gap-10 font-semibold text-white">
-            <span>Promo</span>
-            <Image src="/img/icon-promo.png" alt="Promo" className="h-8" width={32} height={32} />
-          </a>
-          {/* ====================================================== */}
-        </div>
-
-        {/* --- BAGIAN KANAN --- */}
-
-        <nav className="flex items-center gap-6 text-base">
-          {/* Garis Pemisah Vertikal BARU (Ditebalkan) */}
-          <div className="h-6 w-[2px] bg-white/50"></div>{" "}
-          {/* <-- PERUBAHAN DI SINI */}
-          {/* Link Daftar (Tidak berubah) */}
-          <a href="#" className="font-semibold text-white">
-            Daftar
-          </a>
-          {/* Tombol Masuk (Diubah jadi Teks) */}
-          <a href="#" className="font-semibold text-white">
-            Masuk
-          </a>
-        </nav>
-        {/* ====================================================== */}
-        {/* ||                AKHIR PERUBAHAN                   || */}
-        {/* ====================================================== */}
-      </header>
-      {/* ========================================== */}
-      {/* ||         AKHIR DARI HEADER          || */}
-      {/* ========================================== */}
-
-      {/* ====================================================== */}
-      {/* ||         PERUBAHAN PADA TRACKING SECTION        || */}
-      {/* ====================================================== */}
       <section className="mx-12 mt-8 rounded-2xl border border-[#CDE6D5] bg-[#EEF7F0] p-10 pb-16">
-        {" "}
-        {/* Padding bawah ditambah */}
-        {/* Wrapper wajib relative agar absolute bekerja */}
-        <div className="relative flex items-start justify-between">
-          {" "}
-          {/* Diubah ke items-start */}
-          {/* ====================================================== */}
-          {/* ||       PERUBAHAN: Posisi top diubah ke top-12     || */}
-          {/* ====================================================== */}
+        <div className="relative flex justify-between items-start">
           <div className="absolute top-12 right-[10%] left-[10%] z-10 h-[4px] bg-[#8AC79E]"></div>
-          {/* Garis Aktif ditambahkan */}
           <div
-            className="absolute top-12 left-[10%] z-11 h-[4px] bg-[#0A6B3C]" // top-12
+            className="absolute left-[10%] top-12 h-[4px] bg-[#0A6B3C] z-11"
             style={{ width: `${progressPercentage}%` }}
           ></div>
-          {/* ====================================================== */}
+          
           {steps.map((step, index) => (
-            <div
-              key={index}
-              className="relative flex w-1/4 flex-col items-center text-center"
-            >
-              {" "}
-              {/* Hapus gap-3 */}
-              {/* Bulatan icon w-16 h-16 SUDAH DIHAPUS */}
-              {/* Ikon img ditampilkan langsung */}
+            <div key={index} className="relative flex flex-col items-center w-1/4 text-center">
               {step.icon}
-              {/* ====================================================== */}
-              {/* || PERUBAHAN: border-4 DIHAPUS, top diubah ke 48px || */}
-              {/* ====================================================== */}
               <div
                 className={`absolute z-20 h-5 w-5 rounded-full ${step.active ? "bg-[#0A6B3C]" : "bg-[#8AC79E]"} `}
-                style={{
-                  top: "48px", // Diubah dari 40px ke 48px
-                  transform: "translateY(-50%)",
-                }}
+                style={{ top: "48px", transform: "translateY(-50%)" }}
               ></div>
-              {/* ====================================================== */}
-              {/* Text - margin atas disesuaikan */}
-              <p
-                className={`mt-16 text-sm font-semibold ${
-                  // Diubah dari mt-14 ke mt-16
-                  step.active ? "text-[#0A6B3C]" : "text-[#8AC79E]"
-                }`}
-              >
+              <p className={`text-sm font-semibold mt-16 ${step.active ? "text-[#0A6B3C]" : "text-[#8AC79E]"}`}>
                 {step.label}
               </p>
             </div>
           ))}
         </div>
-        {/* ====================================================== */}
-        {/* ||         PERUBAHAN: Judul Status diubah           || */}
-        {/* ====================================================== */}
         <p className="mt-8 text-center text-xl font-bold text-[#0A6B3C]">
           Pesanan Selesai
         </p>
-        {/* ====================================================== */}
       </section>
-      {/* ====================================================== */}
-      {/* ||              AKHIR TRACKING SECTION              || */}
-      {/* ====================================================== */}
 
-      {/* ====================================================== */}
-      {/* ||         PERUBAHAN: STATUS BOX Diubah Total       || */}
-      {/* ====================================================== */}
       <section className="mx-12 mt-6 min-h-52 rounded-xl border border-[#CDE6D5] p-8">
-        <h2 className="text-xl font-bold text-black">
-          Status Pengiriman Barang
-        </h2>
-
-        {/* Garis Pemisah (Sudah ditebalkan) */}
+        <h2 className="text-xl font-bold text-black">Status Pengiriman Barang</h2>
         <hr className="my-4 border-t-2 border-gray-400" />
-
-        {/* Konten Status Timeline */}
         <div className="flex flex-col gap-4">
-          {" "}
-          {/* Wrapper untuk semua status */}
           {statusUpdates.map((status, index) => (
             <div key={index} className="flex items-start">
-              {/* Kolom Kiri: Titik dan Garis */}
               <div className="mr-4 flex flex-col items-center">
-                {/* Titik */}
-                <div
-                  className={`h-5 w-5 flex-shrink-0 rounded-full ${
-                    status.active ? "bg-[#1E6A46]" : "bg-[#CDE6D5]"
-                  }`}
-                ></div>
-
-                {/* ====================================================== */}
-                {/* ||    PERUBAHAN: Garis diubah jadi lebih hijau      || */}
-                {/* ====================================================== */}
+                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${status.active ? "bg-[#1E6A46]" : "bg-[#CDE6D5]"}`}></div>
                 {index < statusUpdates.length - 1 && (
                   <div className="mt-1 h-16 w-0.5 bg-[#8AC79E]"></div>
                 )}
-                {/* ====================================================== */}
               </div>
-
-              {/* Kolom Kanan: Teks */}
-              <div className="-mt-1 flex-1">
-                <p
-                  className={`font-semibold ${
-                    status.active ? "text-[#1E6A46]" : "text-[#B0CFC0]"
-                  }`}
-                >
+              <div className="flex-1 -mt-1">
+                <p className={`font-semibold ${status.active ? "text-[#1E6A46]" : "text-[#B0CFC0]"}`}>
                   {status.title}
                 </p>
-                <p
-                  className={`mt-1 leading-relaxed ${
-                    status.active ? "text-gray-700" : "text-gray-400"
-                  }`}
-                >
+                <p className={`mt-1 leading-relaxed ${status.active ? "text-gray-700" : "text-gray-400"}`}>
                   {status.description}
                 </p>
               </div>
@@ -319,113 +138,93 @@ export default function Page() {
           ))}
         </div>
       </section>
-      {/* ====================================================== */}
-      {/* ||             AKHIR DARI STATUS BOX                || */}
-      {/* ====================================================== */}
 
-      {/* ====================================================== */}
-      {/* ||          PERUBAHAN: Tombol Selesai DITAMBAHKAN     || */}
-      {/* ====================================================== */}
       <section className="mx-12 mt-8 flex items-center justify-end gap-4">
-        {/* Tombol "asdfasdfa" (sesuai gambar) */}
-        <button
-          type="button"
-          className="rounded-lg border-2 border-[#1E6A46] bg-white px-8 py-3 font-semibold text-[#1E6A46] transition-all hover:bg-[#F0F7F3]"
-        >
+        <button type="button" className="rounded-lg border-2 border-[#1E6A46] bg-white px-8 py-3 font-semibold text-[#1E6A46] transition-all hover:bg-[#F0F7F3]">
           Terima Pesanan
         </button>
-
-        {/* Tombol "Pesanan Selesai" */}
-        <button
-          type="button"
+        {/* --- TOMBOL YANG DIUPDATE --- */}
+        <button 
+          type="button" 
+          onClick={handlePesananSelesai}
           className="hover:bg-opacity-90 rounded-lg bg-[#1E6A46] px-8 py-3 font-semibold text-white transition-all"
         >
           Pesanan Selesai
         </button>
       </section>
-      {/* ====================================================== */}
 
-      {/* FOOTER */}
-      <footer className="mt-12 bg-[#1B8150] p-10 text-white">
-        <div className="grid grid-cols-4 gap-8 text-sm">
-          <div>
-            {/* Logo (Bukan Button) & Teks "pasjajan" (Lebih presisi) */}
-                <div className="flex flex-col items-center">
-                  <Image src="/img/logo2.png" className="w-36" alt="PasJajan" width={144} height={48} />
-                  {/* Teks "pasjajan" dibuat lebih presisi & centered */}
-                  <span className="mt-1 text-xl font-semibold">pasjajan</span>
+      <footer className="mt-16 w-full border-t border-white/20 bg-[#125635]">
+        <div className="relative isolate mx-auto max-w-[1920px] overflow-hidden px-6 pb-16 pt-20 text-white sm:px-10 lg:px-8">
+          <div className="pointer-events-none absolute inset-0">
+             <div className="hidden h-full w-full lg:block">
+              <div aria-hidden className="absolute" style={{ width: 2303, height: 839, top: -484, left: -653, borderRadius: 302, background: "#FFFFFF", zIndex: 1 }} />
+              <div aria-hidden className="absolute" style={{ width: 1393, height: 957, top: -642, left: -850, borderRadius: 302, background: "#125635", zIndex: 3 }} />
+              <div aria-hidden className="absolute" style={{ width: 1430, height: 540, top: -305, left: -760, borderRadius: 302, background: "#FDDE13", zIndex: 2 }} />
+            </div>
+            <div className="h-full w-full lg:hidden">
+              <div aria-hidden className="absolute -left-2/3 inset-y-0 w-[160%] rounded-r-full bg-[#125635]" style={{ zIndex: 3 }} />
+              <div aria-hidden className="absolute -top-24 right-[20%] h-64 w-64 rounded-full bg-[#FDDE13]" style={{ zIndex: 2 }} />
+              <div aria-hidden className="absolute -right-[35%] bottom-[-35%] h-72 w-[120%] rounded-t-[240px] bg-[#125635]" style={{ zIndex: 2 }} />
+              <div aria-hidden className="absolute -top-[18%] -left-[15%] h-[140%] w-[140%] rounded-[220px] bg-white" style={{ zIndex: 1 }} />
+            </div>
+          </div>
+
+          <div className="relative z-10 mx-auto flex w-full max-w-full flex-col gap-12 md:flex-row md:items-start md:justify-between">
+            <div className="flex flex-col gap-6 text-white md:ml-12 md:max-w-sm">
+              <div className="flex items-center gap-4">
+                <div className="flex h-28 w-28 items-center justify-center rounded-2xl bg-white/10 p-3 backdrop-blur-sm">
+                  <Image src="/img/logo3.png" alt="PasJajan" width={112} height={112} className="h-full w-full object-contain" priority />
                 </div>
-          </div>
-
-          {/* ====================================================== */}
-          {/* ||       PERUBAHAN: "Hubungi kami" ditambahkan      || */}
-          {/* ====================================================== */}
-          <div>
-            <p className="mb-2 font-semibold">Ikuti kami</p>
-            <div className="flex gap-3">
-              {/* Ikon Sosmed */}
-              <a href="#" className="transition-opacity hover:opacity-80">
-                <Image src="/img/ig.png" alt="Instagram" className="h-6 w-6" width={24} height={24} />
-              </a>
-              <a href="#" className="transition-opacity hover:opacity-80">
-                <Image src="/img/tiktok.png" alt="TikTok" className="h-6 w-6" width={24} height={24} />
-              </a>
+              </div>
+              <p className="text-lg font-semibold leading-relaxed md:text-xl">
+                Solusi Belanja Kelontong
+                <span className="block">dalam Genggaman.</span>
+              </p>
             </div>
 
-            {/* Hubungi Kami (BARU DITAMBAHKAN) */}
-            <div className="mt-4">
-              {" "}
-              {/* Jarak dari ikon sosmed */}
-              <p className="mb-2 font-semibold">Hubungi kami</p>
-              <a
-                href="mailto:Pasjajan@gmail.com"
-                className="flex items-center gap-2 transition-opacity hover:opacity-80"
-              >
-                {/* Ikon Email SVG */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
-                  <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
-                </svg>
-                <span className="underline">Pasjajan@gmail.com</span>
-              </a>
-            </div>
-          </div>
-          {/* ====================================================== */}
+            <div className="flex flex-col gap-10 text-[#0A1F14] md:ml-auto md:flex-row md:gap-12 lg:gap-16">
+              
+              <div className="flex flex-col gap-3">
+                <h3 className="text-lg font-semibold text-[#111827]">Bantuan</h3>
+                <ul className="space-y-2 text-sm text-[#1F2937]">
+                  {supportLinks.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
 
-          {/* ====================================================== */}
-          {/* ||     PERUBAHAN: Metode Pembayaran diubah ke <img>   || */}
-          {/* ====================================================== */}
-          <div>
-            <p className="mb-2 font-semibold">Metode Pembayaran</p>
-            <div className="flex flex-wrap gap-2">
-              {" "}
-              {/* flex-wrap agar rapi jika tidak muat */}
-              {/* Ganti <span> dengan <img> */}
-              <Image src="/img/qris.png" alt="QRIS" className="h-6" width={24} height={24} />
-              <Image src="/img/shopeepay.png" alt="ShopeePay" className="h-6" width={24} height={24} />
-              <Image src="/img/dana.png" alt="DANA" className="h-6" width={24} height={24} />
-              <Image src="/img/gopay.png" alt="Gopay" className="h-6" width={24} height={24} />
-              <Image src="/img/dana.png" alt="OVO" className="h-6" width={24} height={24} />
-            </div>
-          </div>
-          {/* ====================================================== */}
+              <div className="flex flex-col gap-5">
+                <h3 className="text-lg font-semibold text-[#111827]">FAQ</h3>
+                <ul className="space-y-2 text-sm text-[#1F2937]">
+                  {faqList.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
 
-          {/* Pengaduan */}
-          <div>
-            <p className="mb-2 font-semibold">Layanan Pengaduan Konsumen</p>
-            <p className="text-xs leading-relaxed">
-              Direktorat Jenderal Perlindungan Konsumen dan tertib Niaga
-              kementerian perdagangan Republik Indonesia
-            </p>
+              <div className="flex flex-col gap-3">
+                <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
+                
+                <div className="flex items-center gap-4 md:justify-end">
+                  {socialLinks.map(({ name, icon }) => (
+                    <button
+                      key={name}
+                      type="button"
+                      aria-label={name}
+                      className="text-[#111827] transition-colors hover:text-[#125635]"
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <p className="mt-10 text-center text-xs">©2025, PT.PasJajan</p>
+        <div className="bg-[#125635] py-1">
+          <p className="text-center text-xs font-medium text-white">© 2025 PasJajan – All Right Reserved</p>
+        </div>
       </footer>
     </div>
   );
