@@ -150,7 +150,7 @@ class NotificationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Notification::with(['fromUser:id,first_name,last_name,email', 'toUser:id,first_name,last_name,email']);
+        $query = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email']);
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -202,7 +202,7 @@ class NotificationController extends Controller
 
     public function show($id): JsonResponse
     {
-        $notification = Notification::with(['fromUser:id,first_name,last_name,email', 'toUser:id,first_name,last_name,email'])
+        $notification = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email'])
             ->find($id);
 
         if (!$notification) {

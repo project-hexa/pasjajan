@@ -44,7 +44,7 @@ class CustomerController extends Controller
                 ->join('users', 'customers.user_id', '=', 'users.id')
                 ->select(
                     'orders.id',
-                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as customer_name"),
+                    'users.full_name as customer_name',
                     'orders.created_at as transaction_date',
                     'orders.grand_total as total_payment'
                 )
@@ -54,8 +54,7 @@ class CustomerController extends Controller
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(users.first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                        ->orWhereRaw('LOWER(users.last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                    $q->whereRaw('LOWER(users.full_name) LIKE ?', ['%' . strtolower($search) . '%'])
                         ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
@@ -171,7 +170,7 @@ class CustomerController extends Controller
                 ->join('users', 'customers.user_id', '=', 'users.id')
                 ->select(
                     'orders.id',
-                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as customer_name"),
+                    'users.full_name as customer_name',
                     'orders.created_at as transaction_date',
                     'orders.grand_total as total_payment'
                 )
@@ -180,8 +179,7 @@ class CustomerController extends Controller
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(users.first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                        ->orWhereRaw('LOWER(users.last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                    $q->whereRaw('LOWER(users.full_name) LIKE ?', ['%' . strtolower($search) . '%'])
                         ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
@@ -237,11 +235,8 @@ class CustomerController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('first_name', 'like', "%{$search}%");
-                    })->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('email', 'like', "%{$search}%");
+                        $userQuery->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
                     });
                 });
             }
@@ -252,7 +247,7 @@ class CustomerController extends Controller
                 'customers' => $customers->map(function ($customer) {
                     return [
                         'id' => $customer->id,
-                        'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
+                        'customer_name' => $customer->user->full_name,
                         'email' => $customer->user->email,
                         'quantity' => $customer->orders_count,
                         'total_price' => (float) ($customer->total_price ?? 0),
@@ -304,7 +299,7 @@ class CustomerController extends Controller
             return ApiResponse::success([
                 'customer' => [
                     'id' => $customer->id,
-                    'name' => $customer->user->first_name . ' ' . $customer->user->last_name,
+                    'name' => $customer->user->full_name,
                     'email' => $customer->user->email,
                     'phone' => $customer->user->phone_number,
                     'total_orders' => $customer->orders_count,
@@ -406,7 +401,7 @@ class CustomerController extends Controller
                 $csvData .= sprintf(
                     "%d,%s,%s,%s,%d,%s,%s\n",
                     $customer->id,
-                    $customer->user->first_name . ' ' . $customer->user->last_name,
+                    $customer->user->full_name,
                     $customer->user->email,
                     $customer->user->phone_number,
                     $customer->orders_count,
@@ -505,8 +500,7 @@ class CustomerController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('users.first_name', 'like', "%{$search}%")
-                    ->orWhere('users.last_name', 'like', "%{$search}%")
+                $q->where('users.full_name', 'like', "%{$search}%")
                     ->orWhere('users.email', 'like', "%{$search}%");
             });
         }
@@ -526,7 +520,7 @@ class CustomerController extends Controller
             $totalItems = $order->orderItems->sum('quantity');
 
             return [
-                'customer_name' => $order->customer->user->first_name . ' ' . $order->customer->user->last_name,
+                'customer_name' => $order->customer->user->full_name,
                 'transaction_date' => $order->created_at->format('Y-m-d H:i:s'),
                 'total_items' => $totalItems,
                 'total_payment' => 'Rp' . number_format($order->grand_total, 0, ',', '.'),
