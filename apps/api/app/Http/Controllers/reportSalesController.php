@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helpers\ApiResponse;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -255,7 +255,6 @@ class reportSalesController extends Controller
 
 
             return ApiResponse::success(
-                'Laporan penjualan berhasil diambil',
                 [
                     'parameters' => [
                         'period' => $period,
@@ -292,7 +291,8 @@ class reportSalesController extends Controller
                             'revenue' => 'Rp' . number_format($item->revenue, 0, ',', '.'),
                         ];
                     })->values(),
-                ]
+                ],
+                'Laporan penjualan berhasil diambil'
             );
         } catch (\Exception $e) {
             // STEP 5: Return error jika terjadi exception

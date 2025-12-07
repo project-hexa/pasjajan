@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Helpers\ApiResponse;
+use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Store;
 use Illuminate\Validation\Rule;
+use App\Traits\LogsActivity;
 
 class BranchController extends Controller
 {
+    use LogsActivity;
 
     public function index(Request $request)
     {
@@ -33,7 +35,6 @@ class BranchController extends Controller
             $branches = $query->orderBy('name')->get();
 
             return ApiResponse::success(
-                'Data cabang berhasil diambil',
                 [
                     'branches' => $branches->map(function ($store) {
                         return [
@@ -51,7 +52,8 @@ class BranchController extends Controller
                         ];
                     }),
                     'total' => $branches->count(),
-                ]
+                ],
+                'Data cabang berhasil diambil'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
@@ -84,8 +86,10 @@ class BranchController extends Controller
 
             $store = Store::create($validated);
 
+            // Log activity
+            $this->logActivity('CREATE', "Membuat cabang baru: {$store->name} ({$store->code})");
+
             return ApiResponse::created(
-                'Cabang berhasil ditambahkan',
                 [
                     'branch' => [
                         'id' => $store->id,
@@ -99,7 +103,8 @@ class BranchController extends Controller
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
-                ]
+                ],
+                'Cabang berhasil ditambahkan'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
@@ -120,7 +125,6 @@ class BranchController extends Controller
             }
 
             return ApiResponse::success(
-                'Cabang ditemukan',
                 [
                     'branch' => [
                         'id' => $store->id,
@@ -134,7 +138,8 @@ class BranchController extends Controller
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
-                ]
+                ],
+                'Cabang ditemukan'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
@@ -170,8 +175,10 @@ class BranchController extends Controller
 
             $store->update($validator->validated());
 
+            // Log activity
+            $this->logActivity('UPDATE', "Memperbarui data cabang: {$store->name} ({$store->code})");
+
             return ApiResponse::success(
-                'Cabang berhasil diperbarui',
                 [
                     'branch' => [
                         'id' => $store->id,
@@ -185,7 +192,8 @@ class BranchController extends Controller
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
-                ]
+                ],
+                'Cabang berhasil diperbarui'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
@@ -206,13 +214,15 @@ class BranchController extends Controller
             }
 
             if (!$store->is_active) {
-                return ApiResponse::error('Cabang sudah dalam status tidak aktif', [], 400);
+                return ApiResponse::error('Cabang sudah dalam status tidak aktif', 400, []);
             }
 
             $store->update(['is_active' => false]);
 
+            // Log activity
+            $this->logActivity('UPDATE', "Menonaktifkan cabang: {$store->name} ({$store->code})");
+
             return ApiResponse::success(
-                'Cabang berhasil dinonaktifkan',
                 [
                     'branch' => [
                         'id' => $store->id,
@@ -220,7 +230,8 @@ class BranchController extends Controller
                         'name' => $store->name,
                         'is_active' => (bool) $store->is_active,
                     ]
-                ]
+                ],
+                'Cabang berhasil dinonaktifkan'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
@@ -241,13 +252,15 @@ class BranchController extends Controller
             }
 
             if ($store->is_active) {
-                return ApiResponse::error('Cabang sudah dalam status aktif', [], 400);
+                return ApiResponse::error('Cabang sudah dalam status aktif', 400, []);
             }
 
             $store->update(['is_active' => true]);
 
+            // Log activity
+            $this->logActivity('UPDATE', "Mengaktifkan cabang: {$store->name} ({$store->code})");
+
             return ApiResponse::success(
-                'Cabang berhasil diaktifkan',
                 [
                     'branch' => [
                         'id' => $store->id,
@@ -255,7 +268,8 @@ class BranchController extends Controller
                         'name' => $store->name,
                         'is_active' => (bool) $store->is_active,
                     ]
-                ]
+                ],
+                'Cabang berhasil diaktifkan'
             );
         } catch (\Exception $e) {
             return ApiResponse::serverError(
