@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -63,7 +63,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
     );
 };
 
-export default function FailedPage() {
+function FailedPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
@@ -131,7 +131,7 @@ export default function FailedPage() {
         );
     }
 
-    const { payment_method, grand_total, va_number, payment_code, order_code } = paymentData;
+    const { payment_method, grand_total, order_code } = paymentData;
 
     return (
         <div className="min-h-screen flex flex-col bg-emerald-50/50">
@@ -161,12 +161,6 @@ export default function FailedPage() {
 
                         {/* Details */}
                         <div className="space-y-1">
-                            {/* {va_number && (
-                                <DetailRow label="No. VA" value={va_number} isCopyable />
-                            )}
-                            {payment_code && (
-                                <DetailRow label="Kode Pembayaran" value={payment_code} isCopyable />
-                            )} */}
                             <DetailRow label="Metode Pembayaran" value={payment_method.name} />
                             <DetailRow label="ID Pesanan" value={order_code} />
                             <DetailRow label="Status" value="Gagal" isStatus />
@@ -204,3 +198,16 @@ export default function FailedPage() {
         </div>
     );
 }
+
+export default function FailedPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
+                <p className="text-lg">Memuat...</p>
+            </div>
+        }>
+            <FailedPageContent />
+        </Suspense>
+    );
+}
+
