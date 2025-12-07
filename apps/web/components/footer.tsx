@@ -109,24 +109,21 @@ export const Footer = () => {
               </ul>
             </div>
 
-            {/* Kolom 2: Metode Pembayaran */}
+            {/* Kolom 2: FAQ */}
             <div className="flex flex-col gap-3 md:items-end md:text-right">
-              <h3 className="text-lg font-semibold text-[#111827]">Metode Pembayaran</h3>
-              {/* grid tetap dipakai untuk list bank, tapi justify content nya kita atur ke kanan */}
-              <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-[#1F2937] md:text-right">
-                {paymentMethods.map((method) => (
-                  <li key={method}>{method}</li>
-                ))}
+              <h3 className="text-lg font-semibold text-[#111827]">FAQ</h3>
+              <ul className="space-y-2 text-sm text-[#1F2937] md:text-right">
+                <li>Apa itu PasJajan?</li>
+                <li>Bagaimana cara berbelanja di PasJajan?</li>
+                <li>Metode pembayaran apa saja yang tersedia di PasJajan?</li>
+                <li>Bagaimana cara melacak status pesanan saya?</li>
               </ul>
             </div>
 
-            {/* Kolom 3: Ikuti kami */}
-            {/* KHUSUS DISINI SAYA TAMBAHKAN 'pl-4' atau semacamnya jika perlu, 
-                tapi flex parent sudah mendorongnya. 
-                Pastikan items-end aktif. */}
-            <div className="flex flex-col gap-3 md:items-end md:text-right">
+            {/* Kolom 3: Ikuti kami (pinned top-right on wide screens) */}
+            <div className="md:absolute md:right-4 md:top-4 z-20 static md:flex md:flex-col md:items-end md:gap-3">
               <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
-              <div className="flex items-center gap-4 md:justify-end">
+              <div className="flex items-center gap-4">
                 {socialLinks.map(({ name, icon }) => (
                   <button
                     key={name}

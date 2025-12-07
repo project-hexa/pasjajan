@@ -45,6 +45,7 @@
     ]
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
     "@turbo/gen": "^2.6.0",
     "inquirer": "^12.10.0",
     "recharts": "^3.5.1"

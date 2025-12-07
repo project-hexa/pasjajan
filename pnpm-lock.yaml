@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.11
+        version: 4.1.11
       '@turbo/gen':
         specifier: ^2.6.0
         version: 2.6.0(@types/node@24.10.0)(typescript@5.7.3)

@@ -55,6 +55,25 @@ export default function SiteHeader() {
     setSearchValue(q);
   }, [q]);
 
+  // Debounced live search: typing in the navbar will update the URL (catalogue or store)
+  React.useEffect(() => {
+    const val = (searchValue || "").trim();
+
+    // only perform live URL updates on pages that support search (catalogue & store)
+    const isStorePage = pathname?.startsWith("/store/");
+    const isCatalogue = pathname === "/catalogue" || pathname?.startsWith("/catalogue");
+    if (!isStorePage && !isCatalogue) return;
+
+    const id = setTimeout(() => {
+      const targetBase = isStorePage && pathname ? pathname : "/catalogue";
+      const target = val ? `${targetBase}?search=${encodeURIComponent(val)}` : targetBase;
+      // replace to avoid history spam while typing
+      router.replace(target);
+    }, 400);
+
+    return () => clearTimeout(id);
+  }, [searchValue, pathname, router]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const next = (searchValue || "").trim();
@@ -108,14 +127,16 @@ export default function SiteHeader() {
           </button>
         </form>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center ml-6 gap-15">
           <Link
-            href="/cart"
+            href="/promo"
             prefetch={false}
-            aria-label="Buka keranjang belanja"
-            className="flex items-center gap-15 font-semibold text-white ml-6"
+            className="font-semibold text-white"
+            aria-label="Promo - buka halaman promo"
           >
             <span>Promo</span>
+          </Link>
+          <Link href="/cart" prefetch={false} aria-label="Buka keranjang belanja" className="text-white">
             <Image src="/img/icon-promo.png" alt="Keranjang" className="h-5" width={20} height={20} />
           </Link>
         </div>

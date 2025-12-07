@@ -122,15 +122,16 @@ export default function SiteFooter() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <h3 className="text-lg font-semibold text-[#111827]">Metode Pembayaran</h3>
-              <ul className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-[#1F2937]">
-                {paymentMethods.map((method) => (
-                  <li key={method}>{method}</li>
-                ))}
+              <h3 className="text-lg font-semibold text-[#111827]">FAQ</h3>
+              <ul className="space-y-2 text-sm text-[#1F2937]">
+                <li>Apa itu PasJajan?</li>
+                <li>Bagaimana cara berbelanja di PasJajan?</li>
+                <li>Metode pembayaran apa saja yang tersedia di PasJajan?</li>
+                <li>Bagaimana cara melacak status pesanan saya?</li>
               </ul>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="md:absolute md:right-4 md:top-4 z-20 static md:flex md:flex-col md:gap-3">
               <h3 className="text-lg font-semibold text-[#111827]">Ikuti kami</h3>
               <div className="flex items-center gap-4">
                 {socialLinks.map(({ name, icon }) => (
