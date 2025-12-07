@@ -48,7 +48,7 @@ class OrderController extends Controller
                 'grand_total' => $request->grand_total,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
-                'expired_at' => now()->addHours(24), // Order expire 24 jam
+                'expired_at' => null, // Akan di-set saat payment process
                 'notes' => $request->notes ?? null,
             ]);
 
@@ -76,7 +76,7 @@ class OrderController extends Controller
                     'status' => $order->status,
                     'payment_status' => $order->payment_status,
                     'items_count' => $order->items->count(),
-                    'expired_at' => $order->expired_at->toIso8601String(),
+                    'expired_at' => $order->expired_at?->toIso8601String(),
                     'created_at' => $order->created_at->toIso8601String(),
                 ],
             ], 'Order berhasil dibuat. Silakan pilih metode pembayaran.', 201);

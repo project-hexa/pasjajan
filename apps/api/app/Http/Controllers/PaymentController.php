@@ -79,8 +79,8 @@ class PaymentController extends Controller
                 );
             }
 
-            // Check if order expired
-            if ($order->isExpired()) {
+            // Check if order expired (hanya jika expired_at sudah di-set)
+            if ($order->expired_at && $order->isExpired()) {
                 $order->update(['status' => 'cancelled', 'payment_status' => 'expired']);
                 return ApiResponse::error('Order sudah kadaluarsa', 400);
             }
@@ -125,6 +125,7 @@ class PaymentController extends Controller
                 'midtrans_order_id' => $result->order_id,
                 'payment_instructions' => $result->payment_instructions,
                 'payment_status' => 'pending',
+                'expired_at' => now()->addHours(1), // Set expire time saat payment process
             ]);
 
             // Prepare response
@@ -137,6 +138,8 @@ class PaymentController extends Controller
                 ],
                 'payment_status' => $order->payment_status,
                 'grand_total' => $order->grand_total,
+                'created_at' => $order->created_at?->toIso8601String(),
+                'expired_at' => $order->expired_at?->toIso8601String(),
             ];
 
             // Add payment-specific instructions
@@ -193,6 +196,22 @@ class PaymentController extends Controller
                 ->with('paymentMethod')
                 ->firstOrFail();
 
+            // Check if order is expired
+            if ($order->isExpired() && $order->payment_status !== 'paid') {
+                $order->update([
+                    'status' => 'cancelled',
+                    'payment_status' => 'expired'
+                ]);
+
+                return ApiResponse::success([
+                    'order_code' => $order->code,
+                    'status' => 'cancelled',
+                    'payment_status' => 'expired',
+                    'expired_at' => $order->expired_at?->toIso8601String(),
+                    'message' => 'Order sudah kadaluarsa',
+                ], 'Order sudah kadaluarsa');
+            }
+
             if (!$order->midtrans_order_id) {
                 return ApiResponse::error('Order belum memiliki pembayaran', 400);
             }
@@ -222,6 +241,11 @@ class PaymentController extends Controller
                     $updateData['status'] = 'confirmed'; // Auto confirm after payment
                 }
 
+                // Handle expired from Midtrans
+                if ($paymentStatus === 'expired') {
+                    $updateData['status'] = 'cancelled';
+                }
+
                 $order->update($updateData);
 
                 Log::info("Order {$order->code} status updated: {$paymentStatus}");
@@ -231,6 +255,7 @@ class PaymentController extends Controller
                 'order_code' => $order->code,
                 'status' => $order->status,
                 'payment_status' => $order->payment_status,
+                'expired_at' => $order->expired_at?->toIso8601String(),
                 'payment_method' => $order->paymentMethod ? [
                     'name' => $order->paymentMethod->method_name,
                     'code' => $order->paymentMethod->code,
