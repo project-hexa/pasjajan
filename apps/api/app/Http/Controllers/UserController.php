@@ -6,7 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Hash;
 use App\Models\User;
+use App\Models\Customer;
+use App\Models\Staff;
 use App\Models\Address;
 use App\Models\HistoryPoint;
 use App\Models\Order;
@@ -16,41 +19,167 @@ class UserController extends BaseController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(string $role): JsonResponse
     {
-        //
+		// Ambil data seluruh user dengan difilter berdasarkan rolenya
+		$users = User::where('role', Str::ucfirst($role))->get();
+
+		$result['users'] = $users;
+
+		return $this->sendSuccessResponse('Berhasil mendapatkan data seluruh user.', $result);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        //
+		// Cek apakah inputan no HP sudah menggunakan format +62, jika belum maka tambahkan +62 didepannya
+		$request->merge([
+			'phone_number' => !Str::startsWith($request->input('phone_number'), '+62') ? Str::start($request->input('phone_number'), '+62') : $request->input('phone_number'),
+		]);
+
+		$rules = [
+			'full_name' => 'required|string',
+			'email' => 'required|unique:App\Models\User,email|string|email',
+			'phone_number' => 'required|numeric',
+			'password' => [
+				'required',
+				'string',
+				Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+				'confirmed',
+			],
+			'password_confirmation' => 'required',
+			'role' => 'required|alpha:ascii',
+			'status_account' => 'required|alpha:ascii',
+		];
+
+		if ($request->input('role') == 'Staff') {
+			$rules['store_id'] = 'required|integer';
+		}
+
+		$data = $this->execValidation($request->all(), $rules);
+
+		if (isset($data['errors'])) {
+			return $this->sendFailResponse('Validasi tambah user gagal.', $data['errors'], 422);
+		}
+
+		if ($data['result']['role'] == 'Customer') {
+			return $this->sendFailResponse('Tidak dapat menambah Customer baru.');
+		}
+
+		$user = $this->createUser($data['result']);
+
+		$result['user_data'] = $user;
+
+		return $this->sendSuccessResponse('Berhasil menambah user baru.', $data['result']);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
-        //
+		// Ambil data seluruh user dengan difilter berdasarkan rolenya
+		$user = User::find($id);
+
+		// Jika user tidak ditemukan, maka
+		if (!$user) {
+			return $this->sendFailResponse("User tidak ditemukan. Gagal mendapatkan data user.");
+		}
+
+		switch ($user['role']) {
+			// Jika role user yang dicari adalah customer atau staff, maka
+			case 'Customer':
+			case 'Staff':
+				// Ambil juga data dari entitas customer atau staff
+				$user = $user->load($user['role']);
+				break;
+			// Jika role user yang dicari itu selain customer atau staff, maka
+			default:
+				break;
+		}
+
+		$result['user_data'] = $user;
+
+		return $this->sendSuccessResponse('Berhasil mendapatkan data user.', $result);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
-        //
+		$rules = [
+			'full_name' => 'nullable|string',
+			'email' => 'nullable|unique:App\Models\User,email|string|email',
+			'phone_number' => 'nullable|numeric',
+			'password' => [
+				'nullable',
+				'string',
+				Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
+				'confirmed',
+			],
+			'password_confirmation' => 'nullable',
+			'status_account' => 'nullable|alpha:ascii',
+		];
+
+		if ($request->input('role') == 'Staff') {
+			$rules['store_id'] = 'nullable|integer';
+		}
+
+		$data = $this->execValidation($request->all(), $rules);
+
+		// Jika validasi gagal (terdapat error validasi), maka
+		if (isset($data['errors'])) {
+			return $this->sendFailResponse('Validasi edit data user gagal.', $data['errors'], 422);
+		}
+
+		// Cari user dengan id dari parameter
+		$user = User::find($id);
+
+		// Jika user tidak ditemukan, maka
+		if (!$user) {
+			return $this->sendFailResponse("User tidak ditemukan. Gagal mengubah data user.");
+		}
+
+		$user['full_name'] = $data['result']['full_name'] ?? $user['full_name'];
+		$user['email'] = $data['result']['email'] ?? $user['email'];
+		$user['phone_number'] = isset($data['result']['phone_number']) ? Str::start($data['result']['phone_number'], '+62') : $user['phone_number'];
+		$user['password'] = $data['result']['password'] ?? $user['password'];
+		$user['status_account'] = $data['result']['status_account'] ?? $user['status_account'];
+
+		if ($request->input('role') == 'Staff') {
+			$user['store_id'] = $data['result']['store_id'] ?? $user['store_id'];
+		}
+
+		$user->save();
+
+		$result['user_data'] = $user;
+
+		return $this->sendSuccessResponse('Berhasil mengubah data user.', $result);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
-        //
+		// Cari user dengan id dari parameter
+		$user = User::find($id);
+
+		// Jika user tidak ditemukan, maka
+		if (!$user) {
+			return $this->sendFailResponse("User tidak ditemukan. Gagal menghapus data user.");
+		}
+
+		// Jika user ditemukan, maka
+		// Hapus user dengan mekanisme softdelete
+		$user->delete();
+
+		$result['user_data'] = $user;
+
+		return $this->sendSuccessResponse('Berhasil menghapus data user.', $result);
     }
 
 	public function getProfile(Request $request): JsonResponse
@@ -183,11 +312,11 @@ class UserController extends BaseController
 			'customer_id' => $user->customer['id'],
 			'label' => $data['label'],
 			'detail_address' => $data['detail_address'],
-			'notes_address' => $data['notes_address'],
+			'notes_address' => $data['notes_address'] ?? null,
 			'recipient_name' => $data['recipient_name'] ?? $user['full_name'],
 			'phone_number' => $data['phone_number'] ?? $user['phone_number'],
-			'latitude' => $data['latitude'],
-			'longitude' => $data['longitude'],
+			'latitude' => $data['latitude'] ?? null,
+			'longitude' => $data['longitude'] ?? null,
 			'is_default' => $data['is_default'],
 		]);
 
@@ -253,6 +382,7 @@ class UserController extends BaseController
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti password
 		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
 			'password' => [
 				'required',
 				'string',
@@ -305,8 +435,8 @@ class UserController extends BaseController
 		}
 
 		// Jika user ditemukan, maka
-		// Ambil data terbaru dari riwayat point milik user, lalu ambil nilai dari kolom total_point saja
-		$point = HistoryPoint::select('total_point')->where('customer_id', $user->customer['id'])->latest()->first();
+		// Ambil data point milik customer
+		$point = $user->customer['point'];
 
 		$result['total_point'] = $point;
 
@@ -347,5 +477,32 @@ class UserController extends BaseController
 		$result['order'] = $orders;
 
 		return $this->sendSuccessResponse("Berhasil mendapatkan data riwayat transaksi milik user.", $result);
+	}
+
+	// Method private custom buatan sendiri khusus untuk UserController
+	// Method untuk memasukkan data inputan admin ke database 
+	private function createUser(array $data): User
+	{
+		// Memasukkan (insert) isi parameter array $data ke database
+		$user = User::create([
+			'full_name' => $data['full_name'],
+			'email' => $data['email'],
+			'phone_number' => $data['phone_number'],
+			'password' => Hash::make($data['password']),
+			'role' => $data['role'],
+			'status_account' => $data['status_account'],
+			'last_login_date' => now(),
+		]);
+
+		if ($user['role'] == 'Staff') {
+			$staff = Staff::create([
+				'user_id' => $user['id'],
+				'store_id' => $data['store_id'],
+			]);
+
+			$user = $user->load('staff');
+		}
+
+		return $user;
 	}
 }
