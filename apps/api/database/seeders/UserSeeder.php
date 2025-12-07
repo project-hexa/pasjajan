@@ -14,14 +14,48 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-		User::create([
-			'full_name' => 'Mimin',
-			'email' => 'pasjajan032@gmail.com',
-			'phone_number' => '+6283134480937',
-			'password' => Hash::make('4dmin@dmiN'),
-			'role' => 'Admin',
-			'status_account' => 'Active',
-			'last_login_date' => now(),
-		]);
+        // Admin User
+        User::create([
+            'full_name' => 'Admin System',
+            'email' => 'admin@pasjajan.com',
+            'phone_number' => '081234567890',
+            'password' => Hash::make('password123'),
+            'role' => 'Admin',
+            'phone_number_verified_at' => now(),
+            'last_login_date' => now(),
+        ]);
+
+        // Staff User
+        User::create([
+            'full_name' => 'Staff One',
+            'email' => 'staff@pasjajan.com',
+            'phone_number' => '081234567891',
+            'password' => Hash::make('password123'),
+            'role' => 'Staff',
+            'phone_number_verified_at' => now(),
+            'last_login_date' => now(),
+        ]);
+
+        // Customer User 1
+        User::create([
+            'full_name' => 'John Doe',
+            'email' => 'john@example.com',
+            'phone_number' => '081234567892',
+            'password' => Hash::make('password123'),
+            'role' => 'Customer',
+            'phone_number_verified_at' => now(),
+            'last_login_date' => now(),
+        ]);
+
+        // Customer User 2
+        User::create([
+            'full_name' => 'Jane Smith',
+            'email' => 'jane@example.com',
+            'phone_number' => '081234567893',
+            'password' => Hash::make('password123'),
+            'role' => 'Customer',
+            'phone_number_verified_at' => now(),
+            'last_login_date' => now(),
+        ]);
     }
 }

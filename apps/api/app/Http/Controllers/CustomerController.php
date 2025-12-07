@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Http\Helpers\ApiResponse;
+use App\Helpers\ApiResponse;
 
 class CustomerController extends Controller
 {
@@ -18,6 +18,9 @@ class CustomerController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'period' => 'nullable|in:daily,monthly,yearly,custom',
+                'from' => 'required_if:period,custom|date',
+                'to' => 'required_if:period,custom|date|after_or_equal:from',
                 'per_page' => 'nullable|integer|min:5|max:100',
                 'page' => 'nullable|integer|min:1',
                 'search' => 'nullable|string|max:255',
@@ -28,27 +31,30 @@ class CustomerController extends Controller
                 return ApiResponse::validationError($validator->errors()->toArray());
             }
 
+            $period = $request->input('period', 'monthly');
             $perPage = $request->input('per_page', 10);
             $page = $request->input('page', 1);
             $search = $request->input('search');
             $sort = $request->input('sort');
+
+            [$from, $to] = $this->getDateRange($period, $request);
 
             $query = Order::query()
                 ->join('customers', 'orders.customer_id', '=', 'customers.id')
                 ->join('users', 'customers.user_id', '=', 'users.id')
                 ->select(
                     'orders.id',
-                    DB::raw("CONCAT(users.first_name, ' ', users.last_name) as customer_name"),
+                    'users.full_name as customer_name',
                     'orders.created_at as transaction_date',
                     'orders.grand_total as total_payment'
                 )
                 ->where('users.role', 'customer')
-                ->whereIn('orders.status', ['COMPLETED']);
+                ->whereIn('orders.status', ['COMPLETED'])
+                ->whereBetween('orders.created_at', [$from, $to]);
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(users.first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                        ->orWhereRaw('LOWER(users.last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                    $q->whereRaw('LOWER(users.full_name) LIKE ?', ['%' . strtolower($search) . '%'])
                         ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
@@ -76,7 +82,12 @@ class CustomerController extends Controller
                 ];
             });
 
-            return ApiResponse::success('Data pelanggan berhasil diambil', [
+            return ApiResponse::success([
+                'period' => [
+                    'filter' => $period,
+                    'from' => $from->format('Y-m-d'),
+                    'to' => $to->format('Y-m-d'),
+                ],
                 'customers' => $customers,
                 'pagination' => [
                     'current_page' => $ordersPaginated->currentPage(),
@@ -86,7 +97,7 @@ class CustomerController extends Controller
                     'from' => $ordersPaginated->firstItem(),
                     'to' => $ordersPaginated->lastItem(),
                 ],
-            ]);
+            ], 'Data pelanggan berhasil diambil');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data pelanggan',
@@ -120,7 +131,7 @@ class CustomerController extends Controller
             $categoryComposition = $this->getCategoryComposition($from, $to);
             $purchaseFrequency = $this->getPurchaseFrequency($from, $to);
 
-            return ApiResponse::success('Data analytics berhasil diambil', [
+            return ApiResponse::success([
                 'period' => [
                     'filter' => $period,
                     'from' => $from->format('Y-m-d'),
@@ -132,10 +143,70 @@ class CustomerController extends Controller
                     'category_composition' => $categoryComposition,
                     'purchase_frequency' => $purchaseFrequency,
                 ],
-            ]);
+            ], 'Data analytics berhasil diambil');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data analytics',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
+
+    public function exportCustomers(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'search' => 'nullable|string|max:255',
+            ]);
+
+            if ($validator->fails()) {
+                return ApiResponse::validationError($validator->errors()->toArray());
+            }
+
+            $search = $request->input('search');
+
+            $query = Order::query()
+                ->join('customers', 'orders.customer_id', '=', 'customers.id')
+                ->join('users', 'customers.user_id', '=', 'users.id')
+                ->select(
+                    'orders.id',
+                    'users.full_name as customer_name',
+                    'orders.created_at as transaction_date',
+                    'orders.grand_total as total_payment'
+                )
+                ->where('users.role', 'customer')
+                ->whereIn('orders.status', ['COMPLETED']);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(users.full_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(users.email) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
+            }
+
+            $orders = $query->orderBy('orders.created_at', 'desc')->get();
+
+            $csvData = "No,Nama Customer,Tanggal Transaksi,Total Item,Total Bayar\n";
+
+            foreach ($orders as $index => $order) {
+                $totalItems = OrderItem::where('order_id', $order->id)->sum('quantity');
+
+                $csvData .= sprintf(
+                    "%d,%s,%s,%d,%s\n",
+                    $index + 1,
+                    '"' . str_replace('"', '""', $order->customer_name) . '"',
+                    Carbon::parse($order->transaction_date)->format('Y-m-d H:i:s'),
+                    $totalItems,
+                    number_format($order->total_payment, 0, ',', '.')
+                );
+            }
+
+            return response($csvData, 200)
+                ->header('Content-Type', 'text/csv; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="customer-transactions-' . now()->format('Y-m-d-His') . '.csv"');
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Gagal export data customers',
                 ['error' => $e->getMessage()]
             );
         }
@@ -164,22 +235,19 @@ class CustomerController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('first_name', 'like', "%{$search}%");
-                    })->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('last_name', 'like', "%{$search}%");
-                    })->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('email', 'like', "%{$search}%");
+                        $userQuery->where('full_name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
                     });
                 });
             }
 
             $customers = $query->get();
 
-            return ApiResponse::success('Hasil pencarian pelanggan', [
+            return ApiResponse::success([
                 'customers' => $customers->map(function ($customer) {
                     return [
                         'id' => $customer->id,
-                        'customer_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
+                        'customer_name' => $customer->user->full_name,
                         'email' => $customer->user->email,
                         'quantity' => $customer->orders_count,
                         'total_price' => (float) ($customer->total_price ?? 0),
@@ -189,7 +257,7 @@ class CustomerController extends Controller
                     ];
                 }),
                 'total' => $customers->count(),
-            ]);
+            ], 'Hasil pencarian pelanggan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mencari pelanggan',
@@ -228,10 +296,10 @@ class CustomerController extends Controller
                 ->whereIn('status', ['COMPLETED'])
                 ->sum('grand_total');
 
-            return ApiResponse::success('Detail pelanggan ditemukan', [
+            return ApiResponse::success([
                 'customer' => [
                     'id' => $customer->id,
-                    'name' => $customer->user->first_name . ' ' . $customer->user->last_name,
+                    'name' => $customer->user->full_name,
                     'email' => $customer->user->email,
                     'phone' => $customer->user->phone_number,
                     'total_orders' => $customer->orders_count,
@@ -240,7 +308,7 @@ class CustomerController extends Controller
                     'member_since' => $customer->created_at->format('Y-m-d'),
                 ],
                 'recent_orders' => $orders,
-            ]);
+            ], 'Detail pelanggan ditemukan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil detail pelanggan',
@@ -266,7 +334,7 @@ class CustomerController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate($perPage);
 
-            return ApiResponse::success('Data pembelian pelanggan', [
+            return ApiResponse::success([
                 'purchases' => $orders->map(function ($order) {
                     return [
                         'id' => $order->id,
@@ -290,7 +358,7 @@ class CustomerController extends Controller
                     'current_page' => $orders->currentPage(),
                     'last_page' => $orders->lastPage(),
                 ],
-            ]);
+            ], 'Data pembelian pelanggan');
         } catch (\Exception $e) {
             return ApiResponse::serverError(
                 'Gagal mengambil data pembelian',
@@ -333,7 +401,7 @@ class CustomerController extends Controller
                 $csvData .= sprintf(
                     "%d,%s,%s,%s,%d,%s,%s\n",
                     $customer->id,
-                    $customer->user->first_name . ' ' . $customer->user->last_name,
+                    $customer->user->full_name,
                     $customer->user->email,
                     $customer->user->phone_number,
                     $customer->orders_count,
@@ -432,8 +500,7 @@ class CustomerController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('users.first_name', 'like', "%{$search}%")
-                    ->orWhere('users.last_name', 'like', "%{$search}%")
+                $q->where('users.full_name', 'like', "%{$search}%")
                     ->orWhere('users.email', 'like', "%{$search}%");
             });
         }
@@ -453,7 +520,7 @@ class CustomerController extends Controller
             $totalItems = $order->orderItems->sum('quantity');
 
             return [
-                'customer_name' => $order->customer->user->first_name . ' ' . $order->customer->user->last_name,
+                'customer_name' => $order->customer->user->full_name,
                 'transaction_date' => $order->created_at->format('Y-m-d H:i:s'),
                 'total_items' => $totalItems,
                 'total_payment' => 'Rp' . number_format($order->grand_total, 0, ',', '.'),

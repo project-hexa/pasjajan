@@ -13,9 +13,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seed payment methods
-        $this->call(PaymentMethodSeeder::class);
 
-        // Seed test data for development
-        $this->call(TestDataSeeder::class);
+        $this->call([
+            UserSeeder::class,
+            StoreSeeder::class,
+            StaffSeeder::class,
+            ProductCategorySeeder::class,
+            ProductSeeder::class,
+            VoucherSeeder::class,
+            PaymentMethodSeeder::class,
+            CustomerSeeder::class,
+            AddressSeeder::class,
+            OrderSeeder::class,
+            ActivityLogSeeder::class,
+        ]);
     }
 }
