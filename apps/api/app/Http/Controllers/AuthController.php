@@ -133,8 +133,21 @@ class AuthController extends BaseController
 		$customer = $this->createCustomer($data);
 
 		// Hapus otp milik user terkait
-		$userOtp = $customer->load('user.otps');
-		$this->deleteVerifiedOtp($userOtp);
+		// Cari user beserta otpnya dengan email dari data yang baru dibuat
+		$userOtp = User::where('email', $customer->user['email'])->first()->load('otps');
+		$otp = $userOtp->otps;
+
+		// Jika otp ditemukan namun berupa Collection kosong, maka
+		if ($otp->isEmpty()) {
+			// Ambil data otp dari entitas otp
+			$otp = Otp::where('email', $customer->user['email'])->first();
+		} else {
+			// Jika otp ditemukan $ ada isinya, maka ambil data otp tsb
+			$otp = $userOtp->otps()->first();
+		}
+
+		// Method utk menghapus otp yg telah terverifikasi
+		$this->deleteVerifiedOtp($otp);
 
 		// Membuat token auth untuk user
 		$result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
@@ -232,7 +245,8 @@ class AuthController extends BaseController
 
 		// Hapus otp milik user terkait
 		$userOtp = $user->load('otps');
-		$this->deleteVerifiedOtp($userOtp);
+		$otp = $userOtp->otps()->first();
+		$this->deleteVerifiedOtp($otp);
 
 		// Hapus token auth sebelumnya milik user terkait, jika ada (untuk jaga2)
 		$user->tokens()->delete();
@@ -252,7 +266,7 @@ class AuthController extends BaseController
 
 		// Menetapkan aturan (rules) validasi kirim otp
 		$rules = [
-			$input_type => 'required|' . ($input_type == 'email' ? $input_type : 'numeric'),
+			$input_type => 'required|' . ($input_type == 'email' ? $input_type : 'numeric') . '|unique:otps,' . $input_type,
 		];
 
 		// Validasi inputan user berdasarkan aturan validasi kirim otp yang telah ditetapkan sebelumnya
