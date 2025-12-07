@@ -8,7 +8,7 @@ import Image from "next/image";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 
-export const Navbar = () => {
+export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
   const [search, setSearch] = React.useState("");
 
@@ -20,7 +20,7 @@ export const Navbar = () => {
   };
 
   return (
-    <header className="w-full bg-[#1B6B2F] text-white sticky top-0 z-50 shadow-md">
+    <header className={`w-full bg-[#1B6B2F] text-white sticky top-0 z-50 shadow-md ${className || ""}`}>
       <nav className="container mx-auto flex flex-wrap items-center gap-4 px-4 py-3 text-sm md:flex-nowrap">
         <Link href="/" className="flex items-center text-white transition-opacity hover:opacity-90">
           <div className="flex h-10 w-10 items-center justify-center overflow-visible">
