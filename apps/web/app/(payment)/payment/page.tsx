@@ -93,7 +93,7 @@ export default function CheckoutPage() {
             return {
               id: orderItem.product_id.toString(),
               name: product?.name || "Unknown Product",
-              variant: "1 pcs",
+              variant: "Varian",
               price: orderItem.price,
               qty: orderItem.quantity,
               image_url: product?.image_url || "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
