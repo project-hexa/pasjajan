@@ -9,10 +9,11 @@ use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\PromoController;
 
 /*
 Route::get('/user', function (Request $request) {
-    return $request->user();
+	return $request->user();
 })->middleware('auth:sanctum');
 */
 
@@ -84,7 +85,7 @@ Route::controller(AuthController::class)->group(function () {
 	});
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
-	Route::middleware('auth:sanctum')->group(function() {
+	Route::middleware('auth:sanctum')->group(function () {
 		Route::get('/auth/logout', 'logout');
 	});
 });
@@ -111,12 +112,26 @@ Route::controller(UserController::class)->group(function () {
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::controller(DeliveryController::class)->group(function () {
-        // Get Status Pengiriman
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+	Route::controller(DeliveryController::class)->group(function () {
+		// Get Status Pengiriman
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // Kirim Ulasan
-        Route::post('/delivery/{order_id}/review', 'submitReview');
-    });
+		// Kirim Ulasan
+		Route::post('/delivery/{order_id}/review', 'submitReview');
+	});
 
 });
+
+
+// Route::middleware('auth:sanctum')->group(function () {
+Route::controller(PromoController::class)->group(function () {
+	Route::get('/promos', 'active');
+	Route::get('/promos/{id}', 'show');
+
+	// Endpoint Admin
+	Route::get('/admin/promos', 'index');
+	Route::post('/admin/promos', 'store');
+	Route::put('/admin/promos/{id}', 'update');
+	Route::delete('/admin/promos/{id}', 'destroy');
+});
+// });
