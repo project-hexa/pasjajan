@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import {
@@ -10,7 +10,6 @@ import {
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
 import { Calendar } from "@workspace/ui/components/calendar";
-import { CalendarIcon, SearchIcon } from "lucide-react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import {
@@ -31,6 +30,7 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { CustomerListResponse } from "@/lib/schema/customers-analytics.schema";
+import { Icon } from "@workspace/ui/components/icon";
 
 interface CustomerAnalyticsClientProps {
   initialData: CustomerListResponse["data"];
@@ -61,15 +61,7 @@ export default function CustomerAnalyticsClient({
     return undefined;
   });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateURL({ search: searchValue, page: "1" });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  const updateURL = (updates: Record<string, string>) => {
+  const updateURL = useCallback((updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
 
     Object.entries(updates).forEach(([key, value]) => {
@@ -83,7 +75,15 @@ export default function CustomerAnalyticsClient({
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
-  };
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateURL({ search: searchValue, page: "1" });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue, updateURL]);
 
   const handlePeriodChange = (
     newPeriod: "daily" | "monthly" | "yearly" | "custom",
@@ -158,7 +158,7 @@ export default function CustomerAnalyticsClient({
   return (
     <>
       <div className="flex items-center rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-        <SearchIcon className="text-muted-foreground" />
+        <Icon icon={"lucide:search"} className="text-muted-foreground" />
         <Input
           placeholder="Search customer name..."
           className="border-0 shadow-none focus-visible:ring-0"
@@ -175,7 +175,7 @@ export default function CustomerAnalyticsClient({
                 data-empty={!dateRange}
                 className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
               >
-                <CalendarIcon />
+                <Icon icon={"lucide:calendar"} />
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>

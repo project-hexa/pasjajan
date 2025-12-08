@@ -1,13 +1,15 @@
 @import "tailwindcss";
-@source "../../../apps/**/*.{ts,tsx}";
-@source "../../../components/**/*.{ts,tsx}";
-@source "../**/*.{ts,tsx}";
-
 @import "tw-animate-css";
+
+@plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar" {
   nocompatible: true;
   preferredstrategy: "pseudoelements";
 }
+
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -203,6 +205,22 @@
   a,
   button {
     @apply cursor-pointer;
+  }
+  .toaster-close-btn {
+    right: 10 !important;
+    left: unset !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--normal-text) !important;
+  }
+  .toaster {
+    @apply shadow;
+  }
+  .toaster-close-btn > svg {
+    width: 16px;
+    height: 16px;
   }
 }
 

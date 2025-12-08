@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
 
 interface RestaurantCard {
   id: string | number;
@@ -49,7 +49,7 @@ export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCa
           className="absolute -left-4 top-1/2 hidden -translate-y-1/2 rounded-full border border-[#E3E6EF] bg-white p-2 text-[#373A43] shadow-sm transition hover:border-[#009F4D] md:inline-flex z-40"
           aria-label="Scroll left"
         >
-          <ChevronRight className="h-4 w-4 rotate-180" />
+          <Icon icon={"lucide:chevron-right"} className="h-4 w-4 rotate-180" />
         </button>
 
         <div
@@ -93,7 +93,7 @@ export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCa
           className="absolute -right-4 top-1/2 hidden -translate-y-1/2 rounded-full border border-[#E3E6EF] bg-white p-2 text-[#373A43] shadow-sm transition hover:border-[#009F4D] md:inline-flex z-40"
           aria-label="Scroll right"
         >
-          <ChevronRight className="h-4 w-4" />
+          <Icon icon={"lucide:chevron-right"} className="h-4 w-4" />
         </button>
       </div>
     </section>

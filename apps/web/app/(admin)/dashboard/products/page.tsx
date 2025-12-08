@@ -8,8 +8,8 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { Search, ChevronDown, Pencil, Eye, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { Icon } from "@workspace/ui/components/icon";
 
 type Product = {
   id: number;
@@ -282,7 +282,7 @@ export default function ProductsDashboardPage() {
               onSubmit={handleSearchSubmit}
               className="flex w-full flex-1 items-center gap-3 rounded-full bg-[#F0F7F2] px-6 py-3"
             >
-              <Search className="h-5 w-5 text-[#1E8F59]" />
+              <Icon icon={"lucide:search"} className="h-5 w-5 text-[#1E8F59]" />
               <input
                 type="search"
                 value={searchTerm}
@@ -321,7 +321,7 @@ export default function ProductsDashboardPage() {
                   }`}
                 >
                   <span>Kategori</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <Icon icon={"lucide:chevron-down"} className="h-4 w-4" />
                 </button>
                 {isCategoryOpen && (
                   <div className="absolute left-0 top-[110%] z-20 w-44 rounded-2xl border border-[#C9E3D4] bg-white p-2 shadow-lg">
@@ -362,7 +362,7 @@ export default function ProductsDashboardPage() {
                   }`}
                 >
                   <span>Status</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <Icon icon={"lucide:chevron-down"} className="h-4 w-4" />
                 </button>
                 {isStatusOpen && (
                   <div className="absolute left-0 top-[110%] z-20 w-40 rounded-2xl border border-[#C9E3D4] bg-white p-2 shadow-lg">
@@ -456,7 +456,7 @@ export default function ProductsDashboardPage() {
                         onClick={() => handleView(product)}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1E8F59]/10 text-[#1E8F59] transition hover:bg-[#1E8F59]/20"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Icon icon={"lucide:eye"} className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
@@ -464,7 +464,7 @@ export default function ProductsDashboardPage() {
                         onClick={() => handleEdit(product)}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-[#05A9D6]/10 text-[#05A9D6] transition hover:bg-[#05A9D6]/20"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Icon icon={"lucide:pencil"} className="h-4 w-4" />
                       </button>
                       <button
                         type="button"
@@ -472,7 +472,7 @@ export default function ProductsDashboardPage() {
                         onClick={() => handleDelete(product)}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FAD4D0] text-[#C94C3B] transition hover:bg-[#F8C2BB]"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Icon icon={"lucide:trash"} className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
