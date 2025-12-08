@@ -122,11 +122,15 @@ Route::controller(UserController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
-		// Get Status Pengiriman
-		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- List Kurir & Cek Ongkir ---
+        Route::get('/delivery/methods', 'getDeliveryMethods');
+        Route::post('/delivery/check-cost', 'checkShippingCost');
 
-		// Kirim Ulasan
-		Route::post('/delivery/{order_id}/review', 'submitReview');
+        // --- Get Status Pengiriman ---
+        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+        // --- Kirim Ulasan ---
+        Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
