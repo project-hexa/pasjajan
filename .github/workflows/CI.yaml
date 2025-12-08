@@ -37,7 +37,7 @@ jobs:
 
       - name: Setup BE
         run: 
-          cd apps/api
+          cd apps/api &&
           composer install
 
       - name: Build
