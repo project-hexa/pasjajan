@@ -21,14 +21,31 @@ jobs:
         with:
           version: 8
 
+      - name: Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: lts/*
           cache: 'pnpm'
 
-      - name: Setup FE and BE
-        run: pnpm init:all
+      - name: Setup FE
+        run: pnpm install
+
+      - name: Setup BE
+        run: composer install
+        working-directory: ./apps/api
+
+      - name: Copy env
+        run: cp .env.example .env
+        working-directory: ./apps/api
+
+      - name: Generate App Key
+        run: php artisan key:generate
+        working-directory: apps/api
 
       - name: Build
         run: pnpm build

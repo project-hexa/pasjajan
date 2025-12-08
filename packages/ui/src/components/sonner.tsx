@@ -16,7 +16,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         info: <Icon icon="lucide:info" />,
         warning: <Icon icon="lucide:triangle-alert" />,
         error: <Icon icon="lucide:octagon-x" />,
-        loading: <Icon icon="lucide:loader-circle" />,
+        loading: <Icon icon="lucide:loader-circle" className="animate-spin" />,
       }}
       style={
         {

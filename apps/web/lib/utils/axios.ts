@@ -3,9 +3,9 @@ import Cookies from "js-cookie";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 3000,
   headers: {
     "Content-Type": "application/json",
+    "Accept": "application/json",
   },
 });
 
@@ -25,13 +25,19 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      Cookies.remove("token");
+      Cookies.remove("token", { path: "/" });
+
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.includes("/login")
+      ) {
+        window.location.href = `/login?redirect=${window.location.pathname}`;
+      }
     }
+
     return Promise.reject(error);
   },
 );

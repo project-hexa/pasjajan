@@ -2,36 +2,58 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
+  const verificationStep = request.cookies.get("verificationStep")?.value;
   const { pathname, search } = request.nextUrl;
   const currentURL = pathname + search;
 
-  const protectedRoute = [
-    "/verification-code",
-    "/one-time-password",
-    "/forgot-password",
-    "/reset-password",
-    "/dashboard",
-    "/profile"
-  ].some((route) => pathname.startsWith(route));
+  // Routes yang memerlukan token (authenticated)
+  const protectedRoute = ["/dashboard", "/profile"].some((route) =>
+    pathname.startsWith(route),
+  );
+
+  // Routes verification flow (setelah register)
+  const isVerificationFlow = ["/verification-code", "/one-time-password"].some(
+    (route) => pathname.startsWith(route),
+  );
+
+  // Routes auth (login/register)
   const unprotectedRoute = ["/login", "/register"].some((route) =>
     pathname.startsWith(route),
   );
 
+  // 1. Jika akses protected route tanpa token, redirect ke login
   if (protectedRoute && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", currentURL);
     return NextResponse.redirect(loginUrl);
   }
 
+  // 2. Jika sudah login (punya token) tidak bisa masuk ke page login/register
   if (unprotectedRoute && token) {
-    const redirectTo = request.nextUrl.searchParams.get("redirect");
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
-    if (redirectTo) {
-      return NextResponse.redirect(new URL(redirectTo, request.url));
+  // 3. Verification flow - hanya bisa diakses jika ada verificationStep
+  if (isVerificationFlow) {
+    // Jika tidak ada verificationStep, redirect ke home
+    if (!verificationStep) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
-    if (redirectTo) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Di halaman verification-code, harus ada step "email-send"
+    if (pathname.startsWith("/verification-code")) {
+      if (verificationStep !== "email-sent") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+
+    // Di halaman one-time-password, harus ada step "otp-send"
+    if (pathname.startsWith("/one-time-password")) {
+      if (verificationStep !== "otp-sent") {
+        return NextResponse.redirect(
+          new URL("/verification-code", request.url),
+        );
+      }
     }
   }
 
@@ -42,9 +64,9 @@ export const config = {
   matcher: [
     "/verification-code:path*",
     "/one-time-password:path*",
-    "/forgot-password:path*",
-    "/reset-password:path*",
     "/dashboard:path*",
     "/profile:path*",
+    "/login:path*",
+    "/register:path*",
   ],
 };

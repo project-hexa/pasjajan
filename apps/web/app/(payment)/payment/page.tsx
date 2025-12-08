@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -52,7 +52,16 @@ export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get("order");
-  
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])  
+
+  if (!isMounted) {
+    return null
+  }
+
   // ====== FETCH ORDER DATA FROM API ======
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);

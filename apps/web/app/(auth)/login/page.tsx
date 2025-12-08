@@ -18,7 +18,6 @@ import { Input } from "@workspace/ui/components/input";
 import Image from "next/image";
 import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
-import { FcGoogle } from "react-icons/fc";
 import z from "zod";
 
 export default function LoginPage() {
@@ -34,15 +33,7 @@ export default function LoginPage() {
   });
 
   const handleOnSubmit = (data: z.infer<typeof loginSchema>) => {
-    if (data.email === typeof Number) {
-      data.email = "+62" + data.email;
-    }
-
-    login({
-      email: data.email,
-      password: data.password,
-      rememberMe: data.rememberMe ?? false,
-    });
+    login(data);
   };
 
   return (
@@ -51,19 +42,6 @@ export default function LoginPage() {
         <CardContent className="min-h-0 flex-1 p-0">
           <div className="flex h-full max-sm:py-10">
             <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  className="text-accent absolute left-4 top-4"
-                >
-                  <Icon
-                    icon="lucide:circle-chevron-left"
-                    width="24"
-                    height="24"
-                  />
-                  <span>Kembali ke Beranda</span>
-                </Button>
-              </Link>
               <div className="flex flex-col items-center gap-5 text-white">
                 <h1 className="lg:text-4xl md:text-2xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
@@ -99,7 +77,7 @@ export default function LoginPage() {
                           </FieldLabel>
                           <Input
                             id="email"
-                            placeholder="johndoe_123 / john@example.com / 08123456789"
+                            placeholder="john@example.com"
                             aria-invalid={fieldState.invalid}
                             {...field}
                           />
@@ -132,12 +110,22 @@ export default function LoginPage() {
 
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Button form="register-form" type="submit">
-                      Masuk
+                      {
+                        loginForm.formState.isSubmitting ? (
+                          <Icon
+                            icon={"lucide:loader-circle"}
+                            width={24}
+                            className="animate-spin"
+                          />
+                        ) : (
+                          "Masuk"
+                        )
+                      }
                     </Button>
                     <p>
                       Belum punya akun Pasjajan?{" "}
                       <Link href="/register">
-                        <Button variant="link">Daftar</Button>
+                        <Button variant="link" disabled={loginForm.formState.isSubmitting}>Daftar</Button>
                       </Link>
                     </p>
                     <div className="flex w-full justify-between">
@@ -166,7 +154,7 @@ export default function LoginPage() {
                       atau masuk menggunakan:
                     </p>
                     <Button variant={"ghost"} size="icon" className="size-14">
-                      <FcGoogle className="size-10" />
+                      <Icon icon="devicon:google" width="32" />
                     </Button>
                   </div>
                 </FieldGroup>

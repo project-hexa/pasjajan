@@ -1,12 +1,20 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@workspace/ui/components/icon";
 
 export default function ShopeepayCallbackPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [isMounted, setIsMounted] = useState(false)
 
+    useEffect(() => {
+      setIsMounted(true)
+    }, [])  
+  
+    if (!isMounted) {
+      return null
+    }
     useEffect(() => {
         const handleCallback = async () => {
             console.log('ShopeePay callback received, attempting to close this tab...');

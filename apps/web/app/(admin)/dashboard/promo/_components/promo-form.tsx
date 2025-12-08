@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, X } from "lucide-react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Label } from "@workspace/ui/components/label";
 import Image from "next/image";
+import { Icon } from "@workspace/ui/components/icon";
 
 const promoSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -129,7 +129,7 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
                                     setValue("banner", null);
                                 }}
                             >
-                                <X className="h-4 w-4" />
+                                <Icon icon={"material-symbols:close-rounded"} className="h-4 w-4" />
                             </Button>
                         </div>
                     )}
@@ -264,7 +264,7 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
             </div>
 
             <Button type="submit" disabled={isLoading} className="bg-[#1E8F59] hover:bg-[#166E45] text-white w-full md:w-auto">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && <Icon icon={"lucide:loader"} className="mr-2 h-4 w-4 animate-spin" />}
                 Save Promo
             </Button>
         </form>

@@ -1,6 +1,6 @@
 ﻿import * as React from "react";
-import SiteFooter from "../components/site-footer";
 import CatalogueClient from "./CatalogueClient";
+import { Footer } from "@/components/footer";
 
 export default function CataloguePage() {
   return (
@@ -8,7 +8,7 @@ export default function CataloguePage() {
       <React.Suspense fallback={null}>
         <CatalogueClient />
       </React.Suspense>
-      <SiteFooter />
+      <Footer />
     </main>
   );
 }

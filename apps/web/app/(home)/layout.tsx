@@ -14,6 +14,7 @@ export default function HomeLayout({
         {children}
       </main>
       <BottomBar />
+      <Footer />
     </>
   );
 }

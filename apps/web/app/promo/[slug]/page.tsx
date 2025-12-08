@@ -1,8 +1,11 @@
-import Image from "next/image";
-import { Card } from "@workspace/ui/components/card";
-import { Button } from "@workspace/ui/components/button";
-import { Navbar } from "@/components/navigation-bar";
+"use client"
+
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navigation-bar";
+import { Button } from "@workspace/ui/components/button";
+import { Card } from "@workspace/ui/components/card";
+import Image from "next/image";
+import { use } from "react";
 
 const products = [
   {
@@ -63,12 +66,13 @@ const products = [
   },
 ];
 
-export default async function PromoDetailPage({
+export default function PromoDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug } = use(params);
+
   return (
     <>
       <Navbar />
