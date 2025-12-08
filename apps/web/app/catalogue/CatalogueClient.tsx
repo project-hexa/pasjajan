@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
 import { HeroBanner } from "./components/hero-banner";
 import { TopRatedCarousel } from "./components/top-rated-carousel";
 

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import SiteHeader from "../../components/site-header";
-import SiteFooter from "../../components/site-footer";
 import StoreProductList, { StoreProduct } from "../_components/store-product-list";
+import { Navbar } from "@/components/navigation-bar";
+import { Footer } from "@/components/footer";
 
 const defaultHeroSubtitle = "Belanja semua kebutuhan kelontong favoritmu, langsung dari toko terpercaya di kota kamu.";
 
@@ -135,7 +135,7 @@ export default function StorePage(props: any) {
 
   return (
     <main className="min-h-screen flex flex-col bg-[#F9FAFB] pb-0 pt-0">
-      <SiteHeader />
+      <Navbar />
       <div className="mx-auto flex-1 w-full max-w-[90rem] px-4 pb-10 sm:px-6 lg:px-8 xl:px-10">
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -210,7 +210,7 @@ export default function StorePage(props: any) {
           </section>
         )}
       </div>
-      <SiteFooter />
+      <Footer />
     </main>
   );
 }

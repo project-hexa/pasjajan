@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarDays } from "lucide-react";
 import { Button } from "@workspace/ui/components/button";
 import { Calendar } from "@workspace/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
+import { Icon } from "@workspace/ui/components/icon";
 
 interface DateRangePickerProps {
   fromDate?: Date;
@@ -46,7 +46,7 @@ export function DateRangePicker({
               ) : (
                 <span>Dari</span>
               )}
-              <CalendarDays className="ml-2 h-4 w-4" />
+              <Icon icon={'lucide:calendar-days'} className="ml-2 h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -75,7 +75,7 @@ export function DateRangePicker({
               ) : (
                 <span>Sampai</span>
               )}
-              <CalendarDays className="ml-2 h-4 w-4" />
+              <Icon icon={'lucide:calendar-days'} className="ml-2 h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">

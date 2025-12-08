@@ -10,7 +10,6 @@ import {
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
 import { Calendar } from "@workspace/ui/components/calendar";
-import { CalendarIcon, SearchIcon } from "lucide-react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import {
@@ -31,6 +30,7 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { CustomerListResponse } from "@/lib/schema/customers-analytics.schema";
+import { Icon } from "@workspace/ui/components/icon";
 
 interface CustomerAnalyticsClientProps {
   initialData: CustomerListResponse["data"];
@@ -158,7 +158,7 @@ export default function CustomerAnalyticsClient({
   return (
     <>
       <div className="flex items-center rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-        <SearchIcon className="text-muted-foreground" />
+        <Icon icon={"lucide:search"} className="text-muted-foreground" />
         <Input
           placeholder="Search customer name..."
           className="border-0 shadow-none focus-visible:ring-0"
@@ -175,7 +175,7 @@ export default function CustomerAnalyticsClient({
                 data-empty={!dateRange}
                 className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
               >
-                <CalendarIcon />
+                <Icon icon={"lucide:calendar"} />
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <>

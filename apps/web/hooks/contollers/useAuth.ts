@@ -1,20 +1,20 @@
 "use client";
 
-import { api } from "@/lib/utils/axios";
-import { toast } from "@workspace/ui/components/sonner";
-import { useRouter, useSearchParams } from "next/navigation";
-import Cookies from "js-cookie";
-import z from "zod";
 import {
   loginSchema,
   otpSchema,
   registerSchema,
   verificationCodeSchema,
 } from "@/lib/schema/auth.schema";
+import { api } from "@/lib/utils/axios";
+import { toast } from "@workspace/ui/components/sonner";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import z from "zod";
 
 export const useAuth = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
 
   const getToken = () => {
     return Cookies.get("token");
@@ -343,12 +343,12 @@ export const useAuth = () => {
           localStorage.setItem("user", JSON.stringify(userData));
         }
 
-        const redirectTo = searchParams.get("redirect");
-        if (redirectTo) {
-          router.replace(redirectTo);
-        } else {
-          router.replace("/");
-        }
+        // const redirectTo = searchParams.get("redirect");
+        // if (redirectTo) {
+        //   router.replace(redirectTo);
+        // } else {
+        //   router.replace("/");
+        // }
 
         return { success: true };
       }

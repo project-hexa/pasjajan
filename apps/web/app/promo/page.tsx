@@ -1,7 +1,9 @@
-import Image from "next/image";
-import { Card } from "@workspace/ui/components/card";
-import { Navbar } from "@/components/navigation-bar";
+"use client"
+
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navigation-bar";
+import { Card } from "@workspace/ui/components/card";
+import Image from "next/image";
 import Link from "next/link";
 
 const promos = [
@@ -74,6 +76,7 @@ const toSlug = (text: string) =>
     .replace(/(^-|-$)/g, "");
 
 export default function PromoPage() {
+  
   return (
     <>
       <Navbar />
