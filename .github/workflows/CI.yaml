@@ -10,8 +10,6 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      APP_KEY: base64:gSXS/Fsb0TvSyxiLhg7zrEa7Ez5y7r4KbDGoAMF96Ls=
 
     steps:
       - name: Check out code
@@ -40,6 +38,14 @@ jobs:
       - name: Setup BE
         run: composer install
         working-directory: ./apps/api
+
+      - name: Copy env
+        run: cp .env.example .env
+        working-directory: ./apps/api
+
+      - name: Generate App Key
+        run: php artisan key:generate
+        working-directory: apps/api
 
       - name: Build
         run: pnpm build
