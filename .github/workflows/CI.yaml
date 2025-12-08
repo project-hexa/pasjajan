@@ -32,8 +32,13 @@ jobs:
           node-version: lts/*
           cache: 'pnpm'
 
-      - name: Setup FE and BE
-        run: pnpm init:all
+      - name: Setup FE
+        run: pnpm install
+
+      - name: Setup BE
+        run: 
+          cd apps/api
+          composer install
 
       - name: Build
         run: pnpm build
