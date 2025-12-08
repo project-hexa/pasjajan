@@ -1,15 +1,19 @@
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
-import { ThemeProviders } from "@/components/theme-providers";
+import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
+import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 
 const fontSans = Poppins({
-  weight: ["300"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
+
+export const metadata: Metadata = {
+  title: "Pasjajan",
+  description: "Aplikasi kasir untuk usaha makanan dan minuman.",
+};
 
 export default function RootLayout({
   children,
@@ -19,15 +23,25 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`font-sans ${fontSans.variable} antialiased h-screen w-screen container mx-auto overflow-y-auto`}
+        className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
-        <ThemeProviders>
-          <Navbar />
-          <main>
-            {children}
-            <Footer />
-          </main>
-        </ThemeProviders>
+        {children}
+        <Toaster
+          position="top-center"
+          id="global"
+          style={
+            {
+              "--normal-bg": "var(--primary)",
+              "--normal-text": "var(--primary-foreground)",
+              "--toast-close-button-end": "2",
+            } as React.CSSProperties
+          }
+          closeButton
+          toastOptions={{
+            classNames: { closeButton: "toaster-close-btn", toast: "toaster" },
+          }}
+          offset={100}
+        />
       </body>
     </html>
   );
