@@ -36,9 +36,12 @@ jobs:
         run: pnpm install
 
       - name: Setup BE
-        run: 
-          cd apps/api &&
-          composer install
+        run: composer install
+        working-directory: ./apps/api
+
+      - name: Generate key
+        run: php artisan key:generate
+        working-directory: ./apps/api
 
       - name: Build
         run: pnpm build
