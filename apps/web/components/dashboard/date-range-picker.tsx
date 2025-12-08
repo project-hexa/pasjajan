@@ -25,10 +25,10 @@ export function DateRangePicker({
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
-  const handleReset = () => {
-    onFromDateChange(undefined);
-    onToDateChange(undefined);
-  };
+  // const handleReset = () => {
+  //   onFromDateChange(undefined);
+  //   onToDateChange(undefined);
+  // };
 
   return (
     <div className={`flex items-center space-x-4 ${className}`}>

@@ -181,7 +181,7 @@ export default function StorePage(props: any) {
           <section className="mt-8">
             <div className="space-y-1">
               <p className="text-sm text-[#111827]">
-                Hasil pencarian untuk "<span className="font-semibold">{trimmedQuery}</span>"
+                Hasil pencarian untuk &quot;<span className="font-semibold">{trimmedQuery}</span>&quot;
               </p>
               <p className="text-sm text-[#6B7280]">
                 {hasSearchResults ? `${searchResults.length} produk ditemukan` : "Produk tidak ditemukan"}

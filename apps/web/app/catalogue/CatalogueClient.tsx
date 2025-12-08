@@ -240,7 +240,7 @@ export default function CatalogueClient() {
 
         {q ? (
           <section className="w-full">
-            <h3 className="mb-1 text-lg font-semibold text-[#111827]">Hasil Pencarian untuk "{q.toUpperCase()}"...</h3>
+            <h3 className="mb-1 text-lg font-semibold text-[#111827]">Hasil Pencarian untuk &quot;{q.toUpperCase()}&quot;...</h3>
             <p className="mb-6 text-sm text-[#6B7280]">Menampilkan {matchedRestaurants.length} Resto</p>
 
             {isLoading && (

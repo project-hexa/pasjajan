@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import {
@@ -61,15 +61,7 @@ export default function CustomerAnalyticsClient({
     return undefined;
   });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateURL({ search: searchValue, page: "1" });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchValue]);
-
-  const updateURL = (updates: Record<string, string>) => {
+  const updateURL = useCallback((updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
 
     Object.entries(updates).forEach(([key, value]) => {
@@ -83,7 +75,15 @@ export default function CustomerAnalyticsClient({
     startTransition(() => {
       router.push(`?${params.toString()}`);
     });
-  };
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateURL({ search: searchValue, page: "1" });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchValue, updateURL]);
 
   const handlePeriodChange = (
     newPeriod: "daily" | "monthly" | "yearly" | "custom",
