@@ -1,6 +1,7 @@
 "use client";
 
-import Image from "next/image";
+import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navigation-bar";
 import { useState } from "react";
 
 export default function ReviewPage() {
@@ -13,75 +14,7 @@ export default function ReviewPage() {
 
   return (
     <div className="min-h-screen bg-[#EEF7F0] font-sans">
-      {/* ========================================== */}
-      {/* ||               HEADER                 || */}
-      {/* ========================================== */}
-      <header className="flex items-center justify-between bg-[#1B8150] p-4 text-white">
-        {/* --- BAGIAN KIRI --- */}
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col items-center">
-            <Image src="/img/logo2.png" alt="pasjajan" className="h-8" width={32} height={32} />
-            <span className="-mt-0.5 text-xs font-semibold">pasjajan</span>
-          </div>
-
-          <a
-            href="#"
-            className="flex items-center gap-2 rounded-lg border border-white px-3 py-1.5 text-sm font-semibold transition-all hover:bg-white hover:text-[#0A6B3C]"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-5 w-5"
-            >
-              <rect x="3" y="3" width="6" height="6" rx="1.5" />
-              <rect x="11" y="3" width="6" height="6" rx="1.5" />
-              <rect x="3" y="11" width="6" height="6" rx="1.5" />
-              <rect x="11" y="11" width="6" height="6" rx="1.5" />
-            </svg>
-            <span>Kategori</span>
-          </a>
-
-          <div className="flex w-[450px] items-center rounded-lg bg-white px-4 py-2 shadow">
-            <input
-              type="text"
-              placeholder="Cari produk yang anda inginkan"
-              className="flex-grow bg-transparent text-base text-gray-800 placeholder-gray-500 outline-none"
-            />
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="ml-3 h-5 w-5 cursor-pointer text-gray-500"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9 3.5a5.5 5.5 0 1 0 0 11a5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-
-          <a
-            href="#"
-            className="flex items-center gap-10 font-semibold text-white"
-          >
-            <span>Promo</span>
-            <Image src="/img/icon-promo.png" alt="Promo" className="h-8" width={32} height={32} />
-          </a>
-        </div>
-
-        {/* --- BAGIAN KANAN --- */}
-        <nav className="flex items-center gap-6 text-base">
-          <div className="h-6 w-[2px] bg-white/50"></div>
-          <a href="#" className="font-semibold text-white">
-            Daftar
-          </a>
-          <a href="#" className="font-semibold text-white">
-            Masuk
-          </a>
-        </nav>
-      </header>
+      <Navbar />
 
       {/* ========================================== */}
       {/* ||            KONTEN UTAMA              || */}
@@ -163,66 +96,7 @@ export default function ReviewPage() {
       {/* ========================================== */}
       {/* ||               FOOTER                 || */}
       {/* ========================================== */}
-      <footer className="mt-12 bg-[#1B8150] p-10 text-white">
-        <div className="grid grid-cols-4 gap-8 text-sm">
-          <div>
-            <div className="flex flex-col items-center">
-              <Image src="/img/logo2.png" className="w-36" alt="PasJajan" width={144} height={144} />
-              <span className="mt-1 text-xl font-semibold">pasjajan</span>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 font-semibold">Ikuti kami</p>
-            <div className="flex gap-3">
-              <a href="#" className="transition-opacity hover:opacity-80">
-                <Image src="/img/ig.png" alt="Instagram" className="h-6 w-6" width={24} height={24} />
-              </a>
-              <a href="#" className="transition-opacity hover:opacity-80">
-                <Image src="/img/tiktok.png" alt="TikTok" className="h-6 w-6" width={24} height={24} />
-              </a>
-            </div>
-            <div className="mt-4">
-              <p className="mb-2 font-semibold">Hubungi kami</p>
-              <a
-                href="mailto:Pasjajan@gmail.com"
-                className="flex items-center gap-2 transition-opacity hover:opacity-80"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
-                  <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
-                </svg>
-                <span className="underline">Pasjajan@gmail.com</span>
-              </a>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 font-semibold">Metode Pembayaran</p>
-            <div className="flex flex-wrap gap-2">
-              <Image src="/img/qris.png" alt="QRIS" className="h-6" height={24} width={24} />
-              <Image src="/img/shopeepay.png" alt="ShopeePay" className="h-6" height={24} width={24} />
-              <Image src="/img/dana.png" alt="DANA" className="h-6" height={24} width={24} />
-              <Image src="/img/gopay.png" alt="Gopay" className="h-6" height={24} width={24} />
-              <Image src="/img/dana.png" alt="OVO" className="h-6" height={24} width={24} />
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 font-semibold">Layanan Pengaduan Konsumen</p>
-            <p className="text-xs leading-relaxed">
-              Direktorat Jenderal Perlindungan Konsumen dan tertib Niaga
-              kementerian perdagangan Republik Indonesia
-            </p>
-          </div>
-        </div>
-        <p className="mt-10 text-center text-xs">©2025, PT.PasJajan</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

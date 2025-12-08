@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
@@ -101,6 +100,9 @@ export default function HomePage() {
                     </Link>
                     <Link href="/delivery/123/tracking">
                       <Button variant={"secondary"}>/delivery/123/tracking</Button>
+                    </Link>
+                    <Link href="/catalogue">
+                      <Button variant={"secondary"}>/catalogue</Button>
                     </Link>
                   </div>
                   <p className="text-muted-foreground mt-2">
