@@ -1,5 +1,5 @@
-import AnalyticCard from "@/components/dashboard/analytic-card";
-import { AnalyticChart } from "@/components/dashboard/analytic-chart";
+import AnalyticCard from "@/app/(modul 6 - dashboard)/_components/analytic-card";
+import { AnalyticChart } from "@/app/(modul 6 - dashboard)/_components/analytic-chart";
 import { getReportSales } from "@/services/report-sales";
 import { Button } from "@workspace/ui/components/button";
 import {

@@ -1,7 +1,7 @@
-import AnalyticCard from "@/components/dashboard/analytic-card";
-import { AnalyticChart } from "@/components/dashboard/analytic-chart";
-import AnalyticPieChart from "@/components/dashboard/analytic-pie-chart";
-import CustomerAnalyticsClient from "@/components/dashboard/customer-analytics-client";
+import AnalyticCard from "@/app/(modul 6 - dashboard)/_components/analytic-card";
+import { AnalyticChart } from "@/app/(modul 6 - dashboard)/_components/analytic-chart";
+import AnalyticPieChart from "@/app/(modul 6 - dashboard)/_components/analytic-pie-chart";
+import CustomerAnalyticsClient from "@/app/(modul 6 - dashboard)/_components/customer-analytics-client";
 import {
   getCustomerList,
   getCustomersAnalytics,

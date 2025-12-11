@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/auth/login-form";
+import { LoginForm } from "@/app/(modul 1 - auth)/_components/login-form";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import Image from "next/image";
 

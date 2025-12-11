@@ -1,6 +1,6 @@
 "use client";
 
-import { DateRangePicker } from "@/components/dashboard/date-range-picker";
+import { DateRangePicker } from "@/app/(modul 6 - dashboard)/_components/date-range-picker";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import {
