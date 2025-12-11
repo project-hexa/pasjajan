@@ -1,6 +1,6 @@
-import { BottomBar } from "@/components/bottom-bar";
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
+import { BottomBar } from "@/components/ui/bottom-bar";
+import { Footer } from "@/components/ui/footer";
+import { Navbar } from "@/components/ui/navigation-bar";
 
 export default function AuthLayout({
   children,

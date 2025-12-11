@@ -347,7 +347,7 @@ export const useAuth = () => {
         // if (redirectTo) {
         //   router.replace(redirectTo);
         // } else {
-        //   router.replace("/");
+          router.replace("/");
         // }
 
         return { success: true };

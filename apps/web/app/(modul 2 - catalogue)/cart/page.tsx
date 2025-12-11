@@ -1,7 +1,7 @@
 "use client";
 
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
+import { Footer } from "@/components/ui/footer";
+import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";

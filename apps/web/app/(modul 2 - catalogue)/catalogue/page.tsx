@@ -1,6 +1,6 @@
 ﻿import * as React from "react";
 import CatalogueClient from "./CatalogueClient";
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/ui/footer";
 
 export default function CataloguePage() {
   return (

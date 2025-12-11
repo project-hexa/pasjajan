@@ -1,7 +1,7 @@
 "use client";
 
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navigation-bar";
+import { Footer } from "@/components/ui/footer";
+import { Navbar } from "@/components/ui/navigation-bar";
 import { useState } from "react";
 
 export default function ReviewPage() {

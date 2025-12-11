@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import StoreProductList, { StoreProduct } from "../_components/store-product-list";
-import { Navbar } from "@/components/navigation-bar";
-import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/ui/navigation-bar";
+import { Footer } from "@/components/ui/footer";
 
 const defaultHeroSubtitle = "Belanja semua kebutuhan kelontong favoritmu, langsung dari toko terpercaya di kota kamu.";
 
