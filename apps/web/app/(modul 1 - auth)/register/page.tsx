@@ -1,6 +1,6 @@
-import { RegisterForm } from "@/components/auth/register-form";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import Image from "next/image";
+import { RegisterForm } from "../_components/register-form";
 
 export default function RegisterPage() {
   return (
