@@ -34,7 +34,7 @@ export const getCustomersAnalytics = async ({
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers/analytics?${params.toString()}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/customers/analytics?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
@@ -87,7 +87,7 @@ export const getCustomerList = async ({
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers?${params.toString()}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/customers?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,

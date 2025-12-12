@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,7 +48,7 @@ export function Sidebar() {
                 },
               )}
             >
-              <item.icon />
+              <Icon icon={item.icon} />
               {item.name}
               <div
                 className={cn(

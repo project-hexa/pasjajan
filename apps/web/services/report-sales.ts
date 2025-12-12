@@ -18,13 +18,15 @@ export const getReportSales = async ({
   storeId,
 }: ReportSalesParams): Promise<ReportSalesResponse> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/reports/sales?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/reports/sales?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
       },
     },
   );
+
+  console.log(response);
 
   if (!response.ok) {
     throw new Error("Gagal memuat data laporan penjualan.");
