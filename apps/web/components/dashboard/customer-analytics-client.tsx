@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useTransition,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import {
@@ -42,13 +49,17 @@ export default function CustomerAnalyticsClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const previousSearchValue = useRef(searchParams.get("search") || "");
 
   const [searchValue, setSearchValue] = useState(
     searchParams.get("search") || "",
   );
   const [period, setPeriod] = useState<
     "daily" | "monthly" | "yearly" | "custom"
-  >((searchParams.get("period") as any) || "monthly");
+  >(
+    (searchParams.get("period") as "daily" | "monthly" | "yearly" | "custom") ||
+      "monthly",
+  );
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const startDate = searchParams.get("start_date");
     const endDate = searchParams.get("end_date");
@@ -61,29 +72,52 @@ export default function CustomerAnalyticsClient({
     return undefined;
   });
 
-  const updateURL = useCallback((updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const updateURL = useCallback(
+    (updates: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      });
 
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  }, [searchParams, router]);
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
+    },
+    [searchParams, router],
+  );
 
   useEffect(() => {
+    if (searchValue === previousSearchValue.current) {
+      return;
+    }
+
+    previousSearchValue.current = searchValue;
+
     const timer = setTimeout(() => {
-      updateURL({ search: searchValue, page: "1" });
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries({ search: searchValue, page: "1" }).forEach(
+        ([key, value]) => {
+          if (value) {
+            params.set(key, value);
+          } else {
+            params.delete(key);
+          }
+        },
+      );
+
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchValue, updateURL]);
+  }, [searchValue, searchParams, router]);
 
   const handlePeriodChange = (
     newPeriod: "daily" | "monthly" | "yearly" | "custom",
