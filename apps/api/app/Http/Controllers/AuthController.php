@@ -16,9 +16,11 @@ use App\Models\User;
 use App\Models\Customer;
 use App\Models\Otp;
 use App\Models\Address;
+use App\Traits\LogsActivity;
 
 class AuthController extends BaseController
 {
+	use LogsActivity;
 	public function loginGet(): JsonResponse
 	{
 		return response()->json(["ok" => false, "status" => 401]);
@@ -88,6 +90,9 @@ class AuthController extends BaseController
 		// Membuat token auth untuk user
 		$result['token'] = $user->createToken('auth_token')->plainTextToken;
 		$result['user_data'] = $user;
+
+		// Log activity
+		$this->logActivity('LOGIN', "User {$user->full_name} berhasil login", $user->id);
 
 		//return response()->json(["ok" => true, "token" => $token, "status" => 200]);
 		return $this->sendSuccessResponse("User berhasil login.", $result);
@@ -159,44 +164,48 @@ class AuthController extends BaseController
 	public function loginViaGoogle(Request $request): JsonResponse
 	{
 		$request->validate([
-            'id_token' => 'required'
-        ]);
+			'id_token' => 'required'
+		]);
 
-        $client = new GoogleClient(['client_id' => config('services.google.client_id')]);
-        $payload = $client->verifyIdToken($request->id_token);
+		$client = new GoogleClient(['client_id' => config('services.google.client_id')]);
+		$payload = $client->verifyIdToken($request->id_token);
 
-        if (!$payload) {
-            return $this->sendFailResponse('Google Token Invalid.', code: 401);
-        }
+		if (!$payload) {
+			return $this->sendFailResponse('Google Token Invalid.', code: 401);
+		}
 
-        // Google user info
-        $googleId = $payload['sub'];
-        $email = $payload['email'];
-        $name = $payload['name'] ?? '';
+		// Google user info
+		$googleId = $payload['sub'];
+		$email = $payload['email'];
+		$name = $payload['name'] ?? '';
 
-        $user = User::firstOrCreate(
-            [
-                'full_name' => $name,
+		$user = User::firstOrCreate(
+			[
+				'full_name' => $name,
 				'email' => $email,
 				'phone_number' => '',
-                'google_id' => $googleId,
-                'password' => bcrypt(Str::random(16)),
+				'google_id' => $googleId,
+				'password' => bcrypt(Str::random(16)),
 				'last_login_date' => now(),
-            ]
-        );
+			]
+		);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+		$token = $user->createToken('auth_token')->plainTextToken;
 
 		$result = [
-            'token' => $token,
-            'user_data'  => $user->load($user['role']),
+			'token' => $token,
+			'user_data'  => $user->load($user['role']),
 		];
 
-        return $this->sendSuccessResponse('User berhasil login via google.', $result);
+		return $this->sendSuccessResponse('User berhasil login via google.', $result);
 	}
 
 	public function logout(Request $request): JsonResponse
 	{
+		// Log activity
+		$user = $request->user();
+		$this->logActivity('LOGOUT', "User {$user->full_name} berhasil logout", $user->id);
+
 		// Hapus personal_access_token milik user yang sedang login
 		$request->user()->currentAccessToken()->delete();
 
@@ -433,6 +442,5 @@ class AuthController extends BaseController
 			'otp' => $otp,
 			'expires_at' => $expiresAt,
 		]);
-
 	}
 }
