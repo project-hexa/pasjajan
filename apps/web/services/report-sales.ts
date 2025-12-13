@@ -43,3 +43,39 @@ export const getReportSales = async ({
 
   return parsedData.data;
 };
+
+interface ExportReportSalesParams {
+  period: "monthly" | "yearly" | "daily" | "custom";
+  from?: "string";
+  to?: "string";
+  storeId?: "string";
+}
+
+export const exportReportSales = async ({
+  period,
+  from,
+  to,
+  storeId,
+}: ExportReportSalesParams) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/sales/export?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
+    {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Gagal mengekspor laporan penjualan.");
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(new Blob([blob]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `report_sales_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode?.removeChild(link);
+};
