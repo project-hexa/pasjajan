@@ -31,9 +31,17 @@ class NotificationController extends Controller
 
         $previousTotal = Notification::whereBetween('created_at', [$previousFrom, $from])->count();
 
-        $trend = $previousTotal > 0
-            ? round((($currentMetrics->total - $previousTotal) / $previousTotal) * 100, 2)
-            : 0;
+        // Calculate trend
+        if ($previousTotal > 0) {
+            // Ada data sebelumnya, hitung persentase perubahan
+            $trend = round((($currentMetrics->total - $previousTotal) / $previousTotal) * 100, 2);
+        } elseif ($currentMetrics->total > 0) {
+            // Tidak ada data sebelumnya tapi ada data sekarang = 100% increase
+            $trend = 100;
+        } else {
+            // Tidak ada data sama sekali
+            $trend = 0;
+        }
 
         return ApiResponse::success(
             [
