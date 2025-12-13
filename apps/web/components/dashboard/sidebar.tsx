@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@workspace/ui/lib/utils";
-import { Files, History, ShoppingCart, UsersRound } from "lucide-react";
+import { Building2, History, ShoppingCart, UsersRound } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,7 +17,11 @@ const navigation = [
     href: "/dashboard/customers-analytics",
     icon: UsersRound,
   },
-
+  {
+    name: "Data Cabang",
+    href: "/dashboard/branch-data",
+    icon: Building2,
+  },
   {
     name: "Log Aktivitas",
     href: "/dashboard/activity-log",
