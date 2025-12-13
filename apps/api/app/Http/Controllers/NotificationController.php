@@ -53,9 +53,6 @@ class NotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:1000',
-            'target_type' => 'required|in:all,specific,customer',
-            'target_user_ids' => 'required_if:target_type,specific|array',
-            'target_user_ids.*' => 'exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -70,10 +67,11 @@ class NotificationController extends Controller
         }
 
         try {
-            $targetUsers = $this->getTargetUsers($data['target_type'], $data['target_user_ids'] ?? []);
+            // Langsung kirim ke semua customer
+            $targetUsers = $this->getCustomerUsers();
 
             if (empty($targetUsers)) {
-                return ApiResponse::validationError(['target_type' => 'Tidak ada user yang valid untuk target ini']);
+                return ApiResponse::validationError(['message' => 'Tidak ada customer yang ditemukan']);
             }
 
             $timestamp = now();
@@ -131,21 +129,19 @@ class NotificationController extends Controller
         }
     }
 
-    private function getTargetUsers(string $targetType, array $specificUserIds = []): array
+    /**
+     * Get all customer user IDs
+     */
+    private function getCustomerUsers(): array
     {
-        return match ($targetType) {
-            'all' => User::pluck('id')->toArray(),
-            'customer' => Customer::whereHas('user')
-                ->with('user:id')
-                ->get()
-                ->pluck('user.id')
-                ->filter()
-                ->unique()
-                ->values()
-                ->toArray(),
-            'specific' => $specificUserIds,
-            default => [],
-        };
+        return Customer::whereHas('user')
+            ->with('user:id')
+            ->get()
+            ->pluck('user.id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
     }
 
     public function index(Request $request): JsonResponse
