@@ -1,6 +1,7 @@
 import AnalyticCard from "@/components/dashboard/analytic-card";
 import { AnalyticChart } from "@/components/dashboard/analytic-chart";
-import { getReportSales } from "@/services/report-sales";
+import ExportCsvButton from "@/components/dashboard/export-csv-button";
+import { exportReportSales, getReportSales } from "@/services/report-sales";
 import { Button } from "@workspace/ui/components/button";
 import {
   Table,
@@ -8,7 +9,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@workspace/ui/components/table";
 import Link from "next/link";
 
@@ -71,7 +72,7 @@ export default async function DashboardPage({
             >
               <Link href="/dashboard?period=yearly">1 Tahun Terakhir</Link>
             </Button>
-            <Button className="ml-16">Export CSV</Button>
+            <ExportCsvButton period={period} />
           </div>
         </div>
         <AnalyticChart
