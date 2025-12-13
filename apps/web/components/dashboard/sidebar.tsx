@@ -17,7 +17,11 @@ const navigation = [
     href: "/dashboard/customers-analytics",
     icon: "lucide:user-round",
   },
-
+  {
+    name: "Notifikasi",
+    href: "/dashboard/notifications",
+    icon: "lucide:bell",
+  },
   {
     name: "Log Aktivitas",
     href: "/dashboard/activity-log",
@@ -42,7 +46,7 @@ export function Sidebar() {
             <Link
               href={item.href}
               className={cn(
-                "relative flex gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC]",
+                "relative flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC]",
                 {
                   "bg-[#B9DCCC]": pathName === item.href,
                 },
