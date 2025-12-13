@@ -22,35 +22,52 @@ class NotificationController extends Controller
         $from = $request->get('from', Carbon::now()->startOfMonth());
         $to = $request->get('to', Carbon::now());
 
+        // Current period metrics
         $currentMetrics = Notification::selectRaw('COUNT(*) as total, COUNT(DISTINCT to_user_id) as active_users')
             ->whereBetween('created_at', [$from, $to])
             ->first();
 
+        // Previous period calculation
         $diffInDays = Carbon::parse($from)->diffInDays(Carbon::parse($to));
         $previousFrom = Carbon::parse($from)->subDays($diffInDays);
 
-        $previousTotal = Notification::whereBetween('created_at', [$previousFrom, $from])->count();
+        $previousMetrics = Notification::selectRaw('COUNT(*) as total, COUNT(DISTINCT to_user_id) as active_users')
+            ->whereBetween('created_at', [$previousFrom, $from])
+            ->first();
 
-        // Calculate trend
-        if ($previousTotal > 0) {
-            // Ada data sebelumnya, hitung persentase perubahan
-            $trend = round((($currentMetrics->total - $previousTotal) / $previousTotal) * 100, 2);
+        // Calculate trend for total notifications
+        if ($previousMetrics->total > 0) {
+            $notificationsTrend = round((($currentMetrics->total - $previousMetrics->total) / $previousMetrics->total) * 100, 2);
         } elseif ($currentMetrics->total > 0) {
-            // Tidak ada data sebelumnya tapi ada data sekarang = 100% increase
-            $trend = 100;
+            $notificationsTrend = 100;
         } else {
-            // Tidak ada data sama sekali
-            $trend = 0;
+            $notificationsTrend = 0;
         }
+
+        // Calculate trend for active users
+        if ($previousMetrics->active_users > 0) {
+            $activeUsersTrend = round((($currentMetrics->active_users - $previousMetrics->active_users) / $previousMetrics->active_users) * 100, 2);
+        } elseif ($currentMetrics->active_users > 0) {
+            $activeUsersTrend = 100;
+        } else {
+            $activeUsersTrend = 0;
+        }
+
+        // Determine trend direction and description
+        $notificationsTrendText = $notificationsTrend > 0 ? '+' . $notificationsTrend : $notificationsTrend;
+        $activeUsersTrendText = $activeUsersTrend > 0 ? '+' . $activeUsersTrend : $activeUsersTrend;
 
         return ApiResponse::success(
             [
-                'total_notifications' => $currentMetrics->total,
-                'active_users' => $currentMetrics->active_users,
-                'trend' => $trend . '%',
-                'period' => [
-                    'from' => $from,
-                    'to' => $to
+                'total_notifications' => [
+                    'value' => $currentMetrics->total,
+                    'trend' => $notificationsTrendText . '%',
+                    'description' => 'Trending naik bulan ini'
+                ],
+                'active_users' => [
+                    'value' => $currentMetrics->active_users,
+                    'trend' => $activeUsersTrendText . '%',
+                    'description' => 'Pengguna aktif 6 bulan terakhir'
                 ]
             ],
             'Data metrik notifikasi berhasil diambil'
