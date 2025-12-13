@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
@@ -16,12 +16,10 @@ class UserSeeder extends Seeder
     {
         // Admin User
         User::create([
-            'first_name' => 'Admin',
-            'last_name' => 'System',
-            'username' => 'admin',
+            'full_name' => 'Admin System',
             'email' => 'admin@pasjajan.com',
             'phone_number' => '081234567890',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123'),
             'role' => 'Admin',
             'phone_number_verified_at' => now(),
             'last_login_date' => now(),
@@ -29,12 +27,10 @@ class UserSeeder extends Seeder
 
         // Staff User
         User::create([
-            'first_name' => 'Staff',
-            'last_name' => 'One',
-            'username' => 'staff1',
+            'full_name' => 'Staff One',
             'email' => 'staff@pasjajan.com',
             'phone_number' => '081234567891',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123'),
             'role' => 'Staff',
             'phone_number_verified_at' => now(),
             'last_login_date' => now(),
@@ -42,12 +38,10 @@ class UserSeeder extends Seeder
 
         // Customer User 1
         User::create([
-            'first_name' => 'John',
-            'last_name' => 'Doe',
-            'username' => 'johndoe',
+            'full_name' => 'John Doe',
             'email' => 'john@example.com',
             'phone_number' => '081234567892',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
             'last_login_date' => now(),
@@ -55,12 +49,10 @@ class UserSeeder extends Seeder
 
         // Customer User 2
         User::create([
-            'first_name' => 'Jane',
-            'last_name' => 'Smith',
-            'username' => 'janesmith',
+            'full_name' => 'Jane Smith',
             'email' => 'jane@example.com',
             'phone_number' => '081234567893',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
             'last_login_date' => now(),

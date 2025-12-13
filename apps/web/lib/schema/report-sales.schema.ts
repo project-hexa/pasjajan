@@ -2,7 +2,6 @@ import z from "zod";
 
 export const reportSalesSchema = z.object({
   success: z.boolean(),
-  status: z.number(),
   message: z.string(),
   data: z.object({
     parameters: z.object({

@@ -43,9 +43,7 @@ class CustomerSeeder extends Seeder
 
     foreach ($customers as $customerData) {
       $user = User::create([
-        'first_name' => $customerData['first_name'],
-        'last_name' => $customerData['last_name'],
-        'username' => strtolower($customerData['first_name'] . $customerData['last_name']),
+        'full_name' => $customerData['first_name'] . ' ' . $customerData['last_name'],
         'email' => $customerData['email'],
         'phone_number' => $customerData['phone'],
         'password' => bcrypt('password123'),

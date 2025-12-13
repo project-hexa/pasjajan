@@ -9,23 +9,25 @@
     "dev:web": "turbo dev --filter=web",
     "dev:api": "turbo dev --filter=api",
     "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
     "test": "turbo test",
     "test:web": "turbo test --filter=web",
     "test:api": "turbo test -filter=api",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx,php}\"",
     "shadcn:add": "pnpm dlx shadcn add -c apps/web",
-    "init:all": "pnpm install && cd apps/api && composer setup && cd ../..",
+    "init:all": "pnpm install && cd apps/api && composer setup && composer update && cd ../..",
     "init:web": "cd apps/web && pnpm install && cd ../..",
     "init:api": "cd apps/api && composer setup && cd ../..",
     "radix:add": "pnpm add --filter=ui",
-    "create:fitur": "turbo gen 'Templating Frontend Dev Pasjajan'"
+    "create:fitur": "turbo gen \"Templating Frontend Dev Pasjajan\""
   },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.32.0",
     "prettier": "^3.6.2",
-    "turbo": "^2.6.0",
     "prettier-plugin-tailwindcss": "^0.7.1",
+    "turbo": "^2.6.1",
     "typescript": "5.7.3"
   },
   "packageManager": "pnpm@10.20.0",
@@ -37,7 +39,8 @@
       "@tailwindcss/oxide",
       "core-js-pure",
       "esbuild",
-      "sharp"
+      "sharp",
+      "unrs-resolver"
     ],
     "ignoredBuiltDependencies": [
       "esbuild"
@@ -45,6 +48,7 @@
   },
   "dependencies": {
     "@turbo/gen": "^2.6.0",
-    "inquirer": "^12.10.0"
+    "inquirer": "^12.10.0",
+    "recharts": "^3.5.1"
   }
 }
