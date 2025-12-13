@@ -1,7 +1,7 @@
 import AnalyticCard from "@/components/dashboard/analytic-card";
 import { AnalyticChart } from "@/components/dashboard/analytic-chart";
 import ExportCsvButton from "@/components/dashboard/export-csv-button";
-import { exportReportSales, getReportSales } from "@/services/report-sales";
+import { getReportSales } from "@/services/report-sales";
 import { Button } from "@workspace/ui/components/button";
 import {
   Table,
