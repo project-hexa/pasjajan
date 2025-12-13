@@ -69,58 +69,89 @@ function FailedPageContent() {
     const orderCode = searchParams.get("order");
     const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRedirecting, setIsRedirecting] = useState(false);
+    const [orderNotFound, setOrderNotFound] = useState(false);
 
     useEffect(() => {
-        // Get payment data from localStorage
-        const paymentDataStr = localStorage.getItem("payment_data");
-        
-        if (paymentDataStr) {
-            try {
-                const data = JSON.parse(paymentDataStr);
-                setPaymentData(data);
-            } catch (error) {
-                console.error("Error parsing payment data:", error);
+        const validateAndLoadData = async () => {
+            if (!orderCode) {
+                router.push('/cart');
+                return;
             }
-        }
-        
-        // If no payment data, try to fetch from API
-        if (!paymentDataStr && orderCode) {
-            const fetchOrder = async () => {
-                try {
-                    const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
-                    const result = await res.json();
-                    
-                    if (result.success && result.data.order) {
-                        setPaymentData({
-                            order_code: result.data.order.order_code || orderCode,
-                            payment_method: result.data.order.payment_method || { code: '', name: 'Unknown', category: '' },
-                            grand_total: result.data.order.grand_total,
-                            va_number: result.data.order.va_number,
-                            payment_code: result.data.order.payment_code,
-                        });
-                    }
-                } catch (error) {
-                    console.error("Error fetching order:", error);
-                }
-            };
-            fetchOrder();
-        }
-        
-        setLoading(false);
-    }, [orderCode]);
 
-    if (loading) {
+            try {
+                // Always fetch from API to validate current status
+                const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+                const result = await res.json();
+                
+                if (!result.success || !result.data.order) {
+                    // Order not found
+                    setOrderNotFound(true);
+                    setLoading(false);
+                    return;
+                }
+
+                const order = result.data.order;
+                const paymentStatus = order.payment_status;
+
+                // Validate: only show failed page if status is actually failed/expired
+                if (paymentStatus === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture') {
+                    // Order is paid, redirect to success
+                    setIsRedirecting(true);
+                    router.replace(`/payment/success?order=${orderCode}`);
+                    return;
+                }
+
+                if (paymentStatus === 'pending') {
+                    // Check if order has actually expired based on expired_at timestamp
+                    const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
+                    const now = Date.now();
+                    
+                    // If expired_at has passed, treat as expired (show failed page)
+                    if (expiredAt && now > expiredAt) {
+                        // Order is technically expired even if status hasn't updated
+                        // Show failed page instead of redirecting to waiting
+                    } else {
+                        // Order is still pending and not expired, redirect to waiting
+                        setIsRedirecting(true);
+                        router.replace(`/payment/waiting?order=${orderCode}`);
+                        return;
+                    }
+                }
+
+                // Status is failed/expired/cancelled - show this page
+                setPaymentData({
+                    order_code: order.order_code || orderCode,
+                    payment_method: order.payment_method || { code: '', name: 'Unknown', category: '' },
+                    grand_total: order.grand_total,
+                    va_number: order.va_number,
+                    payment_code: order.payment_code,
+                });
+            } catch (error) {
+                console.error("Error fetching order:", error);
+                setOrderNotFound(true);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        validateAndLoadData();
+    }, [orderCode, router]);
+
+    // Show loading while redirecting or loading
+    if (loading || isRedirecting) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-                <p className="text-lg">Memuat...</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Mengalihkan...</p>
             </div>
         );
     }
 
-    if (!paymentData) {
+    // Order not found
+    if (orderNotFound) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50 p-4">
-                <p className="text-gray-600 mb-4">Data pembayaran tidak ditemukan</p>
+                <p className="text-gray-600 mb-4">Order tidak ditemukan</p>
                 <button 
                     onClick={() => router.push('/cart')}
                     className="bg-emerald-700 text-white py-2 px-4 rounded-lg hover:bg-emerald-800"
@@ -129,6 +160,10 @@ function FailedPageContent() {
                 </button>
             </div>
         );
+    }
+
+    if (!paymentData) {
+        return null;
     }
 
     const { payment_method, grand_total, order_code } = paymentData;
@@ -202,12 +237,11 @@ function FailedPageContent() {
 export default function FailedPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-                <p className="text-lg">Memuat...</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Mengalihkan...</p>
             </div>
         }>
             <FailedPageContent />
         </Suspense>
     );
 }
-

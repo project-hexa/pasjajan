@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -48,20 +48,11 @@ interface PaymentItem {
   image_url: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get("order");
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])  
-
-  if (!isMounted) {
-    return null
-  }
-
+  
   // ====== FETCH ORDER DATA FROM API ======
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -430,4 +421,16 @@ export default function CheckoutPage() {
       </main>
     </div>
   );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
+                <p className="text-lg">Memuat...</p>
+            </div>
+        }>
+            <CheckoutPageContent />
+        </Suspense>
+    );
 }

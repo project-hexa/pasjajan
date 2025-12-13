@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -65,15 +65,16 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
     );
 };
 
-export default function SuccessPage() {
+function SuccessPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
     const [orderData, setOrderData] = useState<OrderData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     useEffect(() => {
-        const fetchOrder = async () => {
+        const validateAndFetchOrder = async () => {
             if (!orderCode) {
                 router.push("/");
                 return;
@@ -83,24 +84,53 @@ export default function SuccessPage() {
                 const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
                 const result = await res.json();
                 
-                // Also get payment data from localStorage for payment_method info
+                if (!result.success || !result.data.order) {
+                    alert("Order tidak ditemukan!");
+                    router.push("/");
+                    return;
+                }
+
+                const order = result.data.order;
+                const paymentStatus = order.payment_status;
+
+                // Validate: only show success page if status is actually paid
+                if (paymentStatus === 'pending') {
+                    // Check if expired
+                    const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
+                    const now = Date.now();
+                    
+                    if (expiredAt && now > expiredAt) {
+                        // Expired, redirect to failed
+                        setIsRedirecting(true);
+                        router.replace(`/payment/failed?order=${orderCode}`);
+                        return;
+                    } else {
+                        // Still pending, redirect to waiting
+                        setIsRedirecting(true);
+                        router.replace(`/payment/waiting?order=${orderCode}`);
+                        return;
+                    }
+                }
+
+                if (paymentStatus === 'expired' || paymentStatus === 'failed' || paymentStatus === 'cancelled') {
+                    // Redirect to failed page
+                    setIsRedirecting(true);
+                    router.replace(`/payment/failed?order=${orderCode}`);
+                    return;
+                }
+
+                // Status is paid/settlement/capture - show success page
                 const paymentDataStr = localStorage.getItem("payment_data");
                 const paymentData = paymentDataStr ? JSON.parse(paymentDataStr) : null;
                 
-                if (result.success && result.data.order) {
-                    // Merge order data with payment data
-                    const mergedData = {
-                        ...result.data.order,
-                        order_code: result.data.order.order_code || orderCode,
-                        payment_method: result.data.order.payment_method || paymentData?.payment_method,
-                        va_number: result.data.order.va_number || paymentData?.va_number,
-                        payment_code: result.data.order.payment_code || paymentData?.payment_code,
-                    };
-                    setOrderData(mergedData);
-                } else {
-                    alert("Order tidak ditemukan!");
-                    router.push("/");
-                }
+                const mergedData = {
+                    ...order,
+                    order_code: order.order_code || orderCode,
+                    payment_method: order.payment_method || paymentData?.payment_method,
+                    va_number: order.va_number || paymentData?.va_number,
+                    payment_code: order.payment_code || paymentData?.payment_code,
+                };
+                setOrderData(mergedData);
             } catch (error) {
                 console.error("Error fetching order:", error);
                 alert("Gagal memuat data order!");
@@ -110,13 +140,14 @@ export default function SuccessPage() {
             }
         };
 
-        fetchOrder();
+        validateAndFetchOrder();
     }, [orderCode, router]);
 
-    if (loading) {
+    // Show loading while redirecting or loading
+    if (loading || isRedirecting) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-                <p className="text-lg">Memuat...</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Mengalihkan...</p>
             </div>
         );
     }
@@ -202,5 +233,17 @@ export default function SuccessPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Mengalihkan...</p>
+            </div>
+        }>
+            <SuccessPageContent />
+        </Suspense>
     );
 }

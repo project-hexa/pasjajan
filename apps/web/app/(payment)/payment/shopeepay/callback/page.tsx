@@ -1,20 +1,12 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+export const dynamic = 'force-dynamic';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@workspace/ui/components/icon";
 
-export default function ShopeepayCallbackPage() {
+function ShopeepayCallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [isMounted, setIsMounted] = useState(false)
-
-    useEffect(() => {
-      setIsMounted(true)
-    }, [])  
-  
-    if (!isMounted) {
-      return null
-    }
     useEffect(() => {
         const handleCallback = async () => {
             console.log('ShopeePay callback received, attempting to close this tab...');
@@ -58,5 +50,17 @@ export default function ShopeepayCallbackPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function ShopeepayCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Memuat...</p>
+            </div>
+        }>
+            <ShopeepayCallbackContent />
+        </Suspense>
     );
 }
