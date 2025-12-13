@@ -35,27 +35,5 @@ class UserSeeder extends Seeder
             'phone_number_verified_at' => now(),
             'last_login_date' => now(),
         ]);
-
-        // Customer User 1
-        User::create([
-            'full_name' => 'John Doe',
-            'email' => 'john@example.com',
-            'phone_number' => '081234567892',
-            'password' => Hash::make('Password123'),
-            'role' => 'Customer',
-            'phone_number_verified_at' => now(),
-            'last_login_date' => now(),
-        ]);
-
-        // Customer User 2
-        User::create([
-            'full_name' => 'Jane Smith',
-            'email' => 'jane@example.com',
-            'phone_number' => '081234567893',
-            'password' => Hash::make('Password123'),
-            'role' => 'Customer',
-            'phone_number_verified_at' => now(),
-            'last_login_date' => now(),
-        ]);
     }
 }
