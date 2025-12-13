@@ -32,7 +32,13 @@ class BranchController extends Controller
                 });
             }
 
-            $branches = $query->orderBy('name')->get();
+            // Load orders dengan sum grand_total untuk kolom penghasilan
+            $query->withSum(['orders' => function ($query) {
+                $query->where('status', 'COMPLETED')
+                    ->where('payment_status', 'paid');
+            }], 'grand_total');
+
+            $branches = $query->orderByDesc('orders_sum_grand_total')->get();
 
             return ApiResponse::success(
                 [
@@ -46,6 +52,7 @@ class BranchController extends Controller
                             'latitude' => (float) $store->latitude,
                             'longitude' => (float) $store->longitude,
                             'is_active' => (bool) $store->is_active,
+                            'penghasilan' => (float) ($store->orders_sum_grand_total ?? 0),
                             'total_orders' => $store->orders_count,
                             'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                             'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
@@ -118,7 +125,10 @@ class BranchController extends Controller
     public function show($id)
     {
         try {
-            $store = Store::find($id);
+            $store = Store::withSum(['orders' => function ($query) {
+                $query->where('status', 'COMPLETED')
+                    ->where('payment_status', 'paid');
+            }], 'grand_total')->find($id);
 
             if (!$store) {
                 return ApiResponse::notFound('Cabang tidak ditemukan');
@@ -135,6 +145,7 @@ class BranchController extends Controller
                         'latitude' => (float) $store->latitude,
                         'longitude' => (float) $store->longitude,
                         'is_active' => (bool) $store->is_active,
+                        'penghasilan' => (float) ($store->orders_sum_grand_total ?? 0),
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
