@@ -52,7 +52,7 @@ class BranchController extends Controller
                             'latitude' => (float) $store->latitude,
                             'longitude' => (float) $store->longitude,
                             'is_active' => (bool) $store->is_active,
-                            'penghasilan' => (float) ($store->orders_sum_grand_total ?? 0),
+                            'penghasilan' => 'Rp' . number_format($store->orders_sum_grand_total ?? 0, 0, ',', '.'),
                             'total_orders' => $store->orders_count,
                             'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                             'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
@@ -145,7 +145,7 @@ class BranchController extends Controller
                         'latitude' => (float) $store->latitude,
                         'longitude' => (float) $store->longitude,
                         'is_active' => (bool) $store->is_active,
-                        'penghasilan' => (float) ($store->orders_sum_grand_total ?? 0),
+                        'penghasilan' => 'Rp' . number_format($store->orders_sum_grand_total ?? 0, 0, ',', '.'),
                         'created_at' => $store->created_at->format('Y-m-d H:i:s'),
                         'updated_at' => $store->updated_at->format('Y-m-d H:i:s'),
                     ]
