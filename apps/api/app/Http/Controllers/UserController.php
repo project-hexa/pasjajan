@@ -42,7 +42,7 @@ class UserController extends BaseController
 		$rules = [
 			'full_name' => 'required|string',
 			'email' => 'required|unique:App\Models\User,email|string|email',
-			'phone_number' => 'required|numeric',
+			'phone_number' => 'required|unique:App\Models\User,phone_number|numeric',
 			'password' => [
 				'required',
 				'string',
@@ -113,7 +113,7 @@ class UserController extends BaseController
 		$rules = [
 			'full_name' => 'nullable|string',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
-			'phone_number' => 'nullable|numeric',
+			'phone_number' => 'nullable|unique:App\Models\User,phone_number|numeric',
 			'password' => [
 				'nullable',
 				'string',
@@ -376,6 +376,25 @@ class UserController extends BaseController
 		$result['address'] = $address;
 
 		return $this->sendSuccessResponse("Berhasil mengganti alamat.", $result);
+	}
+
+	public function deleteAddress(string $addressId): JsonResponse
+	{
+		// Cari alamat dengan id dari parameter
+		$address = Address::find($addressId);
+
+		// Jika alamat tidak ditemukan, maka
+		if (!$address) {
+			return $this->sendFailResponse("Alamat tidak ditemukan. Gagal menghapus data alamat.");
+		}
+
+		// Jika alamat ditemukan, maka
+		// Hapus alamat dengan mekanisme softdelete
+		$address->delete();
+
+		$result['address_data'] = $address;
+
+		return $this->sendSuccessResponse('Berhasil menghapus data alamat.', $result);
 	}
 
 	public function changePassword(Request $request): JsonResponse
