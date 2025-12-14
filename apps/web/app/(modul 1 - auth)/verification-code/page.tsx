@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@/hooks/contollers/useAuth";
 import { verificationCodeSchema } from "@/lib/schema/auth.schema";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -13,7 +13,9 @@ import {
 } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
+import { toast } from "@workspace/ui/components/sonner";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -24,10 +26,22 @@ export default function VerificationCodePage() {
       email: "",
     },
   });
-  const { verificationCode } = useAuth();
+  const { sendOTP } = useAuthStore();
+  const router = useRouter();
 
-  const handleSubmit = (data: z.infer<typeof verificationCodeSchema>) => {
-    verificationCode(data);
+  const handleSubmit = async (data: z.infer<typeof verificationCodeSchema>) => {
+    const result = await sendOTP(data.email);
+
+    if (result.ok) {
+      toast.success(result.message, {
+        toasterId: "global",
+      });
+      router.push("/one-time-password");
+    } else {
+      toast.error(result.message, {
+        toasterId: "global",
+      });
+    }
   };
 
   return (
