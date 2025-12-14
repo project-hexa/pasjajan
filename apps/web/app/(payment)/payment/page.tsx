@@ -15,6 +15,9 @@ import { Icon } from "@workspace/ui/components/icon";
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -57,13 +60,16 @@ function CheckoutPageContent() {
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [orderData, setOrderData] = React.useState<any>(null);
+  
+  // Get logged-in user from auth store
+  const { user } = useAuthStore();
 
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
         if (!orderCode) {
-          alert("Order code tidak ditemukan!");
-          router.push("/cart");
+          // Allow page to display without order code
+          setLoading(false);
           return;
         }
 
@@ -72,8 +78,9 @@ function CheckoutPageContent() {
         const result = await response.json();
 
         if (!result.success || !result.data.order) {
-          alert("Order tidak ditemukan!");
-          router.push("/cart");
+          // Allow page to display even if order not found
+          console.log("Order not found, displaying empty page");
+          setLoading(false);
           return;
         }
 
@@ -104,8 +111,7 @@ function CheckoutPageContent() {
         }
       } catch (error) {
         console.error("Error loading order data:", error);
-        alert("Gagal memuat data order!");
-        router.push("/cart");
+        // Allow page to display even on error
       } finally {
         setLoading(false);
       }
@@ -199,21 +205,19 @@ function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* NAVBAR */}
-      <div className="w-full border-b bg-emerald-700 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold">
-            <span className="rounded bg-white/10 px-2 py-1">PasJajan</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-8 w-8 rounded-full bg-white/10 grid place-items-center">
-              JD
-            </div>
-            <span>John Doe</span>
-          </div>
-        </div>
-      </div>
+      {/* HEADER */}
+      <Header 
+        logoSrc="/images/pasjajan2.png" 
+        logoAlt="PasJajan Logo"
+        userName={user?.full_name}
+        userInitials={user?.full_name
+          ?.split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)}
+        userAvatar={user?.avatar}
+      />
 
       {/* MAIN CONTENT */}
       <main className="mx-auto max-w-6xl px-4 py-6">
@@ -415,9 +419,7 @@ function CheckoutPageContent() {
           </div>
         </div>
 
-        <footer className="mt-8 text-center text-xs text-slate-500">
-          © 2025 PasJajan — All Right Reserved
-        </footer>
+        <Footer />
       </main>
     </div>
   );

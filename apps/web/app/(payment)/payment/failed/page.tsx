@@ -2,6 +2,9 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
 import { useRouter, useSearchParams } from 'next/navigation';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface PaymentData {
     order_code: string;
@@ -71,6 +74,9 @@ function FailedPageContent() {
     const [loading, setLoading] = useState(true);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [orderNotFound, setOrderNotFound] = useState(false);
+    
+    // Get logged-in user from auth store
+    const { user } = useAuthStore();
 
     useEffect(() => {
         const validateAndLoadData = async () => {
@@ -169,8 +175,20 @@ function FailedPageContent() {
     const { payment_method, grand_total, order_code } = paymentData;
 
     return (
-        <div className="min-h-screen flex flex-col bg-emerald-50/50">
-            <main className="flex-grow flex items-center justify-center py-10 px-4">
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Header 
+                logoSrc="/images/pasjajan2.png" 
+                logoAlt="PasJajan Logo"
+                userName={user?.full_name}
+                userInitials={user?.full_name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                userAvatar={user?.avatar}
+            />
+            <main className="flex-grow flex items-center justify-center py-10 px-4 bg-emerald-50/50">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
                     {/* Icon */}
                     <div className="flex justify-center mb-6">
@@ -230,6 +248,7 @@ function FailedPageContent() {
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }
