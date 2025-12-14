@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\PaymentController;
@@ -20,6 +21,8 @@ use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
 use App\Http\Controllers\Product\CartController;
+use App\Http\Middleware\EnsureOtpIsVerified;
+
 /*
 Route::get('/user', function (Request $request) {
 	return $request->user();
@@ -122,11 +125,15 @@ Route::controller(UserController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
-		// Get Status Pengiriman
-		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- List Kurir & Cek Ongkir ---
+        Route::get('/delivery/methods', 'getDeliveryMethods');
+        Route::post('/delivery/check-cost', 'checkShippingCost');
 
-		// Kirim Ulasan
-		Route::post('/delivery/{order_id}/review', 'submitReview');
+        // --- Get Status Pengiriman ---
+        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+        // --- Kirim Ulasan ---
+        Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
@@ -197,9 +204,9 @@ Route::get('/categories/{id}', [ProductCategoryController::class, 'show']);
 
 //Cart
 Route::prefix('cart')->group(function () {
-    Route::get('/', [CartController::class, 'index']);
-    Route::post('/add', [CartController::class, 'add']);
-    Route::patch('/{cartId}', [CartController::class, 'update']);
-    Route::delete('/{cartId}', [CartController::class, 'remove']);
-    Route::post('/clear', [CartController::class, 'clear']);
+	Route::get('/', [CartController::class, 'index']);
+	Route::post('/add', [CartController::class, 'add']);
+	Route::patch('/{cartId}', [CartController::class, 'update']);
+	Route::delete('/{cartId}', [CartController::class, 'remove']);
+	Route::post('/clear', [CartController::class, 'clear']);
 });

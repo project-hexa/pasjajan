@@ -2,7 +2,7 @@ import {
   ReportSalesResponse,
   reportSalesSchema,
 } from "@/lib/schema/report-sales.schema";
-import { getToken } from "@/lib/utils";
+import { getApiBaseUrl, getToken } from "@/lib/utils";
 
 interface ReportSalesParams {
   period: "monthly" | "yearly" | "daily" | "custom";
@@ -17,16 +17,22 @@ export const getReportSales = async ({
   to,
   storeId,
 }: ReportSalesParams): Promise<ReportSalesResponse> => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/reports/sales?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
-    {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
+  const params = new URLSearchParams({ period });
+
+  if (from) params.append("from", from);
+  if (to) params.append("to", to);
+  if (storeId) params.append("storeId", storeId);
+
+  const url = `${getApiBaseUrl()}/api/reports/sales?${params.toString()}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
     },
-  );
+  });
 
   if (!response.ok) {
+    console.error("Report sales fetch failed", { status: response.status, url });
     throw new Error("Gagal memuat data laporan penjualan.");
   }
 
@@ -35,7 +41,7 @@ export const getReportSales = async ({
   const parsedData = reportSalesSchema.safeParse(data);
 
   if (!parsedData.success) {
-    console.error("Report Sales Schema Validation Error:", parsedData.error);
+    console.error("Report Sales Schema Validation Error:", parsedData.error.flatten());
     throw new Error("Gagal memuat data laporan penjualan.");
   }
 

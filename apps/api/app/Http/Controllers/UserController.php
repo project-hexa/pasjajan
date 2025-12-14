@@ -428,7 +428,7 @@ class UserController extends BaseController
 
 		// Mencari user di database dengan email
 		$user = User::where('email', $data['email'])->first()->load('customer');
-		
+
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
 			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data point user.");
@@ -465,7 +465,7 @@ class UserController extends BaseController
 
 		// Mencari user di database dengan email
 		$user = User::where('email', $data['email'])->first()->load('customer');
-		
+
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
 			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data riwayat transaksi user.");
@@ -480,7 +480,7 @@ class UserController extends BaseController
 	}
 
 	// Method private custom buatan sendiri khusus untuk UserController
-	// Method untuk memasukkan data inputan admin ke database 
+	// Method untuk memasukkan data inputan admin ke database
 	private function createUser(array $data): User
 	{
 		// Memasukkan (insert) isi parameter array $data ke database

@@ -2,12 +2,11 @@ import z from "zod";
 
 export const reportSalesSchema = z.object({
   success: z.boolean(),
-  status: z.number(),
   message: z.string(),
   data: z.object({
     parameters: z.object({
       period: z.string(),
-      store_id: z.null(),
+      store_id: z.number().nullable().optional(),
       top_n: z.number(),
       date_range: z.object({ from: z.string(), to: z.string() }),
     }),

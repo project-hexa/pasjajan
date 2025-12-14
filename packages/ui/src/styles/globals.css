@@ -1,13 +1,14 @@
 @import "tailwindcss";
-@source "../../../apps/**/*.{ts,tsx}";
-@source "../../../components/**/*.{ts,tsx}";
-@source "../**/*.{ts,tsx}";
-
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar" {
   nocompatible: true;
   preferredstrategy: "pseudoelements";
 }
+
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -204,6 +205,22 @@
   button {
     @apply cursor-pointer;
   }
+  .toaster-close-btn {
+    right: 10 !important;
+    left: unset !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--normal-text) !important;
+  }
+  .toaster {
+    @apply shadow;
+  }
+  .toaster-close-btn > svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* Hide native browser clear/decoration for search inputs so only our custom clear button shows */
@@ -220,3 +237,7 @@ input[type="search"]::-ms-reveal {
   width: 0;
   height: 0;
 }
+
+/* Utility to hide scrollbars where needed */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

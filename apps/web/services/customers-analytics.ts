@@ -3,7 +3,7 @@ import {
   customerAnalyticSchema,
   customerListSchema,
 } from "@/lib/schema/customers-analytics.schema";
-import { getToken } from "@/lib/utils";
+import { getApiBaseUrl, getToken } from "@/lib/utils";
 
 interface CustomerAnalyticParams {
   period: "monthly" | "yearly" | "daily" | "custom";
@@ -34,7 +34,7 @@ export const getCustomersAnalytics = async ({
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers/analytics?${params.toString()}`,
+    `${getApiBaseUrl()}/api/customers/analytics?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
@@ -87,7 +87,7 @@ export const getCustomerList = async ({
   }
 
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/customers?${params.toString()}`,
+    `${getApiBaseUrl()}/api/customers?${params.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${getToken()}`,
