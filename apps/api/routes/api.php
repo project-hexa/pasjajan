@@ -3,11 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Middleware\EnsureOtpIsVerified;
-
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\PaymentController;
@@ -22,6 +21,8 @@ use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
 use App\Http\Controllers\Product\CartController;
+use App\Http\Middleware\EnsureOtpIsVerified;
+
 /*
 Route::get('/user', function (Request $request) {
 	return $request->user();
@@ -105,17 +106,13 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		// User management by user himself
 		Route::get('/user/profile', 'getProfile');
 		Route::post('/user/change-profile', 'changeProfile');
 		Route::post('/user/add-address', 'createAddress');
 		Route::post('/user/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/delete-address/{addressId}', 'deleteAddress');
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
-
-		// User management by admin
 		Route::get('/admin/users/{role}', 'index');
 		Route::get('/admin/user/{id}', 'show');
 		Route::post('/admin/add-user', 'store');
@@ -207,9 +204,9 @@ Route::get('/categories/{id}', [ProductCategoryController::class, 'show']);
 
 //Cart
 Route::prefix('cart')->group(function () {
-    Route::get('/', [CartController::class, 'index']);
-    Route::post('/add', [CartController::class, 'add']);
-    Route::patch('/{cartId}', [CartController::class, 'update']);
-    Route::delete('/{cartId}', [CartController::class, 'remove']);
-    Route::post('/clear', [CartController::class, 'clear']);
+	Route::get('/', [CartController::class, 'index']);
+	Route::post('/add', [CartController::class, 'add']);
+	Route::patch('/{cartId}', [CartController::class, 'update']);
+	Route::delete('/{cartId}', [CartController::class, 'remove']);
+	Route::post('/clear', [CartController::class, 'clear']);
 });
