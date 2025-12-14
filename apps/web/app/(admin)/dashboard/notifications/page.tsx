@@ -1,5 +1,6 @@
-import AnalyticCard from "@/components/dashboard/analytic-card";
 import NotificationsForm from "@/components/dashboard/notifications-form";
+import NotificationsMetrics from "@/components/dashboard/notifications-metrics";
+import NotificationsList from "@/components/dashboard/notifications-list";
 
 export default function NotificationsPage() {
   return (
@@ -9,31 +10,9 @@ export default function NotificationsPage() {
           <h3 className="text-2xl font-semibold">Buat Pesan Notifikasi</h3>
           <NotificationsForm />
         </div>
-        <AnalyticCard
-          title="Pengguna Aktif"
-          value="12345"
-          growth="+12%"
-          description="oke"
-          className="w-full"
-        />
-        <AnalyticCard
-          title="Pengguna Aktif"
-          value="12345"
-          growth="+12%"
-          description="oke"
-          className="w-full"
-        />
+        <NotificationsMetrics />
       </div>
-      <ul className="space-y-4">
-        <li className="rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-          <h4 className="font-semibold">Promo akhir tahun</h4>
-          <p>Ini deskripsi</p>
-        </li>
-        <li className="rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-          <h4 className="font-semibold">Promo akhir tahun</h4>
-          <p>Ini deskripsi</p>
-        </li>
-      </ul>
+      <NotificationsList />
     </section>
   );
 }
