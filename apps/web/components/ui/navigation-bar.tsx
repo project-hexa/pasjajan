@@ -1,7 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/contollers/useAuth";
-import { useUser } from "@/hooks/contollers/useUser";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
@@ -20,9 +19,8 @@ import { Search } from "./search";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
-  const { user } = useUser();
-  
+  const { user, token } = useAuthStore();
+
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
       <nav className="flex h-full items-center justify-between gap-5 px-4 md:px-10 lg:gap-10">
@@ -55,7 +53,7 @@ export const Navbar = ({ className }: { className?: string }) => {
 
           <Separator orientation="vertical" />
 
-          {!isLoggedIn ? (
+          {!token ? (
             <div className="ml-2 flex items-center gap-5">
               <Button
                 variant={"link"}
