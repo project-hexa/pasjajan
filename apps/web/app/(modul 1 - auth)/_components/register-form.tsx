@@ -1,8 +1,8 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - auth)/_components/password";
-import { useAuth } from "@/hooks/contollers/useAuth";
 import { registerSchema } from "@/lib/schema/auth.schema";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -27,12 +27,11 @@ import {
 } from "@workspace/ui/components/input-group";
 import { Label } from "@workspace/ui/components/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 export const RegisterForm = () => {
-  const { register } = useAuth();
-
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -44,6 +43,8 @@ export const RegisterForm = () => {
       password_confirmation: "",
     },
   });
+  const { setRegisterHold } = useAuthStore();
+  const router = useRouter();
 
   const handleOnSubmit = (data: z.infer<typeof registerSchema>) => {
     const phone_number = data.phone_number.startsWith("0")
@@ -51,7 +52,8 @@ export const RegisterForm = () => {
       : "+62" + data.phone_number;
     data.phone_number = phone_number;
 
-    register(data);
+    setRegisterHold(data);
+    router.push("/verification-code");
   };
 
   return (
