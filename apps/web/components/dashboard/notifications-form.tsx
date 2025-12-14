@@ -1,0 +1,71 @@
+"use client";
+
+import { sendEmailNotificationSchema } from "@/lib/schema/notifications.schema";
+import { sendEmailNotification } from "@/services/notifications";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@workspace/ui/components/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@workspace/ui/components/form";
+import { Input } from "@workspace/ui/components/input";
+import { Textarea } from "@workspace/ui/components/textarea";
+import { useForm } from "react-hook-form";
+import z from "zod";
+
+export default function NotificationsForm() {
+  const form = useForm<z.infer<typeof sendEmailNotificationSchema>>({
+    resolver: zodResolver(sendEmailNotificationSchema),
+    defaultValues: {
+      title: "",
+      body: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof sendEmailNotificationSchema>) {
+    await sendEmailNotification({
+      title: values.title,
+      body: values.body,
+    });
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Judul</FormLabel>
+              <FormControl>
+                <Input placeholder="Judul notifikasi" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="body"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Isi Notifikasi</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Isi notifikasi" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-end">
+          <Button type="submit">Kirim Notifikasi</Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
