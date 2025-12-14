@@ -32,6 +32,7 @@ import {
 } from "@workspace/ui/components/pagination";
 import { CustomerListResponse } from "@/lib/schema/customers-analytics.schema";
 import { Icon } from "@workspace/ui/components/icon";
+import { exportCustomerReport } from "@/services/customers-analytics";
 
 interface CustomerAnalyticsClientProps {
   initialData: CustomerListResponse["data"];
@@ -252,6 +253,13 @@ export default function CustomerAnalyticsClient({
             onClick={() => handlePeriodChange("yearly")}
           >
             Yearly
+          </Button>
+          <Button
+            onClick={() => {
+              exportCustomerReport(searchValue);
+            }}
+          >
+            Export CSV
           </Button>
         </div>
       </div>
