@@ -15,6 +15,7 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 export default function NotificationsForm() {
@@ -27,10 +28,18 @@ export default function NotificationsForm() {
   });
 
   async function onSubmit(values: z.infer<typeof sendEmailNotificationSchema>) {
-    await sendEmailNotification({
-      title: values.title,
-      body: values.body,
-    });
+    try {
+      await sendEmailNotification({
+        title: values.title,
+        body: values.body,
+      });
+      toast.success("Notifikasi berhasil dikirim!");
+      form.reset();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengirim notifikasi",
+      );
+    }
   }
 
   return (
@@ -43,7 +52,11 @@ export default function NotificationsForm() {
             <FormItem>
               <FormLabel>Judul</FormLabel>
               <FormControl>
-                <Input placeholder="Judul notifikasi" {...field} />
+                <Input
+                  placeholder="Judul notifikasi"
+                  disabled={form.formState.isSubmitting}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,14 +69,20 @@ export default function NotificationsForm() {
             <FormItem>
               <FormLabel>Isi Notifikasi</FormLabel>
               <FormControl>
-                <Textarea placeholder="Isi notifikasi" {...field} />
+                <Textarea
+                  placeholder="Isi notifikasi"
+                  disabled={form.formState.isSubmitting}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit">Kirim Notifikasi</Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? "Mengirim..." : "Kirim Notifikasi"}
+          </Button>
         </div>
       </form>
     </Form>
