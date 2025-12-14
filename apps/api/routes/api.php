@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Middleware\EnsureOtpIsVerified;
+
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
@@ -106,13 +108,17 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
+		// User management by user himself
 		Route::get('/user/profile', 'getProfile');
 		Route::post('/user/change-profile', 'changeProfile');
 		Route::post('/user/add-address', 'createAddress');
 		Route::post('/user/change-address/{addressId}', 'changeAddress');
+		Route::post('/user/delete-address/{addressId}', 'deleteAddress');
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
+
+		// User management by admin
 		Route::get('/admin/users/{role}', 'index');
 		Route::get('/admin/user/{id}', 'show');
 		Route::post('/admin/add-user', 'store');
