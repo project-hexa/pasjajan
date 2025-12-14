@@ -4,7 +4,11 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@workspace/ui/components/button";
 import { Calendar } from "@workspace/ui/components/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
 import { Icon } from "@workspace/ui/components/icon";
 
 interface DateRangePickerProps {
@@ -36,8 +40,8 @@ export function DateRangePicker({
         <Popover open={fromOpen} onOpenChange={setFromOpen}>
           <PopoverTrigger asChild>
             <Button
-            variant="ghost"
-            className="w-[120px] justify-between text-left font-normal border border-black/20 bg-[#F7FFFB]"
+              variant="ghost"
+              className="w-[120px] justify-between border border-black/20 bg-[#F7FFFB] text-left font-normal"
             >
               {fromDate ? (
                 <span className="flex items-center">
@@ -46,7 +50,7 @@ export function DateRangePicker({
               ) : (
                 <span>Dari</span>
               )}
-              <Icon icon={'lucide:calendar-days'} className="ml-2 h-4 w-4" />
+              <Icon icon={"lucide:calendar-days"} className="ml-2 h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -57,7 +61,7 @@ export function DateRangePicker({
                 onFromDateChange(date);
                 setFromOpen(false);
               }}
-              initialFocus
+              autoFocus
             />
           </PopoverContent>
         </Popover>
@@ -66,7 +70,7 @@ export function DateRangePicker({
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
-              className="w-[120px] justify-between text-left font-normal border border-black/20 bg-[#F7FFFB]"
+              className="w-[120px] justify-between border border-black/20 bg-[#F7FFFB] text-left font-normal"
             >
               {toDate ? (
                 <span className="flex items-center">
@@ -75,7 +79,7 @@ export function DateRangePicker({
               ) : (
                 <span>Sampai</span>
               )}
-              <Icon icon={'lucide:calendar-days'} className="ml-2 h-4 w-4" />
+              <Icon icon={"lucide:calendar-days"} className="ml-2 h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -86,8 +90,14 @@ export function DateRangePicker({
                 onToDateChange(date);
                 setToOpen(false);
               }}
-              disabled={false}
-              initialFocus
+              disabled={(date) => {
+                // Disable dates before the fromDate
+                if (fromDate) {
+                  return date < fromDate;
+                }
+                return false;
+              }}
+              autoFocus
             />
           </PopoverContent>
         </Popover>

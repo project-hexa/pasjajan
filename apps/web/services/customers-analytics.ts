@@ -42,6 +42,8 @@ export const getCustomersAnalytics = async ({
     },
   );
 
+  console.log(response);
+
   if (!response.ok) {
     throw new Error("Gagal memuat data analitik pelanggan.");
   }
