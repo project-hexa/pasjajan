@@ -1,5 +1,5 @@
 "use client";
-import { Navbar } from "@/components/navigation-bar";
+import { Navbar } from "@/components/ui/navigation-bar";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
