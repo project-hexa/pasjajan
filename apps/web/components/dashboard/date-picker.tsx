@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
+import { Calendar } from "@workspace/ui/components/calendar";
+import { Icon } from "@workspace/ui/components/icon";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
-import { Calendar } from "@workspace/ui/components/calendar";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 
@@ -22,7 +22,7 @@ export default function DatePicker() {
           data-empty={!date}
           className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
         >
-          <CalendarIcon />
+          <Icon icon={"lucide:calendar"} />
           {date ? format(date, "PPP") : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>

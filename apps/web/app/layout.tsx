@@ -1,8 +1,7 @@
 import { Toaster } from "@workspace/ui/components/sonner";
-import { ThemeProviders } from "@/components/theme-providers";
-import "@workspace/ui/styles/globals.css";
+import "@workspace/ui/globals.css";
+import { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import { Metadata } from "next";   // ⬅ wajib
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],

@@ -1,6 +1,7 @@
 "use client";
 
 import { Password } from "@/components/auth/password";
+import { useAuth } from "@/hooks/contollers/useAuth";
 import { registerSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
@@ -21,6 +22,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@workspace/ui/components/field";
+import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import {
   InputGroup,
@@ -31,62 +33,39 @@ import {
 import { Label } from "@workspace/ui/components/label";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
-import { FcGoogle } from "react-icons/fc";
-import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
-import { Icon } from "@workspace/ui/components/icon";
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const { register } = useAuth();
 
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullname: "",
-      userName: "",
+      full_name: "",
       email: "",
-      noTelepon: "",
+      phone_number: "",
       address: "",
       password: "",
-      confirmPassword: "",
+      password_confirmation: "",
     },
   });
 
   const handleOnSubmit = (data: z.infer<typeof registerSchema>) => {
-    if (data.noTelepon) {
-      data.noTelepon = "+62" + data.noTelepon.replace(/^(\+62|62|0)/, "");
-    }
-
-    toast.promise(
-      new Promise<typeof registerForm>((resolve) => resolve(registerForm)),
-      {
-        loading: "Loading...",
-        toasterId: "global",
-        success: () => "Akun berhasil dibuat!",
-        error: () => "Akun gagal dibuat",
-      },
-    );
-    router.push("/verification-code");
-    console.log(data);
+    const phone_number = data.phone_number.startsWith("0")
+      ? "+62" + data.phone_number.slice(1)
+      : "+62" + data.phone_number;
+    data.phone_number = phone_number;
+    
+    register(data);
   };
 
   return (
-    <div className="items-center md:flex md:h-screen md:w-screen justify-center">
+    <div className="items-center justify-center md:flex md:h-screen md:w-screen">
       <Card className="flex flex-col overflow-hidden p-0 max-sm:rounded-none md:h-2/3 md:w-2/3">
         <CardContent className="min-h-0 flex-1 p-0">
           <div className="flex h-full">
             <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  className="text-accent absolute left-4 top-4"
-                >
-                  <Icon icon="lucide:circle-chevron-left" />
-                  <span>Kembali ke Beranda</span>
-                </Button>
-              </Link>
               <div className="flex flex-col items-center gap-5 text-white">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
@@ -108,7 +87,7 @@ export default function RegisterPage() {
               >
                 <FieldGroup>
                   <Controller
-                    name="fullname"
+                    name="full_name"
                     control={registerForm.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
@@ -119,26 +98,6 @@ export default function RegisterPage() {
                         <Input
                           id="fullname"
                           placeholder="John Doe"
-                          aria-invalid={fieldState.invalid}
-                          {...field}
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                  <Controller
-                    name="userName"
-                    control={registerForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="userName">
-                          Username<span className="text-destructive">*</span>
-                        </FieldLabel>
-                        <Input
-                          id="userName"
-                          placeholder="johndoe_123"
                           aria-invalid={fieldState.invalid}
                           {...field}
                         />
@@ -169,19 +128,19 @@ export default function RegisterPage() {
                     )}
                   />
                   <Controller
-                    name="noTelepon"
+                    name="phone_number"
                     control={registerForm.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="noTelepon">
+                        <FieldLabel htmlFor="phone_number">
                           No Telepon<span className="text-destructive">*</span>
                         </FieldLabel>
                         <ButtonGroup>
                           <ButtonGroupText asChild>
-                            <Label htmlFor="noTelepon">+62</Label>
+                            <Label htmlFor="phone_number">+62</Label>
                           </ButtonGroupText>
                           <Input
-                            id="noTelepon"
+                            id="phone_number"
                             placeholder="81234567890"
                             aria-invalid={fieldState.invalid}
                             {...field}
@@ -249,16 +208,16 @@ export default function RegisterPage() {
                     )}
                   />
                   <Controller
-                    name="confirmPassword"
+                    name="password_confirmation"
                     control={registerForm.control}
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="confirmPassword">
+                        <FieldLabel htmlFor="password_confirmation">
                           Confirm Password
                           <span className="text-destructive">*</span>
                         </FieldLabel>
                         <Password
-                          id="confirmPassword"
+                          id="password_confirmation"
                           field={field}
                           fieldState={fieldState}
                           disabled={
@@ -279,8 +238,20 @@ export default function RegisterPage() {
                 </FieldGroup>
 
                 <div className="flex flex-col items-center justify-center gap-2">
-                  <Button form="register-form" type="submit">
-                    Daftar
+                  <Button
+                    form="register-form"
+                    type="submit"
+                    disabled={registerForm.formState.isSubmitting}
+                  >
+                    {registerForm.formState.isSubmitting ? (
+                      <Icon
+                        icon={"lucide:loader-circle"}
+                        width={24}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      "Daftar"
+                    )}
                   </Button>
                   <div className="flex shrink-0 flex-col items-center gap-4">
                     <CardDescription>
@@ -294,7 +265,7 @@ export default function RegisterPage() {
                     atau daftar menggunakan:
                   </p>
                   <Button variant={"ghost"} size="icon" className="size-14">
-                    <FcGoogle className="size-10" />
+                    <Icon icon="devicon:google" width="32" />
                   </Button>
                 </div>
               </form>

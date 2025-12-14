@@ -5,11 +5,10 @@ import { Button } from "@workspace/ui/components/button";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@workspace/ui/components/table";
 import Link from "next/link";
 

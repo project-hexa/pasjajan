@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@workspace/ui/lib/utils";
-import { History, ShoppingCart, UsersRound, Tag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,23 +9,23 @@ const navigation = [
   {
     name: "Dashboard",
     href: "/dashboard",
-    icon: ShoppingCart,
+    icon: "lucide:shopping-cart",
   },
   {
     name: "Analitik Pelanggan",
     href: "/dashboard/customers-analytics",
-    icon: UsersRound,
+    icon: "lucide:user-round",
   },
 
   {
     name: "Log Aktivitas",
     href: "/dashboard/activity-log",
-    icon: History,
+    icon: "lucide:history",
   },
   {
     name: "Promo",
     href: "/dashboard/promo",
-    icon: Tag,
+    icon: "lucide:tag",
   },
 ];
 

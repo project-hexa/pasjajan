@@ -12,14 +12,12 @@ import {
 } from "@workspace/ui/components/alert-dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
-import { cn } from "@workspace/ui/lib/utils";
-import { ComponentProps } from "react";
 
-export const Logout = (props: ComponentProps<"button">) => {
+export const Logout = () => {
   const { logout, isLoggedIn } = useAuth();
 
   const handleClick = () => {
-    isLoggedIn && logout();
+    if (isLoggedIn) logout();
   };
 
   return (

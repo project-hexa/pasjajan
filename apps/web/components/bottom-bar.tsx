@@ -10,6 +10,11 @@ export function BottomBar() {
           <Icon icon={"lucide:home"} width={24} />
         </Button>
       </Link>
+      <Link href={"/kategory"}>
+        <Button variant={"ghost"} size={"icon"}>
+          <Icon icon="mynaui:grid" width={24} />
+        </Button>
+      </Link>
       <Link href="/">
         <Button variant={"ghost"} size={"icon"}>
           <Icon icon={"lucide:bell"} width={24} />

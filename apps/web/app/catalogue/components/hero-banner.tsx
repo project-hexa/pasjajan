@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import { cn } from "@workspace/ui/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@workspace/ui/components/button";
+import Image from "next/image";
+import { Icon } from "@workspace/ui/components/icon";
 
 interface Banner {
   id: string | number;
@@ -109,10 +110,12 @@ export function HeroBanner({
                     key={banner.id}
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-[0_15px_45px_-24px_rgba(0,0,0,0.5)]"
                   >
-                    <img
+                    <Image
                       src={banner.image}
                       alt={banner.title || "Banner"}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      width={800}
+                      height={400}
                     />
                     {banner.link && (
                       <div className="absolute bottom-6 left-6">
@@ -142,7 +145,7 @@ export function HeroBanner({
             )}
             aria-label="Previous slide"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <Icon icon={"lucide:chevron-left"} className="h-4 w-4" />
           </button>
           <button
             onClick={goToNext}
@@ -152,7 +155,7 @@ export function HeroBanner({
             )}
             aria-label="Next slide"
           >
-            <ChevronRight className="h-4 w-4" />
+            <Icon icon={"lucide:chevron-left"} className="h-4 w-4" />
           </button>
         </>
       )}

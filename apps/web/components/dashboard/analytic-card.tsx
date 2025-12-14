@@ -1,5 +1,5 @@
+import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
-import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface AnalyticCardProps {
   title: string;
@@ -26,9 +26,9 @@ export default function AnalyticCard(props: AnalyticCardProps) {
         {growth && (
           <div className="flex items-center rounded-full border px-2 py-1 text-xs">
             {!positiveGrowth ? (
-              <TrendingDown size={12} />
+              <Icon icon={"lucide:trending-down"} size={12} />
             ) : (
-              <TrendingUp size={12} />
+              <Icon icon={"lucide:trending-up"} size={12} />
             )}
             <span>{growth}</span>
           </div>

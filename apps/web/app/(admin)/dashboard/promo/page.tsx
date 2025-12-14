@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Plus, Pencil, Trash2, Calendar, Tag, Percent } from "lucide-react";
-import Image from "next/image";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Icon } from "@workspace/ui/components/icon";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 interface Promo {
     id: number;
@@ -26,10 +26,6 @@ interface Promo {
 export default function PromoPage() {
     const [promos, setPromos] = useState<Promo[]>([]);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        fetchPromos();
-    }, []);
 
     const fetchPromos = async () => {
         try {
@@ -93,7 +89,7 @@ export default function PromoPage() {
                 </div>
                 <Link href="/dashboard/promo/create">
                     <Button className="bg-[#1E8F59] hover:bg-[#166E45] text-white">
-                        <Plus className="mr-2 h-4 w-4" /> Add Promo
+                        <Icon icon={"ic:outline-plus"} className="mr-2 h-4 w-4" /> Add Promo
                     </Button>
                 </Link>
             </div>
@@ -132,7 +128,7 @@ export default function PromoPage() {
                                                         </div>
                                                     ) : (
                                                         <div className="h-12 w-20 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                                                            <Tag className="h-4 w-4 text-muted-foreground" />
+                                                            <Icon icon={"lucide:tag"} className="h-4 w-4 text-muted-foreground" />
                                                         </div>
                                                     )}
                                                     <div className="flex flex-col">
@@ -144,7 +140,7 @@ export default function PromoPage() {
                                             <td className="p-4 align-middle">
                                                 <div className="flex items-center gap-2">
                                                     <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1">
-                                                        <Percent className="h-3 w-3" />
+                                                        <Icon icon={"lucide:percent"} className="h-3 w-3" />
                                                         {Math.round(Number(promo.discount_percentage))}%
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">
@@ -155,7 +151,7 @@ export default function PromoPage() {
                                             <td className="p-4 align-middle">
                                                 <div className="flex flex-col text-sm">
                                                     <span className="flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                                                        <Icon icon={"lucide:calendar"} className="h-3 w-3 text-muted-foreground" />
                                                         {formatDate(promo.start_date)}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground pl-4">
@@ -172,11 +168,11 @@ export default function PromoPage() {
                                                 <div className="flex justify-end gap-2">
                                                     <Link href={`/dashboard/promo/${promo.id}/edit`}>
                                                         <Button variant="ghost" size="icon">
-                                                            <Pencil className="h-4 w-4" />
+                                                            <Icon icon={"lucide:pencil"} className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
                                                     <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deletePromo(promo.id)}>
-                                                        <Trash2 className="h-4 w-4" />
+                                                        <Icon icon={"lucide:trash"} className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             </td>

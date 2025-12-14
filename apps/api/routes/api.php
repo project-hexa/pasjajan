@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Middleware\EnsureOtpIsVerified;
+
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
@@ -106,13 +108,17 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
+		// User management by user himself
 		Route::get('/user/profile', 'getProfile');
 		Route::post('/user/change-profile', 'changeProfile');
 		Route::post('/user/add-address', 'createAddress');
 		Route::post('/user/change-address/{addressId}', 'changeAddress');
+		Route::post('/user/delete-address/{addressId}', 'deleteAddress');
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
+
+		// User management by admin
 		Route::get('/admin/users/{role}', 'index');
 		Route::get('/admin/user/{id}', 'show');
 		Route::post('/admin/add-user', 'store');
@@ -125,11 +131,15 @@ Route::controller(UserController::class)->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
-		// Get Status Pengiriman
-		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- List Kurir & Cek Ongkir ---
+        Route::get('/delivery/methods', 'getDeliveryMethods');
+        Route::post('/delivery/check-cost', 'checkShippingCost');
 
-		// Kirim Ulasan
-		Route::post('/delivery/{order_id}/review', 'submitReview');
+        // --- Get Status Pengiriman ---
+        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+        // --- Kirim Ulasan ---
+        Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
@@ -205,14 +215,4 @@ Route::prefix('cart')->group(function () {
 	Route::patch('/{cartId}', [CartController::class, 'update']);
 	Route::delete('/{cartId}', [CartController::class, 'remove']);
 	Route::post('/clear', [CartController::class, 'clear']);
-});
-
-//product dummy untuk keperluan cart fe
-Route::get('/products', function () {
-	return response()->json([
-		'success' => true,
-		'data' => [
-			'products' => DB::table('products')->get()
-		]
-	]);
 });

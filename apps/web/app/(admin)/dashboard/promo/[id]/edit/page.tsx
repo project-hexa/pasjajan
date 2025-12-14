@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
-import { PromoForm } from "../../_components/promo-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Icon } from "@workspace/ui/components/icon";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { PromoForm } from "../../_components/promo-form";
 
 export default function EditPromoPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -101,7 +101,7 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
             <div className="flex items-center gap-4">
                 <Link href="/dashboard/promo">
                     <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-4 w-4" />
+                        <Icon icon={"lucide:arrow-left"} className="h-4 w-4" />
                     </Button>
                 </Link>
                 <h1 className="text-3xl font-bold tracking-tight">Edit Promo</h1>

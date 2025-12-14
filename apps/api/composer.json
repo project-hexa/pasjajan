@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "evenement/evenement": "3.0",
         "google/apiclient": "^2.18",
         "laravel/framework": "^12.0",
@@ -48,7 +48,7 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan migrate --force"
+            "@php artisan migrate:fresh --seed"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",

@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
       password: "",
-      confirmPassword: "",
+      password_confirmation: "",
     },
   });
   const router = useRouter();
@@ -70,14 +70,14 @@ export default function ForgotPasswordPage() {
 
             <Controller
               control={resetPassForm.control}
-              name="confirmPassword"
+              name="password_confirmation"
               render={({ field, fieldState }) => (
                 <Field>
-                  <FieldLabel htmlFor="confirmPassword">
+                  <FieldLabel htmlFor="password_confirmation">
                     Konfirmasi Password baru
                   </FieldLabel>
                   <Password
-                    id="confirmPassword"
+                    id="password_confirmation"
                     field={field}
                     fieldState={fieldState}
                   />

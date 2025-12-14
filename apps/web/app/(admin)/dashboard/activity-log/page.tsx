@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { SearchIcon } from "lucide-react";
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
+import { Icon } from "@workspace/ui/components/icon";
+import { Input } from "@workspace/ui/components/input";
 import {
   Table,
   TableBody,
@@ -13,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table";
+import { useState } from "react";
 
 const logs = [
   {
@@ -372,7 +371,7 @@ export default function ActivityLog() {
     <div className="flex items-center gap-4">
       <div className="flex-1">
   <div className="relative flex items-center">
-    <SearchIcon className="absolute left-3 h-4 w-4" />
+    <Icon icon={"lucide:search"} className="absolute left-3 h-4 w-4" />
     <Input
       placeholder="Search"
       className="w-full border border-black/20 bg-[#F7FFFB] pl-9 focus-visible:ring-0"

@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
+  ChartTooltipContent
 } from "@workspace/ui/components/chart";
 import { cn } from "@workspace/ui/lib/utils";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
