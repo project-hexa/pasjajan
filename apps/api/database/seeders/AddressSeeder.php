@@ -21,10 +21,10 @@ class AddressSeeder extends Seeder
       Address::create([
         'customer_id' => $customer->id,
         'label' => 'Rumah',
-        'detail_address' => 'Jl. Sudirman No. ' . rand(1, 100),
+        'detail_address' => 'Jl. Sudirman No. ' . rand(1, 100) . ', Jakarta Selatan, DKI Jakarta 12190',
         'notes_address' => 'Dekat ' . collect(['Indomaret', 'Alfamart', 'Bank BCA', 'Masjid', 'Sekolah'])->random(),
-        'recipient_name' => $customer->user->first_name . ' ' . $customer->user->last_name,
-        'phone_number' => '08' . rand(1000000000, 9999999999),
+        'recipient_name' => $customer->user->full_name,
+        'phone_number' => $customer->user->phone_number,
         'latitude' => -6.2 . rand(10000, 99999),
         'longitude' => 106.8 . rand(10000, 99999),
         'is_default' => true,
