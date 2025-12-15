@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PaymentInstructionsModal } from '@/components/PaymentInstructionsModal';
+import Image from 'next/image';
 
 interface PaymentData {
     order_code: string;
@@ -341,7 +342,7 @@ function WaitingPageContent() {
                                         className="inline-block border-2 border-gray-200 rounded-xl p-2 bg-white cursor-pointer hover:border-emerald-500 transition-colors"
                                         onClick={() => setShowQrPreview(true)}
                                     >
-                                        <img src={qr_code_url} alt="QR Code" className="w-48 h-48 object-contain" />
+                                        <Image src={qr_code_url} alt="QR Code" className="w-48 h-48 object-contain" width={192} height={192} />
                                     </div>
                                     <button 
                                         onClick={handleDownloadQr}
@@ -400,7 +401,7 @@ function WaitingPageContent() {
                                         className="inline-block border-2 border-gray-200 rounded-xl p-2 bg-white cursor-pointer hover:border-emerald-500 transition-colors"
                                         onClick={() => setShowQrPreview(true)}
                                     >
-                                        <img src={qr_code_url} alt="QR Code" className="w-56 h-56 object-contain" />
+                                        <Image src={qr_code_url} alt="QR Code" className="w-56 h-56 object-contain" width={224} height={224} />
                                     </div>
                                     <button 
                                         onClick={handleDownloadQr}
@@ -533,7 +534,7 @@ function WaitingPageContent() {
                         <h3 className="text-xl font-bold text-center mb-6">QR Code</h3>
                         
                         <div className="flex justify-center">
-                            <img src={qr_code_url} alt="QR Code Large" className="w-96 h-96 object-contain" />
+                            <Image src={qr_code_url} alt="QR Code Large" className="w-96 h-96 object-contain" width={384} height={384} />
                         </div>
                     </div>
                 </div>

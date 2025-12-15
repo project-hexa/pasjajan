@@ -29,7 +29,7 @@ type authStore = {
   setRegisterHold: (data: z.infer<typeof registerSchema>) => void;
   logout: () => Promise<AuthResponse>;
   sendOTP: (email: string) => Promise<AuthResponse>;
-  verifyOTP: (pin: string) => Promise<AuthResponse>;
+  verifyOTP: (email: string, pin: string) => Promise<AuthResponse>;
   forgotPassword: (email: string) => Promise<AuthResponse>;
   resetPassword: (
     data: z.infer<typeof resetPasswordSchema>,
@@ -113,20 +113,9 @@ export const useAuthStore = create<authStore>()(
             phone_number,
           });
 
-          const newToken = response.data.token;
-          const userData = response.data.data.user_data;
-
-          Cookies.set("token", newToken, cookiesOptions);
-
-          set({ user: userData, token: newToken });
-
           return {
             ok: true,
-            message: response.data.message || "Berhasil Mendaftar!",
-            data: {
-              token: newToken,
-              user: userData,
-            },
+            message: response.data.message || "Berhasil Mendaftar!"
           };
         } catch (error) {
           let message = "Gagal Mendaftar!";
@@ -143,6 +132,7 @@ export const useAuthStore = create<authStore>()(
       },
       setRegisterHold: (data) => {
         Cookies.set("verificationStep", "email-sent", cookiesOptions);
+        sessionStorage.setItem("emailForOTP", data.email);
         set({ registerHold: data });
       },
       logout: async () => {
@@ -191,9 +181,10 @@ export const useAuthStore = create<authStore>()(
           };
         }
       },
-      verifyOTP: async (pin) => {
+      verifyOTP: async (email, pin) => {
         try {
           const response = await api.post("/auth/verify-otp", {
+            email,
             otp: pin,
           });
 

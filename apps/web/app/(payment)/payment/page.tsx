@@ -15,6 +15,7 @@ import { Icon } from "@workspace/ui/components/icon";
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
+import Image from "next/image";
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -287,10 +288,12 @@ function CheckoutPageContent() {
                     <div className="flex items-stretch gap-4">
                       {/* Product Image */}
                       <div className="h-16 w-16 rounded-lg overflow-hidden bg-white flex-shrink-0">
-                        <img
+                        <Image
                           src={item.image_url}
                           alt={item.name}
                           className="h-full w-full object-cover"
+                          width={64}
+                          height={64}
                         />
                       </div>
 
