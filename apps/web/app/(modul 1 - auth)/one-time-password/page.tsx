@@ -14,6 +14,7 @@ import {
 import { InputOTP, InputOTPSlot } from "@workspace/ui/components/input-otp";
 import { toast } from "@workspace/ui/components/sonner";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -26,17 +27,36 @@ export default function OTPPage() {
   });
   const router = useRouter();
   const { verifyOTP, register, registerHold } = useAuthStore();
+  const [emailForOTP, setEmailForOTP] = useState<string>("");
+
+  useEffect(() => {
+    const email = sessionStorage.getItem("emailForOTP") || "";
+    setEmailForOTP(email);
+  }, []);
+
+  console.log("registerHold:", registerHold);
 
   const handleSubmit = async (data: z.infer<typeof otpSchema>) => {
-    const result = await verifyOTP(data.pin);
+    const result = await verifyOTP(emailForOTP, data.pin);
 
     if (result.ok) {
       toast.success(result.message, {
         toasterId: "global",
       });
 
-      register(registerHold!);
-      router.push("/login");
+      const regist = await register(registerHold!);
+      if (regist.ok) {
+        toast.success("Berhasil Register!", {
+          description: "Silahkan login menggunakan akun anda.",
+          toasterId: "global",
+        });
+
+        router.push("/login");
+      } else {
+        toast.error(regist.message, {
+          toasterId: "global",
+        });
+      }
     } else {
       toast.error(result.message, {
         toasterId: "global",
