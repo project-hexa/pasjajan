@@ -1,8 +1,8 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import React, { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@workspace/ui/components/icon";
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
 
 function ShopeepayCallbackContent() {
     const router = useRouter();
