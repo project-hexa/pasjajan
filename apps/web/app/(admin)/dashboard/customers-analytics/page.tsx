@@ -98,7 +98,7 @@ export default async function CustomersAnalytics({
       </div>
       <div className="flex gap-4">
         <div className="w-full space-y-8 rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
-          <h3 className="text-2xl font-semibold">Tren Penjualan</h3>
+          <h3 className="text-2xl font-semibold">Frekuensi Pembelian</h3>
           <AnalyticChart
             label="Yahut"
             data={data.analytics.purchase_trend.map((item) => ({

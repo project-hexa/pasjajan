@@ -42,6 +42,8 @@ export const getCustomersAnalytics = async ({
     },
   );
 
+  console.log(response);
+
   if (!response.ok) {
     throw new Error("Gagal memuat data analitik pelanggan.");
   }
@@ -109,4 +111,28 @@ export const getCustomerList = async ({
   }
 
   return parsedData.data;
+};
+
+export const exportCustomerReport = async (name: string | undefined) => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/customers/export${name ? `?search=${name}` : ""}`,
+    {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Gagal mengekspor laporan pelanggan.");
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(new Blob([blob]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `report_customers_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode?.removeChild(link);
 };
