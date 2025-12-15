@@ -160,8 +160,8 @@ export const RegisterForm = () => {
               </FieldLabel>
               <Password id="password" field={field} fieldState={fieldState} />
               <FieldDescription>
-                Buat password menggunakan kombinasi huruf besar, dan huruf
-                kecil.
+                Buat password menggunakan kombinasi huruf besar, huruf
+                kecil, dan minimal 1 simbol.
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
