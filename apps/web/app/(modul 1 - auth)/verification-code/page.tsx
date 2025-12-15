@@ -16,6 +16,7 @@ import { Input } from "@workspace/ui/components/input";
 import { toast } from "@workspace/ui/components/sonner";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -28,6 +29,13 @@ export default function VerificationCodePage() {
   });
   const { sendOTP } = useAuthStore();
   const router = useRouter();
+  const [emailForOTP, setEmailForOTP] = useState<string>("")
+
+  useEffect(() => {
+    const email = sessionStorage.getItem("emailForOTP") || "";
+    setEmailForOTP(email);
+    verifCodeForm.setValue("email", email);
+  }, [verifCodeForm]);
 
   const handleSubmit = async (data: z.infer<typeof verificationCodeSchema>) => {
     const result = await sendOTP(data.email);
