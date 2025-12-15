@@ -23,6 +23,11 @@ const navigation = [
     icon: "lucide:bell",
   },
   {
+    name: "Data Cabang",
+    href: "/dashboard/branch-data",
+    icon: "lucide:store",
+  },
+  {
     name: "Log Aktivitas",
     href: "/dashboard/activity-log",
     icon: "lucide:history",

@@ -64,7 +64,7 @@ export const config = {
   matcher: [
     "/verification-code:path*",
     "/one-time-password:path*",
-    "/dashboard:path*",
+    // "/dashboard:path*",
     "/profile:path*",
     "/login:path*",
     "/register:path*",
