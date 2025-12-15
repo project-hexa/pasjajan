@@ -6,11 +6,12 @@ use App\Helpers\ApiResponse;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Customer;
-use App\Events\NotificationSent;
+use App\Mail\NotificationMail;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
@@ -21,27 +22,52 @@ class NotificationController extends Controller
         $from = $request->get('from', Carbon::now()->startOfMonth());
         $to = $request->get('to', Carbon::now());
 
+        // Current period metrics
         $currentMetrics = Notification::selectRaw('COUNT(*) as total, COUNT(DISTINCT to_user_id) as active_users')
             ->whereBetween('created_at', [$from, $to])
             ->first();
 
+        // Previous period calculation
         $diffInDays = Carbon::parse($from)->diffInDays(Carbon::parse($to));
         $previousFrom = Carbon::parse($from)->subDays($diffInDays);
 
-        $previousTotal = Notification::whereBetween('created_at', [$previousFrom, $from])->count();
+        $previousMetrics = Notification::selectRaw('COUNT(*) as total, COUNT(DISTINCT to_user_id) as active_users')
+            ->whereBetween('created_at', [$previousFrom, $from])
+            ->first();
 
-        $trend = $previousTotal > 0
-            ? round((($currentMetrics->total - $previousTotal) / $previousTotal) * 100, 2)
-            : 0;
+        // Calculate trend for total notifications
+        if ($previousMetrics->total > 0) {
+            $notificationsTrend = round((($currentMetrics->total - $previousMetrics->total) / $previousMetrics->total) * 100, 2);
+        } elseif ($currentMetrics->total > 0) {
+            $notificationsTrend = 100;
+        } else {
+            $notificationsTrend = 0;
+        }
+
+        // Calculate trend for active users
+        if ($previousMetrics->active_users > 0) {
+            $activeUsersTrend = round((($currentMetrics->active_users - $previousMetrics->active_users) / $previousMetrics->active_users) * 100, 2);
+        } elseif ($currentMetrics->active_users > 0) {
+            $activeUsersTrend = 100;
+        } else {
+            $activeUsersTrend = 0;
+        }
+
+        // Determine trend direction and description
+        $notificationsTrendText = $notificationsTrend > 0 ? '+' . $notificationsTrend : $notificationsTrend;
+        $activeUsersTrendText = $activeUsersTrend > 0 ? '+' . $activeUsersTrend : $activeUsersTrend;
 
         return ApiResponse::success(
             [
-                'total_notifications' => $currentMetrics->total,
-                'active_users' => $currentMetrics->active_users,
-                'trend' => $trend . '%',
-                'period' => [
-                    'from' => $from,
-                    'to' => $to
+                'total_notifications' => [
+                    'value' => $currentMetrics->total,
+                    'trend' => $notificationsTrendText . '%',
+                    'description' => 'Trending naik bulan ini'
+                ],
+                'active_users' => [
+                    'value' => $currentMetrics->active_users,
+                    'trend' => $activeUsersTrendText . '%',
+                    'description' => 'Pengguna aktif 6 bulan terakhir'
                 ]
             ],
             'Data metrik notifikasi berhasil diambil'
@@ -68,43 +94,59 @@ class NotificationController extends Controller
 
         try {
             // Langsung kirim ke semua customer
-            $targetUsers = $this->getCustomerUsers();
+            $customers = $this->getCustomers();
 
-            if (empty($targetUsers)) {
+            if ($customers->isEmpty()) {
                 return ApiResponse::validationError(['message' => 'Tidak ada customer yang ditemukan']);
             }
 
             $timestamp = now();
-            $notificationsData = array_map(function ($userId) use ($data, $user, $timestamp) {
-                return [
+            $notificationsData = [];
+            $emailsSent = 0;
+            $emailsFailed = 0;
+
+            foreach ($customers as $customer) {
+                // Simpan ke database
+                $notificationsData[] = [
                     'title' => $data['title'],
                     'body' => $data['body'],
                     'from_user_id' => $user->id,
-                    'to_user_id' => $userId,
+                    'to_user_id' => $customer->user_id,
                     'created_at' => $timestamp,
                     'updated_at' => $timestamp,
                 ];
-            }, $targetUsers);
 
-            Notification::insert($notificationsData);
+                // Kirim email
+                try {
+                    Mail::to($customer->user->email)->send(
+                        new NotificationMail(
+                            $data['title'],
+                            $data['body'],
+                            $user->full_name
+                        )
+                    );
+                    $emailsSent++;
+                } catch (\Exception $mailError) {
+                    Log::error('Gagal mengirim email ke: ' . $customer->user->email, [
+                        'error' => $mailError->getMessage()
+                    ]);
+                    $emailsFailed++;
+                }
+            }
 
-            $insertedNotifications = Notification::with('fromUser')
-                ->where('from_user_id', $user->id)
-                ->where('created_at', $timestamp)
-                ->get();
-
-            foreach ($insertedNotifications as $notification) {
-                broadcast(new NotificationSent($notification));
+            // Simpan semua notifikasi ke database
+            if (!empty($notificationsData)) {
+                Notification::insert($notificationsData);
             }
 
             return ApiResponse::success(
                 [
-                    'total_recipients' => count($targetUsers),
-                    'total_sent' => $insertedNotifications->count(),
-                    'total_failed' => 0,
-                    'status' => 'success',
+                    'total_recipients' => $customers->count(),
+                    'total_sent' => $emailsSent,
+                    'total_failed' => $emailsFailed,
+                    'status' => $emailsSent > 0 ? 'success' : 'failed',
                 ],
-                'Notifikasi berhasil dikirim'
+                'Notifikasi berhasil dikirim via email'
             );
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error saat mengirim notifikasi', [
@@ -130,18 +172,13 @@ class NotificationController extends Controller
     }
 
     /**
-     * Get all customer user IDs
+     * Get all customers with user relationship
      */
-    private function getCustomerUsers(): array
+    private function getCustomers()
     {
         return Customer::whereHas('user')
-            ->with('user:id')
-            ->get()
-            ->pluck('user.id')
-            ->filter()
-            ->unique()
-            ->values()
-            ->toArray();
+            ->with('user:id,full_name,email')
+            ->get();
     }
 
     public function index(Request $request): JsonResponse

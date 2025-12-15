@@ -49,7 +49,8 @@ class CustomerController extends Controller
                     'orders.grand_total as total_payment'
                 )
                 ->where('users.role', 'customer')
-                ->whereIn('orders.status', ['COMPLETED'])
+                ->where('orders.status', 'COMPLETED')
+                ->where('orders.payment_status', 'paid')
                 ->whereBetween('orders.created_at', [$from, $to]);
 
             if ($search) {
@@ -175,7 +176,8 @@ class CustomerController extends Controller
                     'orders.grand_total as total_payment'
                 )
                 ->where('users.role', 'customer')
-                ->whereIn('orders.status', ['COMPLETED']);
+                ->where('orders.status', 'COMPLETED')
+                ->where('orders.payment_status', 'paid');
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -227,7 +229,8 @@ class CustomerController extends Controller
             $query = Customer::with('user')
                 ->withCount('orders')
                 ->withSum(['orders as total_price' => function ($q) {
-                    $q->whereIn('status', ['COMPLETED']);
+                    $q->where('status', 'COMPLETED')
+                        ->where('payment_status', 'paid');
                 }], 'grand_total');
 
 
@@ -278,7 +281,8 @@ class CustomerController extends Controller
 
 
             $orders = Order::where('customer_id', $id)
-                ->whereIn('status', ['COMPLETED'])
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid')
                 ->orderBy('created_at', 'desc')
                 ->take(10)
                 ->get()
@@ -293,7 +297,8 @@ class CustomerController extends Controller
                 });
 
             $totalSpent = Order::where('customer_id', $id)
-                ->whereIn('status', ['COMPLETED'])
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid')
                 ->sum('grand_total');
 
             return ApiResponse::success([
@@ -387,11 +392,13 @@ class CustomerController extends Controller
             $customers = Customer::with('user')
                 ->withCount(['orders' => function ($query) use ($from, $to) {
                     $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
+                        ->where('status', 'COMPLETED')
+                        ->where('payment_status', 'paid');
                 }])
                 ->withSum(['orders as total_spent' => function ($query) use ($from, $to) {
                     $query->whereBetween('created_at', [$from, $to])
-                        ->whereIn('status', ['COMPLETED']);
+                        ->where('status', 'COMPLETED')
+                        ->where('payment_status', 'paid');
                 }], 'grand_total')
                 ->get();
 
@@ -425,15 +432,18 @@ class CustomerController extends Controller
     {
         $totalCustomers = Customer::whereHas('orders', function ($query) use ($from, $to) {
             $query->whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED']);
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid');
         })->count();
 
         $totalOrders = Order::whereBetween('created_at', [$from, $to])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->count();
 
         $totalRevenue = Order::whereBetween('created_at', [$from, $to])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->sum('grand_total');
 
         $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
@@ -444,15 +454,18 @@ class CustomerController extends Controller
 
         $previousCustomers = Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
             $query->whereBetween('created_at', [$previousFrom, $previousTo])
-                ->whereIn('status', ['COMPLETED']);
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid');
         })->count();
 
         $previousRevenue = Order::whereBetween('created_at', [$previousFrom, $previousTo])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->sum('grand_total');
 
         $previousOrders = Order::whereBetween('created_at', [$previousFrom, $previousTo])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->count();
 
         $previousAvgOrderValue = $previousOrders > 0 ? $previousRevenue / $previousOrders : 0;
@@ -492,7 +505,8 @@ class CustomerController extends Controller
     {
         $query = Order::with(['customer.user', 'orderItems'])
             ->whereBetween('orders.created_at', [$from, $to])
-            ->whereIn('orders.status', ['COMPLETED'])
+            ->where('orders.status', 'COMPLETED')
+            ->where('orders.payment_status', 'paid')
             ->join('customers', 'orders.customer_id', '=', 'customers.id')
             ->join('users', 'customers.user_id', '=', 'users.id')
             ->where('users.role', 'customer')
@@ -546,7 +560,8 @@ class CustomerController extends Controller
     {
         if ($period === 'daily') {
             $orders = Order::whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED'])
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid')
                 ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count, SUM(grand_total) as revenue')
                 ->groupBy('hour')
                 ->get()
@@ -565,7 +580,8 @@ class CustomerController extends Controller
 
         if ($period === 'monthly') {
             $orders = Order::whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED'])
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid')
                 ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
                 ->groupBy('date')
                 ->get()
@@ -588,7 +604,8 @@ class CustomerController extends Controller
 
         if ($period === 'yearly') {
             $orders = Order::whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED'])
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid')
                 ->selectRaw('MONTH(created_at) as month, COUNT(*) as count, SUM(grand_total) as revenue')
                 ->groupBy('month')
                 ->get()
@@ -606,7 +623,8 @@ class CustomerController extends Controller
         }
 
         $orders = Order::whereBetween('created_at', [$from, $to])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count, SUM(grand_total) as revenue')
             ->groupBy('date')
             ->orderBy('date')
@@ -629,7 +647,8 @@ class CustomerController extends Controller
             ->join('products', 'products.id', '=', 'order_items.product_id')
             ->join('product_categories', 'product_categories.id', '=', 'products.product_category_id')
             ->whereBetween('orders.created_at', [$from, $to])
-            ->whereIn('orders.status', ['COMPLETED'])
+            ->where('orders.status', 'COMPLETED')
+            ->where('orders.payment_status', 'paid')
             ->selectRaw('product_categories.name as category, COUNT(*) as count, SUM(order_items.quantity) as total_quantity')
             ->groupBy('product_categories.id', 'product_categories.name')
             ->get();
@@ -649,7 +668,8 @@ class CustomerController extends Controller
     private function getPurchaseFrequency($from, $to)
     {
         $frequency = Order::whereBetween('created_at', [$from, $to])
-            ->whereIn('status', ['COMPLETED'])
+            ->where('status', 'COMPLETED')
+            ->where('payment_status', 'paid')
             ->selectRaw('MONTH(created_at) as month, YEAR(created_at) as year, COUNT(*) as count')
             ->groupBy('year', 'month')
             ->orderBy('year')
