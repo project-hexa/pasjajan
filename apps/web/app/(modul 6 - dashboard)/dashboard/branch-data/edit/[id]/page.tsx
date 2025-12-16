@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
 import { EditBranchForm } from "../../_components/edit-branch-form";
 
 interface BranchData {
@@ -15,7 +15,7 @@ interface BranchData {
   code: string;
   latitude: number;
   longitude: number;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export default function EditBranchPage() {
@@ -31,14 +31,14 @@ export default function EditBranchPage() {
           `${process.env.NEXT_PUBLIC_API_URL}/branches/${params.id}`,
           {
             headers: {
-              'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
+              "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!response.ok) {
-          throw new Error('Gagal mengambil data cabang');
+          throw new Error("Gagal mengambil data cabang");
         }
 
         const responseData = await response.json();
@@ -50,7 +50,7 @@ export default function EditBranchPage() {
           code: responseData.data.code,
           latitude: responseData.data.latitude,
           longitude: responseData.data.longitude,
-          status: responseData.data.is_active ? 'active' : 'inactive',
+          status: responseData.data.is_active ? "active" : "inactive",
         });
       } catch (error) {
         console.error("Error fetching branch:", error);
@@ -71,10 +71,10 @@ export default function EditBranchPage() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/branches/${params.id}`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             name: formData.name,
@@ -83,21 +83,21 @@ export default function EditBranchPage() {
             phone_number: formData.phone_number,
             latitude: parseFloat(formData.latitude) || 0,
             longitude: parseFloat(formData.longitude) || 0,
-            is_active: formData.status === 'Active',
+            is_active: formData.status === "Active",
           }),
-        }
+        },
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Gagal memperbarui cabang');
+        throw new Error(errorData.message || "Gagal memperbarui cabang");
       }
 
-      toast.success('Data cabang berhasil diperbarui');
-      router.push('/dashboard/branch-data');
+      toast.success("Data cabang berhasil diperbarui");
+      router.push("/dashboard/branch-data");
     } catch (error: any) {
-      console.error('Error updating branch:', error);
-      toast.error(error.message || 'Terjadi kesalahan saat memperbarui cabang');
+      console.error("Error updating branch:", error);
+      toast.error(error.message || "Terjadi kesalahan saat memperbarui cabang");
     } finally {
       setIsLoading(false);
     }
@@ -105,15 +105,15 @@ export default function EditBranchPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   if (!branch) {
     return (
-      <div className="text-center py-8">
+      <div className="py-8 text-center">
         <p>Data cabang tidak ditemukan</p>
       </div>
     );
@@ -121,19 +121,19 @@ export default function EditBranchPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Edit Data Cabang</h2>
       </div>
 
       <div>
         <Card>
           <CardContent className="pt-6">
-            <EditBranchForm 
+            <EditBranchForm
               initialData={{
                 name: branch.name,
                 address: branch.address,
                 contact: branch.contact,
-                status: branch.status === 'active' ? 'Active' : 'Inactive'
+                status: branch.status === "active" ? "Active" : "Inactive",
               }}
               onSubmit={handleSubmit}
               isLoading={isLoading}
