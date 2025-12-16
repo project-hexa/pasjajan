@@ -3,33 +3,37 @@
 Dokumentasi untuk menjalankan dan mengembangkan API aplikasi ini
 
 ## Daftar isi
+
 - [Konfigurasi environment (.env)](#konfigurasi-environment)
 - [Referensi](#referensi)
 
 ## Konfigurasi environment
+
 - Pastikan untuk membuat salinan `.env.example` di direktori API ini
 
 ```bash
 cp .env.example .env
-
 ```
 
-- Lalu agar fitur kirim email dan login google dapat berjalan lancar, harap jalankan command berikut:
+- Lalu agar fitur kirim email, login google, midtrans dapat berjalan lancar, harap jalankan command berikut:
 
 ```bash
 # Command ini akan menghasilkan .env dari .env.encrypted,
 # dengan isi dari file .env.example ditambah beberapa variabel konfigurasi
-# yang berguna untuk keperluan kirim email & login google
+# yang berguna untuk keperluan kirim email ,login google dan
 php artisan env:decrypt
 ```
 
-- Setelah itu masukkan kode berikut sebagai descryption key
+- Setelah itu masukkan kode decryption key (kode ada di grup)
 
-```
-base64:ReiRyVydk9y+xqy9P2MAY2VAQomxz3HL6KR7uKlastk=
-```
+- Agar fitur **Midtrans**, **Kirim Email (OTP)**, dan **Login Google** dapat berjalan dengan baik, pastikan variabel-variabel berikut sudah ditambahkan ke file `.env` Anda (nilai credential bisa didapat dari file `.env.encrypted`):
+    - **Midtrans**: `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_IS_SANITIZED`, `MIDTRANS_IS_3DS`
+    - **Google OAuth**: `GOOGLE_CLIENT_ID`
+    - **Email SMTP**: `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`
+- Variabel lain seperti appkey, db bisa disesuaikan sendiri
 
 - Untuk info lebih lanjut tentang enkripsi-deskripsi file environment, lihat: [Enkripsi file environtment](https://laravel.com/docs/12.x/configuration#encrypting-environment-files)
 
 ## Referensi
-- [Dokumentasi laravel](https://laravel.com/docs/12.x)
+
+- [Dokumentasi Laravel](https://laravel.com/docs/12.x)

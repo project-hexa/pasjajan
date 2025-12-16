@@ -28,6 +28,13 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
       message: "Password harus mengandung huruf kecil",
     });
   }
+
+  if (!strength.contains.includes("symbol")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Password harus mengandung setidaknya 1 simbol",
+    });
+  }
 });
 
 export const registerSchema = z
@@ -59,6 +66,7 @@ export const loginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   rememberMe: z.boolean().optional(),
+  role: z.enum(["Admin", "Staff", "Customer"]).optional(),
 });
 
 export const otpSchema = z.object({

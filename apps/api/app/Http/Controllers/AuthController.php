@@ -387,7 +387,7 @@ class AuthController extends BaseController
 	}
 
 	// Method private custom buatan sendiri khusus untuk AuthController
-	// Method untuk memasukkan data inputan user ke database 
+	// Method untuk memasukkan data inputan user ke database
 	private function createCustomer(array $data): Customer
 	{
 		// Memasukkan (insert) isi parameter array $data ke database
