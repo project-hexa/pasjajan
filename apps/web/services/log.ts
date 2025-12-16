@@ -1,5 +1,5 @@
 import { logSchema } from "@/lib/schema/log.schema";
-import { getToken } from "@/lib/utils";
+import { api, createServerApi } from "@/lib/utils/axios";
 
 interface LogParams {
   email?: string;
@@ -16,26 +16,50 @@ export const getLogs = async ({
   page,
   perPage,
 }: LogParams) => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/logs?${email ? `email=${email}&` : ""}${
-      from ? `from=${from}&` : ""
-    }${to ? `to=${to}&` : ""}${page ? `page=${page}&` : ""}${
-      perPage ? `perPage=${perPage}` : ""
-    }`,
-    {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    },
-  );
+  const params: Record<string, string> = {};
 
-  if (!response.ok) {
+  if (email) params.email = email;
+  if (from) params.from = from;
+  if (to) params.to = to;
+  if (page) params.page = page.toString();
+  if (perPage) params.perPage = perPage.toString();
+
+  const response = await api.get("/logs", {
+    params,
+  });
+
+  const parsedData = logSchema.safeParse(response.data);
+
+  if (!parsedData.success) {
+    console.error("Log Schema Validation Error:", parsedData.error);
     throw new Error("Gagal memuat data log aktivitas.");
   }
 
-  const data = await response.json();
+  return parsedData.data;
+};
 
-  const parsedData = logSchema.safeParse(data);
+// Server-side version for Server Components
+export const getLogsServer = async ({
+  email,
+  from,
+  to,
+  page,
+  perPage,
+}: LogParams) => {
+  const serverApi = await createServerApi();
+  const params: Record<string, string> = {};
+
+  if (email) params.email = email;
+  if (from) params.from = from;
+  if (to) params.to = to;
+  if (page) params.page = page.toString();
+  if (perPage) params.perPage = perPage.toString();
+
+  const response = await serverApi.get("/logs", {
+    params,
+  });
+
+  const parsedData = logSchema.safeParse(response.data);
 
   if (!parsedData.success) {
     console.error("Log Schema Validation Error:", parsedData.error);

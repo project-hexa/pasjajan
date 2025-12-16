@@ -1,7 +1,7 @@
 import AnalyticCard from "@/app/(modul 6 - dashboard)/_components/analytic-card";
 import { AnalyticChart } from "@/app/(modul 6 - dashboard)/_components/analytic-chart";
 import ExportCsvButton from "@/app/(modul 6 - dashboard)/_components/export-csv-button";
-import { getReportSales } from "@/services/report-sales";
+import { getReportSalesServer } from "@/services/report-sales";
 import { Button } from "@workspace/ui/components/button";
 import {
   Table,
@@ -26,7 +26,7 @@ export default async function DashboardPage({
 
   const period = params.period ?? "monthly";
 
-  const { data } = await getReportSales({ period });
+  const { data } = await getReportSalesServer({ period });
 
   return (
     <section className="space-y-4">

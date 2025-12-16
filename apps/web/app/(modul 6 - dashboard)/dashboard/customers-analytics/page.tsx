@@ -3,8 +3,8 @@ import { AnalyticChart } from "@/app/(modul 6 - dashboard)/_components/analytic-
 import AnalyticPieChart from "@/app/(modul 6 - dashboard)/_components/analytic-pie-chart";
 import CustomerAnalyticsClient from "@/app/(modul 6 - dashboard)/_components/customer-analytics-client";
 import {
-  getCustomerList,
-  getCustomersAnalytics,
+  getCustomerListServer,
+  getCustomersAnalyticsServer,
 } from "@/services/customers-analytics";
 
 import { ChartConfig } from "@workspace/ui/components/chart";
@@ -27,13 +27,13 @@ export default async function CustomersAnalytics({
   const currentPeriod = period ?? "monthly";
   const currentPage = parseInt(page ?? "1", 10);
 
-  const { data } = await getCustomersAnalytics({
+  const { data } = await getCustomersAnalyticsServer({
     period: currentPeriod,
     start_date,
     end_date,
   });
 
-  const { data: customerList } = await getCustomerList({
+  const { data: customerList } = await getCustomerListServer({
     page: currentPage,
     perPage: 20,
     period: currentPeriod,

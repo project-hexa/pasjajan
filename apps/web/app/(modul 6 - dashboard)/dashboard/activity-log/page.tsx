@@ -1,5 +1,5 @@
 import ActivityLogClient from "@/app/(modul 6 - dashboard)/_components/activity-log-client";
-import { getLogs } from "@/services/log";
+import { getLogsServer } from "@/services/log";
 
 interface ActivityLogPageProps {
   searchParams: Promise<{
@@ -17,7 +17,7 @@ export default async function ActivityLog({
 
   const currentPage = parseInt(page ?? "1", 10);
 
-  const { data } = await getLogs({
+  const { data } = await getLogsServer({
     email,
     from,
     to,

@@ -2,6 +2,7 @@ import {
   notificationsMetricsSchema,
   notificationsSchema,
 } from "@/lib/schema/notifications.schema";
+import { api } from "@/lib/utils/axios";
 
 interface EmailNotificationBody {
   title: string;
@@ -12,42 +13,27 @@ export const sendEmailNotification = async ({
   title,
   body,
 }: EmailNotificationBody) => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/notifications/send`,
+  const response = await api.post(
+    "/notifications/send",
+    { title, body },
     {
-      method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
       },
-      body: JSON.stringify({ title, body }),
     },
   );
 
   console.log(response);
-
-  if (!response.ok) {
-    throw new Error("Gagal mengirim notifikasi email.");
-  }
 };
 
 export const getNotificationsMetrics = async () => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/notifications/metrics`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-      },
+  const response = await api.get("/notifications/metrics", {
+    headers: {
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
     },
-  );
+  });
 
-  if (!response.ok) {
-    throw new Error("Gagal memuat data metrik notifikasi.");
-  }
-
-  const data = await response.json();
-
-  const parsedData = notificationsMetricsSchema.safeParse(data);
+  const parsedData = notificationsMetricsSchema.safeParse(response.data);
 
   if (!parsedData.success) {
     console.error(
@@ -61,22 +47,14 @@ export const getNotificationsMetrics = async () => {
 };
 
 export const getNotifications = async (page?: number) => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/notifications?page=${page ?? 1}`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-      },
+  const response = await api.get("/notifications", {
+    params: { page: page ?? 1 },
+    headers: {
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
     },
-  );
+  });
 
-  if (!response.ok) {
-    throw new Error("Gagal memuat data notifikasi.");
-  }
-
-  const data = await response.json();
-
-  const parsedData = notificationsSchema.safeParse(data);
+  const parsedData = notificationsSchema.safeParse(response.data);
 
   if (!parsedData.success) {
     console.error("Notifications Schema Validation Error:", parsedData.error);
