@@ -17,8 +17,10 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
+import { useNotificationsStore } from "@/stores/useNotificationsStore";
 
 export default function NotificationsForm() {
+  const triggerRefresh = useNotificationsStore((state) => state.triggerRefresh);
   const form = useForm<z.infer<typeof sendEmailNotificationSchema>>({
     resolver: zodResolver(sendEmailNotificationSchema),
     defaultValues: {
@@ -35,6 +37,7 @@ export default function NotificationsForm() {
       });
       toast.success("Notifikasi berhasil dikirim!");
       form.reset();
+      triggerRefresh();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Gagal mengirim notifikasi",

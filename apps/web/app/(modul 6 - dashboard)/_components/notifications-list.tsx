@@ -4,6 +4,7 @@ import { getNotifications } from "@/services/notifications";
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { useNotificationsStore } from "@/stores/useNotificationsStore";
 import {
   Pagination,
   PaginationContent,
@@ -29,6 +30,7 @@ interface PaginationData {
 }
 
 export default function NotificationsList() {
+  const refreshTrigger = useNotificationsStore((state) => state.refreshTrigger);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +53,7 @@ export default function NotificationsList() {
 
   useEffect(() => {
     fetchNotifications(currentPage);
-  }, [currentPage]);
+  }, [currentPage, refreshTrigger]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
