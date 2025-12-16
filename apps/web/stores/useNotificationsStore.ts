@@ -7,5 +7,6 @@ interface NotificationsStore {
 
 export const useNotificationsStore = create<NotificationsStore>((set) => ({
   refreshTrigger: 0,
-  triggerRefresh: () => set((state) => ({ refreshTrigger: state.refreshTrigger + 1 })),
+  triggerRefresh: () =>
+    set((state) => ({ refreshTrigger: state.refreshTrigger + 1 })),
 }));

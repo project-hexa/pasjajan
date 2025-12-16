@@ -78,7 +78,7 @@ export default async function DashboardPage({
         <AnalyticChart
           label="Total"
           data={data.salesTrend.map((item) => ({
-            name: item.date,
+            name: item.label.toString(),
             value: item.value,
           }))}
         />

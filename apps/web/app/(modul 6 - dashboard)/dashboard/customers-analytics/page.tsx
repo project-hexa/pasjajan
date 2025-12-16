@@ -100,9 +100,9 @@ export default async function CustomersAnalytics({
         <div className="w-full space-y-8 rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
           <h3 className="text-2xl font-semibold">Frekuensi Pembelian</h3>
           <AnalyticChart
-            label="Yahut"
+            label="Frekuensi Pembelian"
             data={data.analytics.purchase_trend.map((item) => ({
-              name: item.date,
+              name: item.label.toString(),
               value: item.value,
             }))}
             className="h-48"
