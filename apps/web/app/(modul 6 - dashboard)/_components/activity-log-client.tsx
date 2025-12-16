@@ -23,7 +23,7 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { LogResponse } from "@/lib/schema/log.schema";
-import { DateRangePicker } from "@/components/dashboard/date-range-picker";
+import { DateRangePicker } from "@/app/(modul 6 - dashboard)/_components/date-range-picker";
 
 interface ActivityLogClientProps {
   initialData: LogResponse["data"];
@@ -195,9 +195,13 @@ export default function ActivityLogClient({
                 initialData.logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="pl-8">{log.timestamp}</TableCell>
-                    <TableCell>{log.user.email}</TableCell>
+                    <TableCell className="max-w-xs break-words whitespace-normal">
+                      {log.user.email}
+                    </TableCell>
                     <TableCell>{log.activity_type}</TableCell>
-                    <TableCell className="pr-8">{log.description}</TableCell>
+                    <TableCell className="max-w-md pr-8 break-words whitespace-normal">
+                      {log.description}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

@@ -12,7 +12,6 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { format } from "date-fns";
-import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import {
   Table,
   TableBody,
@@ -33,6 +32,7 @@ import {
 import { CustomerListResponse } from "@/lib/schema/customers-analytics.schema";
 import { Icon } from "@workspace/ui/components/icon";
 import { exportCustomerReport } from "@/services/customers-analytics";
+import { DateRangePicker } from "@/app/(modul 6 - dashboard)/_components/date-range-picker";
 
 interface CustomerAnalyticsClientProps {
   initialData: CustomerListResponse["data"];

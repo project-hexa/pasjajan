@@ -1,6 +1,6 @@
-import NotificationsForm from "@/components/dashboard/notifications-form";
-import NotificationsMetrics from "@/components/dashboard/notifications-metrics";
-import NotificationsList from "@/components/dashboard/notifications-list";
+import NotificationsForm from "@/app/(modul 6 - dashboard)/_components/notifications-form";
+import NotificationsList from "@/app/(modul 6 - dashboard)/_components/notifications-list";
+import NotificationsMetrics from "@/app/(modul 6 - dashboard)/_components/notifications-metrics";
 
 export default function NotificationsPage() {
   return (

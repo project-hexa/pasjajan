@@ -1,9 +1,9 @@
 "use client";
 
-import AnalyticCard from "@/components/dashboard/analytic-card";
 import { getNotificationsMetrics } from "@/services/notifications";
 import { useEffect, useState } from "react";
 import type { NotificationsMetricsResponse } from "@/lib/schema/notifications.schema";
+import AnalyticCard from "@/app/(modul 6 - dashboard)/_components/analytic-card";
 
 export default function NotificationsMetrics() {
   const [metrics, setMetrics] = useState<NotificationsMetricsResponse | null>(
