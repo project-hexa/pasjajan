@@ -44,7 +44,7 @@ export const LoginForm = () => {
       router.push("/");
     } else {
       toast.error(result.message, {
-        toasterId: "global"
+        toasterId: "global",
       });
     }
   };
@@ -52,7 +52,7 @@ export const LoginForm = () => {
   return (
     <form
       className="w-full space-y-5 px-10"
-      id="register-form"
+      id="login-form"
       onSubmit={loginForm.handleSubmit(handleOnSubmit)}
     >
       <FieldGroup>
@@ -94,7 +94,7 @@ export const LoginForm = () => {
         />
 
         <div className="flex flex-col items-center justify-center gap-2">
-          <Button form="register-form" type="submit">
+          <Button form="login-form" type="submit">
             {loginForm.formState.isSubmitting ? (
               <Icon
                 icon={"lucide:loader-circle"}
