@@ -4,6 +4,7 @@ import {
   resetPasswordSchema,
 } from "@/lib/schema/auth.schema";
 import { api } from "@/lib/utils/axios";
+import { authService } from "@/services/auth.service";
 import { isAxiosError } from "axios";
 import Cookies from "js-cookie";
 import z from "zod";
@@ -50,85 +51,47 @@ export const useAuthStore = create<authStore>()(
       registerHold: null,
       setToken: (token) => set({ token }),
       login: async (data) => {
-        const { email, password, rememberMe, role } = data;
+        const res = await authService.login(data);
+        const { token, user, message } = res;
 
-        try {
-          const response = await api.post("/auth/login", {
-            user_identity: email,
-            password,
-            rememberMe,
-            role,
-          });
-
-          const newToken = response.data.data.token;
-          const userData = response.data.data.user_data;
-
-          if (rememberMe) {
-            Object.assign(cookiesOptions, { expires: 7 });
-          }
-
-          Cookies.set("token", newToken, cookiesOptions);
-          Cookies.set("userRole", userData.role, cookiesOptions);
-
-          set({ user: userData, token: newToken });
-
-          return {
-            ok: true,
-            message: response.data.message || "Berhasil Masuk!",
-            data: {
-              token: newToken,
-              user: userData,
-            },
-          };
-        } catch (error) {
-          let message = "Gagal Login!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
+
+        if (data.rememberMe) {
+          Object.assign(cookiesOptions, { expires: 7 });
         }
+
+        Cookies.set("token", token, cookiesOptions);
+        Cookies.set("userRole", user.role, cookiesOptions);
+
+        set({ user, token });
+
+        return {
+          ok: true,
+          message,
+          data: {
+            token,
+            user,
+          },
+        };
       },
       register: async (data) => {
-        const {
-          address,
-          email,
-          full_name,
-          password,
-          password_confirmation,
-          phone_number,
-        } = data;
+        const res = await authService.register(data);
+        const { message } = res;
 
-        try {
-          const response = await api.post("/auth/register", {
-            address,
-            email,
-            full_name,
-            password,
-            password_confirmation,
-            phone_number,
-          });
-
-          return {
-            ok: true,
-            message: response.data.message || "Berhasil Mendaftar!"
-          };
-        } catch (error) {
-          let message = "Gagal Mendaftar!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        return {
+          ok: true,
+          message,
+        };
       },
       setRegisterHold: (data) => {
         Cookies.set("verificationStep", "email-sent", cookiesOptions);
@@ -136,76 +99,49 @@ export const useAuthStore = create<authStore>()(
         set({ registerHold: data });
       },
       logout: async () => {
-        try {
-          Cookies.remove("token", { path: "/" });
-          Cookies.remove("userRole", { path: "/" });
+        Cookies.remove("token", { path: "/" });
+        Cookies.remove("userRole", { path: "/" });
 
-          set({ user: null, token: null });
+        set({ user: null, token: null });
 
-          return { ok: true, message: "Logout Berhasil!" };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
-          return {
-            ok: false,
-            message,
-          };
-        }
+        return { ok: true, message: "Logout Berhasil!" };
       },
       sendOTP: async (email) => {
-        try {
-          const response = await api.post("/auth/send-otp", {
-            email,
-          });
+        const res = await authService.sendOTP({ email });
+        const { message } = res;
 
-          Cookies.set("verificationStep", "otp-sent", cookiesOptions);
-
-          return {
-            ok: true,
-            message: response.data.message || "Kode OTP Berhasil Dikirim!",
-          };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        Cookies.set("verificationStep", "otp-sent", cookiesOptions);
+
+        return {
+          ok: true,
+          message,
+        };
       },
       verifyOTP: async (email, pin) => {
-        try {
-          const response = await api.post("/auth/verify-otp", {
-            email,
-            otp: pin,
-          });
+        const res = await authService.verifyOTP({
+          email,
+          pin,
+        });
+        const { message } = res;
 
-          Cookies.remove("verificationStep", cookiesOptions);
-
-          return {
-            ok: true,
-            message: response.data.message || "Verifikasi OTP Berhasil!",
-          };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        Cookies.remove("verificationStep", cookiesOptions);
+
+        return {
+          ok: true,
+          message,
+        };
       },
       forgotPassword: async () => {
         // TODO: Implementation of forgotPassword
