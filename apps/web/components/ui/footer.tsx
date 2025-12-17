@@ -41,7 +41,7 @@ const paymentMethods = [
 
 export const Footer = () => {
   return (
-    <footer className="bg-primary mt-5">
+    <footer className="bg-primary">
       <div className="grid w-full bg-background pb-5 rounded-br-full grid-cols-[repeat(1,auto)] gap-4 max-md:pb-10 lg:grid-cols-[repeat(4,auto)] lg:gap-10 items-start">
         <div className="bg-primary text-primary-foreground relative flex w-full md:w-max md:h-full items-center justify-between gap-4 md:gap-10 rounded-br-full px-4 md:px-10 py-5 md:shadow-[70px_-10px_0_-10px_var(--secondary)] shadow-[20px_0_0_-10px_var(--secondary)]">
           <div className="flex flex-col items-center justify-center gap-2">
