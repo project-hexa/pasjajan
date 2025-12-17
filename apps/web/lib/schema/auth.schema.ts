@@ -41,8 +41,8 @@ export const registerSchema = z
   .object({
     full_name: z
       .string()
-      .min(2, "Nama lengkap minimal harus 3 karakter")
-      .max(20, "Nama lengkap maksimal 30 karakter"),
+      .min(3, "Nama lengkap minimal harus 3 karakter")
+      .max(30, "Nama lengkap maksimal 30 karakter"),
     email: emailSchema,
     phone_number: phoneSchema,
     address: z
@@ -70,6 +70,7 @@ export const loginSchema = z.object({
 });
 
 export const otpSchema = z.object({
+  email: emailSchema,
   pin: z.string().min(6, {
     message: "OTP anda harus terdiri dari 6 karakter.",
   }),
