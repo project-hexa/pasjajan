@@ -3,6 +3,17 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@workspace/ui/components/alert-dialog";
+import { toast } from "@workspace/ui/components/sonner";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Image from "next/image";
@@ -27,6 +38,9 @@ interface Promo {
 export default function PromoPage() {
     const [promos, setPromos] = useState<Promo[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchPromos = async () => {
         try {
@@ -34,6 +48,7 @@ export default function PromoPage() {
             setPromos(response.data.data);
         } catch (error) {
             console.error("Failed to fetch promos", error);
+            toast.error("Gagal memuat daftar promo", { toasterId: "global" });
         } finally {
             setLoading(false);
         }
@@ -43,17 +58,28 @@ export default function PromoPage() {
         fetchPromos();
     }, []);
 
-    const deletePromo = async (promoId: number) => {
-        if (!confirm("Are you sure you want to delete this promo?")) return;
+    const handleDeleteClick = (promo: Promo) => {
+        setPromoToDelete(promo);
+        setDeleteDialogOpen(true);
+    };
 
+    const handleDeleteConfirm = async () => {
+        if (!promoToDelete) return;
+
+        setIsDeleting(true);
         try {
-            await api.delete(`/admin/promos/${promoId}`);
+            await api.delete(`/admin/promos/${promoToDelete.id}`);
+            toast.success("Promo berhasil dihapus!", { toasterId: "global" });
             fetchPromos();
         } catch (error) {
             console.error("Failed to delete promo", error);
-            alert("Failed to delete promo");
+            toast.error("Gagal menghapus promo", { toasterId: "global" });
+        } finally {
+            setIsDeleting(false);
+            setDeleteDialogOpen(false);
+            setPromoToDelete(null);
         }
-    }
+    };
 
     const formatCurrency = (value: string | number) => {
         return new Intl.NumberFormat("id-ID", {
@@ -159,7 +185,12 @@ export default function PromoPage() {
                                                             <Icon icon={"lucide:pencil"} className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
-                                                    <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => deletePromo(promo.id)}>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                        onClick={() => handleDeleteClick(promo)}
+                                                    >
                                                         <Icon icon={"lucide:trash"} className="h-4 w-4" />
                                                     </Button>
                                                 </div>
@@ -172,6 +203,37 @@ export default function PromoPage() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Promo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Apakah Anda yakin ingin menghapus promo <strong>&quot;{promoToDelete?.name}&quot;</strong>?
+                            Tindakan ini tidak dapat dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteConfirm}
+                            disabled={isDeleting}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                            {isDeleting ? (
+                                <>
+                                    <Icon icon={"lucide:loader"} className="mr-2 h-4 w-4 animate-spin" />
+                                    Menghapus...
+                                </>
+                            ) : (
+                                "Hapus"
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
+
