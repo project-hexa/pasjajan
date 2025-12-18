@@ -37,11 +37,15 @@ class PromoResource extends JsonResource
                 });
             }),
             'products' => $this->whenLoaded('products', function () {
-                return $this->products->map(function ($product) {
+                $discountPercentage = (float) $this->discount_percentage;
+                return $this->products->map(function ($product) use ($discountPercentage) {
+                    $price = (float) ($product->price ?? 0);
+                    $discountedPrice = $price * (1 - $discountPercentage / 100);
                     return [
                         'id' => $product->id,
                         'name' => $product->name ?? null,
                         'price' => $product->price ?? null,
+                        'discounted_price' => round($discountedPrice, 2),
                         'stock' => $product->stock ?? null,
                         'image_url' => $product->image_url ?? null,
                     ];
