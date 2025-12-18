@@ -126,14 +126,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
 		// --- List Kurir & Cek Ongkir ---
-        Route::get('/delivery/methods', 'getDeliveryMethods');
-        Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
-        // --- Get Status Pengiriman ---
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // --- Kirim Ulasan ---
-        Route::post('/delivery/{order_id}/review', 'submitReview');
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
@@ -167,7 +167,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 		// Notifications
 		Route::get('/notifications/metrics', [NotificationController::class, 'metrics'])->name('notifications.metrics');
-		Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
+		Route::post('/notifications/send', [NotificationController::class, 'send'])->middleware('cors')->name('notifications.send');
 		Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 		Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 	});
