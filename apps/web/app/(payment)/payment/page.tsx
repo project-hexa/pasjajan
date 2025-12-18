@@ -60,6 +60,7 @@ function CheckoutPageContent() {
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [orderData, setOrderData] = React.useState<any>(null);
+  const [branchName, setBranchName] = React.useState<string>("");
   
   // Get logged-in user from auth store
   const { user } = useAuthStore();
@@ -67,6 +68,20 @@ function CheckoutPageContent() {
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
+        // Fetch branch name from API (always fetch, regardless of order)
+        const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
+        const branchesResult = await branchesResponse.json();
+        
+        console.log("Branch API Response:", branchesResult);
+        
+        if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
+          // Get first active branch or specific branch
+          console.log("Setting branch name:", branchesResult.data.branches[0].name);
+          setBranchName(branchesResult.data.branches[0].name);
+        } else {
+          console.log("No branches found or API error");
+        }
+
         if (!orderCode) {
           // Allow page to display without order code
           setLoading(false);
@@ -277,10 +292,15 @@ function CheckoutPageContent() {
             <div className="space-y-3">
               {/* Header Card */}
               <Card className="bg-white shadow-sm py-2">
-                <CardContent className="px-4 py-2">
+                <CardContent className="px-4 py-2 flex items-center justify-between">
                   <h2 className="text-emerald-700 text-sm font-semibold">
                     Pesanan
                   </h2>
+                  {branchName && (
+                    <p className="text-emerald-700 text-sm font-semibold">
+                      Cabang {branchName}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 

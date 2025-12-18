@@ -29,6 +29,10 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 */
 
+// ================= PUBLIC ROUTES (NO AUTH) =================
+// Public Branches/Stores endpoint (untuk customer pilih cabang)
+Route::get('/branches/public', [BranchController::class, 'publicIndex']);
+
 // Payment Methods
 Route::get('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
 
@@ -126,14 +130,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
 		// --- List Kurir & Cek Ongkir ---
-        Route::get('/delivery/methods', 'getDeliveryMethods');
-        Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
-        // --- Get Status Pengiriman ---
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // --- Kirim Ulasan ---
-        Route::post('/delivery/{order_id}/review', 'submitReview');
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 

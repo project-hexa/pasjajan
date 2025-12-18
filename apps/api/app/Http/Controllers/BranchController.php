@@ -278,4 +278,38 @@ class BranchController extends Controller
             );
         }
     }
+
+    /**
+     * Get active branches for public (customers)
+     * No authentication required
+     */
+    public function publicIndex()
+    {
+        try {
+            $branches = Store::where('is_active', true)
+                ->orderBy('name')
+                ->get();
+
+            return ApiResponse::success(
+                [
+                    'branches' => $branches->map(function ($store) {
+                        return [
+                            'id' => $store->id,
+                            'code' => $store->code,
+                            'name' => $store->name,
+                            'address' => $store->address,
+                            'phone_number' => $store->phone_number,
+                        ];
+                    }),
+                    'total' => $branches->count(),
+                ],
+                'Data cabang berhasil diambil'
+            );
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Gagal mengambil data cabang',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
 }
