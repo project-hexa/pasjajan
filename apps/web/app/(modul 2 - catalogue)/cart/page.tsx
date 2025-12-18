@@ -1,10 +1,10 @@
 "use client";
 
+import React, { Suspense } from "react";
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import * as React from "react";
 
 interface CartItem {
   id: string;
@@ -92,7 +92,9 @@ export default function CartPage() {
 
   return (
     <>
-      <Navbar />
+      <Suspense fallback={<div />}>
+        <Navbar />
+      </Suspense>
       <div className="flex-1">
         <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 text-[#111827]">
@@ -121,36 +123,7 @@ export default function CartPage() {
 
           <div className="mt-10 grid gap-8 lg:grid-cols-12">
             <div className="space-y-6 lg:col-span-8">
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A6B3C]/10 text-[#0A6B3C]">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-6 w-6"
-                      >
-                        <path d="M12 2a7 7 0 0 0-7 7c0 5.25 6.19 11.22 6.46 11.48a.75.75 0 0 0 1.08 0C12.81 20.22 19 14.25 19 9a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5a2.5 2.5 0 0 1 0 5Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <h2 className="text-base font-semibold">
-                        Alamat Pengiriman
-                      </h2>
-                      <p className="text-sm text-[#6B7280]">
-                        Belum ada alamat yang dipilih
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-max rounded-full border border-[#E5E7EB] px-5 py-2 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Tambah
-                  </button>
-                </div>
-              </section>
+              
 
               <section className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -253,39 +226,7 @@ export default function CartPage() {
             </div>
 
             <aside className="space-y-6 lg:col-span-4">
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#111827]">
-                    Metode Pembayaran
-                  </h2>
-                  <button
-                    type="button"
-                    className="rounded-full border border-[#E5E7EB] px-4 py-1.5 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Pilih
-                  </button>
-                </div>
-                <p className="mt-3 text-sm text-[#6B7280]">
-                  Belum ada metode pembayaran yang dipilih
-                </p>
-              </section>
-
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#111827]">
-                    Voucher dan Promo
-                  </h2>
-                  <button
-                    type="button"
-                    className="rounded-full border border-[#E5E7EB] px-4 py-1.5 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Pilih
-                  </button>
-                </div>
-                <p className="mt-3 text-sm text-[#6B7280]">
-                  Belum ada voucher yang digunakan
-                </p>
-              </section>
+              
 
               <section className="space-y-4 rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#111827]">

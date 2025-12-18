@@ -1,3 +1,4 @@
+import React, { Suspense } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import StoreProductList, { StoreProduct } from "../_components/store-product-list";
@@ -6,8 +7,8 @@ import { Footer } from "@/components/ui/footer";
 
 const defaultHeroSubtitle = "Belanja semua kebutuhan kelontong favoritmu, langsung dari toko terpercaya di kota kamu.";
 
-const defaultPopularProducts: StoreProduct[] = [
-  {
+const defaultPopularProducts: StoreProduct[] = (() => {
+  const base: StoreProduct = {
     id: "minyak-goreng",
     name: "Minyak Goreng",
     description: "Botol 2L",
@@ -15,73 +16,14 @@ const defaultPopularProducts: StoreProduct[] = [
     image: "/images/Screenshot 2025-10-25 173437.png",
     details:
       "Minyak goreng kemasan 2 liter dengan rasa netral yang cocok untuk menumis maupun menggoreng. Kemasan rapat memudahkan penyimpanan di dapur rumah atau toko.",
-  },
-  {
-    id: "fruit-tea",
-    name: "Fruit Tea",
-    description: "Freeze 350 ML",
-    price: 4500,
-    image: "/images/Screenshot 2025-10-25 173713.png",
-    details:
-      "Minuman rasa buah 350 ml dengan sensasi dingin menyegarkan. Praktis dikonsumsi kapan saja dan jadi favorit pelanggan muda.",
-  },
-  {
-    id: "happy-tos",
-    name: "Happy Tos",
-    description: "Keripik 140 g",
-    price: 14500,
-    image: "/images/Screenshot 2025-10-25 174230.png",
-    details:
-      "Keripik jagung renyah 140 gram dengan bumbu gurih manis. Cocok untuk stok camilan keluarga atau paket hampers sederhana.",
-  },
-  {
-    id: "mie-sedap",
-    name: "Mie Sedap",
-    description: "Goreng Selection",
-    price: 3500,
-    image: "/images/Screenshot 2025-10-25 174329.png",
-    details:
-      "Mi instan goreng dengan bumbu selection kaya rasa dan tekstur kenyal. Topping bawang renyah membuat setiap sajian terasa spesial.",
-  },
-  {
-    id: "mamy-poko",
-    name: "MamyPoko",
-    description: "X-tra Kering",
-    price: 51700,
-    image: "/images/Screenshot 2025-10-25 175114.png",
-    details:
-      "Popok bayi tipe celana dengan daya serap tinggi sehingga kulit tetap kering hingga 12 jam. Desain elastis nyaman untuk aktivitas si kecil.",
-  },
-  {
-    id: "ekonomi",
-    name: "Ekonomi",
-    description: "Sabun Cuci Piring",
-    price: 6800,
-    image: "/images/Screenshot 2025-10-25 175248.png",
-    details:
-      "Sabun cuci piring cair dengan formula konsentrat yang efektif mengangkat lemak. Busanya melimpah namun mudah dibilas tanpa residu.",
-  },
-  {
-    id: "minyak-telon",
-    name: "Minyak Telon",
-    description: "Botol 60 ml",
-    price: 24500,
-    image: "/images/Screenshot 2025-10-25 175308.png",
-    details:
-      "Minyak telon 60 ml untuk menjaga kehangatan bayi serta memberi aroma lembut menenangkan. Diformulasikan dari bahan alami pilihan.",
-  },
-  {
-    id: "yupie",
-    name: "Yupie Permen",
-    description: "Gummy 9 Rasa",
-    price: 14500,
-    image: "/images/Screenshot 2025-10-25 175227.png",
-    details:
-      "Permen gummy dengan sembilan rasa buah berbeda dalam satu kemasan. Teksturnya kenyal dan disukai anak-anak maupun dewasa.",
-  },
-];
+  };
+
+  // create multiple identical products to simplify backend mapping during development
+  return Array.from({ length: 8 }).map((_, idx) => ({ ...base, id: `${base.id}-${idx + 1}` }));
+})();
 
 const storeSeeds = [
+  { slug: "pas-jajan-setiabudhi", name: "Pas Jajan - Setiabudhi" },
   { slug: "sushi-day-bandung", name: "Sushi Day - Bandung" },
   { slug: "burger-baik-cimahi", name: "Burger Baik - Cimahi" },
   { slug: "warkop-bandung", name: "Warkop - Bandung" },
@@ -135,7 +77,9 @@ export default function StorePage(props: any) {
 
   return (
     <main className="min-h-screen flex flex-col bg-[#F9FAFB] pb-0 pt-0">
-      <Navbar />
+      <Suspense fallback={<div />}>
+        <Navbar />
+      </Suspense>
       <div className="mx-auto flex-1 w-full max-w-[90rem] px-4 pb-10 sm:px-6 lg:px-8 xl:px-10">
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out ${
