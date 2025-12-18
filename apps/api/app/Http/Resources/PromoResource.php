@@ -28,7 +28,14 @@ class PromoResource extends JsonResource
             'applies_to_product' => $this->applies_to_product,
 
             // Relasi (kalau mau ditampilkan)
-
+            'stores' => $this->whenLoaded('stores', function () {
+                return $this->stores->map(function ($store) {
+                    return [
+                        'id' => $store->id,
+                        'name' => $store->name ?? null,
+                    ];
+                });
+            }),
             'products' => $this->whenLoaded('products', function () {
                 return $this->products->map(function ($product) {
                     return [
@@ -40,6 +47,7 @@ class PromoResource extends JsonResource
                     ];
                 });
             }),
+
         ];
     }
 }
