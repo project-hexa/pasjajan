@@ -126,14 +126,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
 		// --- List Kurir & Cek Ongkir ---
-        Route::get('/delivery/methods', 'getDeliveryMethods');
-        Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
-        // --- Get Status Pengiriman ---
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // --- Kirim Ulasan ---
-        Route::post('/delivery/{order_id}/review', 'submitReview');
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
@@ -174,18 +174,21 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
-// Route::middleware('auth:sanctum')->group(function () {
 Route::controller(PromoController::class)->group(function () {
 	Route::get('/promos', 'active');
 	Route::get('/promos/{id}', 'show');
-
-	// Endpoint Admin
-	Route::get('/admin/promos', 'index');
-	Route::post('/admin/promos', 'store');
-	Route::put('/admin/promos/{id}', 'update');
-	Route::delete('/admin/promos/{id}', 'destroy');
 });
-// });
+
+Route::middleware('auth:sanctum')->group(function () {
+	Route::controller(PromoController::class)->group(function () {
+
+		// Endpoint Admin
+		Route::get('/admin/promos', 'index');
+		Route::post('/admin/promos', 'store');
+		Route::put('/admin/promos/{id}', 'update');
+		Route::delete('/admin/promos/{id}', 'destroy');
+	});
+});
 
 
 

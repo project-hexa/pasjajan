@@ -7,7 +7,8 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/utils/axios";
 
 interface Promo {
     id: number;
@@ -29,16 +30,8 @@ export default function PromoPage() {
 
     const fetchPromos = async () => {
         try {
-            const response = await fetch("http://localhost:8000/api/admin/promos", {
-                headers: {
-                    "Accept": "application/json",
-
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setPromos(data.data);
-            }
+            const response = await api.get("/admin/promos");
+            setPromos(response.data.data);
         } catch (error) {
             console.error("Failed to fetch promos", error);
         } finally {
@@ -46,24 +39,19 @@ export default function PromoPage() {
         }
     };
 
-    const deletePromo = async (id: number) => {
+    useEffect(() => {
+        fetchPromos();
+    }, []);
+
+    const deletePromo = async (promoId: number) => {
         if (!confirm("Are you sure you want to delete this promo?")) return;
 
         try {
-            const response = await fetch(`http://localhost:8000/api/admin/promos/${id}`, {
-                method: "DELETE",
-                headers: {
-                    "Accept": "application/json",
-                }
-            });
-
-            if (response.ok) {
-                fetchPromos();
-            } else {
-                alert("Failed to delete promo");
-            }
+            await api.delete(`/admin/promos/${promoId}`);
+            fetchPromos();
         } catch (error) {
             console.error("Failed to delete promo", error);
+            alert("Failed to delete promo");
         }
     }
 
