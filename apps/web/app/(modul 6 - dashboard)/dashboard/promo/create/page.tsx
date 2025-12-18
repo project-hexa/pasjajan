@@ -3,6 +3,7 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -46,12 +47,13 @@ export default function CreatePromoPage() {
                 },
             });
 
+            toast.success("Promo berhasil dibuat!", { toasterId: "global" });
             router.push("/dashboard/promo");
             router.refresh();
         } catch (error: any) {
             console.error(error);
-            const message = error.response?.data?.message || "An error occurred";
-            alert(`Failed to create promo: ${message}`);
+            const message = error.response?.data?.message || "Terjadi kesalahan";
+            toast.error(`Gagal membuat promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }

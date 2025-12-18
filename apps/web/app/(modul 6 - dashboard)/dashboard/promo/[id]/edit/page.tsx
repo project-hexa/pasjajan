@@ -3,6 +3,7 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -23,7 +24,7 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
                 setInitialData(response.data.data);
             } catch (error: any) {
                 console.error(error);
-                alert("Failed to fetch promo details");
+                toast.error("Gagal memuat detail promo", { toasterId: "global" });
                 router.push("/dashboard/promo");
             } finally {
                 setFetching(false);
@@ -68,12 +69,13 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
                 },
             });
 
+            toast.success("Promo berhasil diperbarui!", { toasterId: "global" });
             router.push("/dashboard/promo");
             router.refresh();
         } catch (error: any) {
             console.error(error);
-            const message = error.response?.data?.message || "An error occurred";
-            alert(`Failed to update promo: ${message}`);
+            const message = error.response?.data?.message || "Terjadi kesalahan";
+            toast.error(`Gagal memperbarui promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }
