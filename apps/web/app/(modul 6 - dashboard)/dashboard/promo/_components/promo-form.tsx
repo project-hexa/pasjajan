@@ -10,6 +10,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { Label } from "@workspace/ui/components/label";
 import Image from "next/image";
 import { Icon } from "@workspace/ui/components/icon";
+import { api } from "@/lib/utils/axios";
 
 const promoSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -69,9 +70,20 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
     const selectedProductIds = watch("product_ids") || [];
 
     useEffect(() => {
-        // Fetch stores and products for selection
-        fetch("http://localhost:8000/api/admin/promos/list/stores").then(res => res.json()).then(setStores).catch(console.error);
-        fetch("http://localhost:8000/api/admin/promos/list/products").then(res => res.json()).then(setProducts).catch(console.error);
+        // Fetch stores and products for selection using axios
+        const fetchData = async () => {
+            try {
+                const [storesRes, productsRes] = await Promise.all([
+                    api.get("/stores"),
+                    api.get("/products"),
+                ]);
+                setStores(storesRes.data.data.data || []);
+                setProducts(productsRes.data.data.data || []);
+            } catch (error) {
+                console.error("Failed to fetch stores/products", error);
+            }
+        };
+        fetchData();
 
         if (initialData) {
             const formData = {
