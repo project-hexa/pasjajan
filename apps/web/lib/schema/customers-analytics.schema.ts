@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const customerAnalyticSchema = z.object({
   success: z.boolean(),
-  status: z.number(),
   message: z.string(),
   data: z.object({
     period: z.object({ filter: z.string(), from: z.string(), to: z.string() }),
@@ -55,7 +54,6 @@ export type CustomerAnalyticResponse = z.infer<typeof customerAnalyticSchema>;
 
 export const customerListSchema = z.object({
   success: z.boolean(),
-  status: z.number(),
   message: z.string(),
   data: z.object({
     customers: z.array(

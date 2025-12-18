@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             AddressSeeder::class,
             OrderSeeder::class,
-            ActivityLogSeeder::class,
+
+
         ]);
 
 

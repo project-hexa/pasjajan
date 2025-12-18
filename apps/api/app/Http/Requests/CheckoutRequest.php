@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class CheckoutRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // Dalam production, cek auth di sini
+        return Auth::check(); // Hanya user terautentikasi
     }
 
     /**
@@ -20,21 +21,19 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Customer info (dari modul lain)
-            'customer_id' => 'required|integer',
-            'customer_email' => 'required|email|max:255',
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'nullable|string|max:20',
+            // Customer ID tidak perlu dikirim - diambil dari auth user
+            'customer_id' => 'nullable|integer',
 
             // References (optional, dari modul lain)
-            'address_id' => 'nullable|integer',
+            'address_id' => 'nullable|integer|exists:addresses,id', // Jika ada, shipping diambil dari sini
             'store_id' => 'nullable|integer',
             'voucher_id' => 'nullable|integer',
 
-            // Shipping address (snapshot dari modul alamat)
-            'shipping_address' => 'required|string',
-            'shipping_recipient_name' => 'required|string|max:255',
-            'shipping_recipient_phone' => 'required|string|max:20',
+            // Shipping address - required jika tidak ada address_id
+            // Jika address_id dikirim, data shipping diambil dari Address model
+            'shipping_address' => 'nullable|required_without:address_id|string',
+            'shipping_recipient_name' => 'nullable|required_without:address_id|string|max:255',
+            'shipping_recipient_phone' => 'nullable|required_without:address_id|string|max:20',
 
             // Items (dari modul katalog)
             'items' => 'required|array|min:1',
