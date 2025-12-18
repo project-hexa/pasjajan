@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { VoucherItem } from "@/app/account/voucher/VoucherItem";
+import { VoucherItem } from "@/app/(modul 5 - promo)/account/voucher/VoucherItem";
 import { usePathname } from "next/navigation";
 
 const leftVoucherList = [
@@ -60,11 +60,10 @@ export default function VoucherPage() {
         {/* Voucher Tab */}
         <Link
           href="/account/voucher"
-          className={`rounded-lg border px-6 py-2 text-sm font-semibold transition-all ${
-            path.includes("/account/voucher")
+          className={`rounded-lg border px-6 py-2 text-sm font-semibold transition-all ${path.includes("/account/voucher")
               ? "bg-white text-green-700"
               : "bg-green-700 text-white hover:bg-green-800"
-          }`}
+            }`}
         >
           Voucher
         </Link>
@@ -72,11 +71,10 @@ export default function VoucherPage() {
         {/* Points Tab */}
         <Link
           href="/account/points"
-          className={`rounded-lg border px-6 py-2 text-sm font-semibold transition-all ${
-            path.includes("/account/points")
+          className={`rounded-lg border px-6 py-2 text-sm font-semibold transition-all ${path.includes("/account/points")
               ? "bg-white text-green-700"
               : "bg-green-700 text-white hover:bg-green-800"
-          }`}
+            }`}
         >
           Tukar Poin
         </Link>
