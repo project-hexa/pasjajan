@@ -43,7 +43,8 @@ class reportSalesController extends Controller
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
                 ->whereBetween('orders.created_at', [$from, $to])
-                ->whereIn('orders.status', ['COMPLETED'])
+                ->where('orders.status', 'COMPLETED')
+                ->where('orders.payment_status', 'paid')
                 ->select(
                     'products.name as product_name',
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
@@ -126,7 +127,8 @@ class reportSalesController extends Controller
 
             $base = Order::query()
                 ->whereBetween('created_at', [$from, $to])
-                ->whereIn('status', ['COMPLETED']);
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid');
 
             if ($request->filled('store_id')) {
                 $base->where('store_id', $request->integer('store_id'));
@@ -151,7 +153,8 @@ class reportSalesController extends Controller
 
             $previousBase = Order::query()
                 ->whereBetween('created_at', [$previousFrom, $previousTo])
-                ->whereIn('status', ['COMPLETED']);
+                ->where('status', 'COMPLETED')
+                ->where('payment_status', 'paid');
 
             if ($request->filled('store_id')) {
                 $previousBase->where('store_id', $request->integer('store_id'));
@@ -167,12 +170,14 @@ class reportSalesController extends Controller
 
             $previousCustomers = \App\Models\Customer::whereHas('orders', function ($query) use ($previousFrom, $previousTo) {
                 $query->whereBetween('created_at', [$previousFrom, $previousTo])
-                    ->whereIn('status', ['COMPLETED']);
+                    ->where('status', 'COMPLETED')
+                    ->where('payment_status', 'paid');
             })->count();
 
             $currentCustomers = \App\Models\Customer::whereHas('orders', function ($query) use ($from, $to) {
                 $query->whereBetween('created_at', [$from, $to])
-                    ->whereIn('status', ['COMPLETED']);
+                    ->where('status', 'COMPLETED')
+                    ->where('payment_status', 'paid');
             })->count();
 
             $customerTrend = $previousCustomers > 0

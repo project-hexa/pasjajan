@@ -3,19 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
-use App\Models\Notification;
-use App\Models\User;
+use App\Mail\NotificationMail;
 use App\Models\Customer;
-use App\Events\NotificationSent;
-use Illuminate\Http\Request;
+use App\Models\Notification;
+use App\Traits\LogsActivity;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
 
 class NotificationController extends Controller
 {
+    use LogsActivity;
+
     public function metrics(Request $request): JsonResponse
     {
         $from = $request->get('from', Carbon::now()->startOfMonth());
@@ -28,20 +31,27 @@ class NotificationController extends Controller
         $diffInDays = Carbon::parse($from)->diffInDays(Carbon::parse($to));
         $previousFrom = Carbon::parse($from)->subDays($diffInDays);
 
-        $previousTotal = Notification::whereBetween('created_at', [$previousFrom, $from])->count();
+        $previousMetrics = Notification::selectRaw('COUNT(*) as total, COUNT(DISTINCT to_user_id) as active_users')
+            ->whereBetween('created_at', [$previousFrom, $from])
+            ->first();
 
-        $trend = $previousTotal > 0
-            ? round((($currentMetrics->total - $previousTotal) / $previousTotal) * 100, 2)
-            : 0;
+        $notificationsTrend = $this->calculateTrend($previousMetrics->total, $currentMetrics->total);
+        $activeUsersTrend = $this->calculateTrend($previousMetrics->active_users, $currentMetrics->active_users);
+
+        $notificationsTrendText = $notificationsTrend > 0 ? '+' . $notificationsTrend : $notificationsTrend;
+        $activeUsersTrendText = $activeUsersTrend > 0 ? '+' . $activeUsersTrend : $activeUsersTrend;
 
         return ApiResponse::success(
             [
-                'total_notifications' => $currentMetrics->total,
-                'active_users' => $currentMetrics->active_users,
-                'trend' => $trend . '%',
-                'period' => [
-                    'from' => $from,
-                    'to' => $to
+                'total_notifications' => [
+                    'value' => $currentMetrics->total,
+                    'trend' => $notificationsTrendText . '%',
+                    'description' => 'Trending naik bulan ini'
+                ],
+                'active_users' => [
+                    'value' => $currentMetrics->active_users,
+                    'trend' => $activeUsersTrendText . '%',
+                    'description' => 'Pengguna aktif 6 bulan terakhir'
                 ]
             ],
             'Data metrik notifikasi berhasil diambil'
@@ -53,9 +63,6 @@ class NotificationController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:1000',
-            'target_type' => 'required|in:all,specific,customer',
-            'target_user_ids' => 'required_if:target_type,specific|array',
-            'target_user_ids.*' => 'exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -70,49 +77,75 @@ class NotificationController extends Controller
         }
 
         try {
-            $targetUsers = $this->getTargetUsers($data['target_type'], $data['target_user_ids'] ?? []);
+            $customers = $this->getCustomers();
 
-            if (empty($targetUsers)) {
-                return ApiResponse::validationError(['target_type' => 'Tidak ada user yang valid untuk target ini']);
+            if ($customers->isEmpty()) {
+                return ApiResponse::validationError(['message' => 'Tidak ada customer yang ditemukan']);
             }
 
             $timestamp = now();
-            $notificationsData = array_map(function ($userId) use ($data, $user, $timestamp) {
-                return [
+            $notificationsData = [];
+            $emailsSent = 0;
+            $emailsFailed = 0;
+            $recipientEmails = [];
+
+            foreach ($customers as $customer) {
+                $notificationsData[] = [
                     'title' => $data['title'],
                     'body' => $data['body'],
                     'from_user_id' => $user->id,
-                    'to_user_id' => $userId,
+                    'to_user_id' => $customer->user_id,
                     'created_at' => $timestamp,
                     'updated_at' => $timestamp,
                 ];
-            }, $targetUsers);
 
-            Notification::insert($notificationsData);
-
-            $insertedNotifications = Notification::with('fromUser')
-                ->where('from_user_id', $user->id)
-                ->where('created_at', $timestamp)
-                ->get();
-
-            foreach ($insertedNotifications as $notification) {
-                broadcast(new NotificationSent($notification));
+                try {
+                    Mail::to($customer->user->email)->send(
+                        new NotificationMail($data['title'], $data['body'], $user->full_name)
+                    );
+                    $emailsSent++;
+                    $recipientEmails[] = $customer->user->email;
+                } catch (\Exception $mailError) {
+                    $emailsFailed++;
+                    Log::error('Gagal mengirim email notifikasi', [
+                        'to' => $customer->user->email,
+                        'customer_name' => $customer->user->full_name,
+                        'error' => $mailError->getMessage()
+                    ]);
+                }
             }
+
+            if (!empty($notificationsData)) {
+                Notification::insert($notificationsData);
+            }
+
+            $statusText = $emailsSent > 0 ? 'berhasil' : 'gagal';
+            $recipientPreview = $this->formatRecipientPreview($recipientEmails, $customers->count());
+
+            $this->logActivity(
+                'SEND_NOTIFICATION',
+                "Pengiriman notifikasi '{$data['title']}' {$statusText}. Terkirim: {$emailsSent}/{$customers->count()} email. Recipients: {$recipientPreview}"
+            );
 
             return ApiResponse::success(
                 [
-                    'total_recipients' => count($targetUsers),
-                    'total_sent' => $insertedNotifications->count(),
-                    'total_failed' => 0,
-                    'status' => 'success',
+                    'total_recipients' => $customers->count(),
+                    'total_sent' => $emailsSent,
+                    'total_failed' => $emailsFailed,
+                    'status' => $emailsSent > 0 ? 'success' : 'failed',
                 ],
-                'Notifikasi berhasil dikirim'
+                'Notifikasi berhasil dikirim via email'
             );
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error saat mengirim notifikasi', [
                 'error' => $e->getMessage(),
                 'code' => $e->getCode()
             ]);
+
+            $this->logActivity(
+                'SEND_NOTIFICATION',
+                "Gagal mengirim notifikasi '{$data['title']}': Database error"
+            );
 
             return ApiResponse::serverError(
                 'Gagal menyimpan notifikasi ke database',
@@ -124,6 +157,11 @@ class NotificationController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
+            $this->logActivity(
+                'SEND_NOTIFICATION',
+                "Gagal mengirim notifikasi: {$e->getMessage()}"
+            );
+
             return ApiResponse::serverError(
                 'Gagal mengirim notifikasi',
                 config('app.debug') ? ['error' => $e->getMessage()] : []
@@ -131,69 +169,42 @@ class NotificationController extends Controller
         }
     }
 
-    private function getTargetUsers(string $targetType, array $specificUserIds = []): array
-    {
-        return match ($targetType) {
-            'all' => User::pluck('id')->toArray(),
-            'customer' => Customer::whereHas('user')
-                ->with('user:id')
-                ->get()
-                ->pluck('user.id')
-                ->filter()
-                ->unique()
-                ->values()
-                ->toArray(),
-            'specific' => $specificUserIds,
-            default => [],
-        };
-    }
-
     public function index(Request $request): JsonResponse
     {
         $query = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email']);
 
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('body', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->has('from_user_id') && !empty($request->from_user_id)) {
-            $query->where('from_user_id', $request->from_user_id);
-        }
-
-        if ($request->has('to_user_id') && !empty($request->to_user_id)) {
-            $query->where('to_user_id', $request->to_user_id);
-        }
-
-        if ($request->has('from') && !empty($request->from)) {
-            $query->whereDate('created_at', '>=', $request->from);
-        }
-
-        if ($request->has('to') && !empty($request->to)) {
-            $query->whereDate('created_at', '<=', $request->to);
-        }
+        $this->applyFilters($query, $request);
 
         $query->orderBy('created_at', 'desc');
 
         $perPage = $request->get('per_page', config('app.pagination.per_page', 15));
-        $notifications = $query->paginate($perPage);
+        $allNotifications = $query->get();
 
-        $notifications->getCollection()->transform(function ($notification) {
-            $notification->status = 'sent';
-            return $notification;
+        $grouped = $allNotifications->groupBy(function ($item) {
+            return $item->created_at . '|' . $item->from_user_id . '|' . $item->title . '|' . $item->body;
         });
+
+        $uniqueNotifications = $grouped->map(function ($group) {
+            $first = $group->first();
+            $first->recipient_count = $group->count();
+            $first->status = 'sent';
+            return $first;
+        })->values();
+
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedItems = $uniqueNotifications->slice($offset, $perPage)->values();
+        $total = $uniqueNotifications->count();
+        $lastPage = (int) ceil($total / $perPage);
 
         return ApiResponse::success(
             [
-                'notifications' => $notifications->items(),
+                'notifications' => $paginatedItems->toArray(),
                 'pagination' => [
-                    'current_page' => $notifications->currentPage(),
-                    'per_page' => $notifications->perPage(),
-                    'total' => $notifications->total(),
-                    'last_page' => $notifications->lastPage(),
+                    'current_page' => (int) $currentPage,
+                    'per_page' => (int) $perPage,
+                    'total' => $total,
+                    'last_page' => $lastPage,
                 ]
             ],
             'Data riwayat notifikasi berhasil diambil'
@@ -202,18 +213,92 @@ class NotificationController extends Controller
 
     public function show($id): JsonResponse
     {
-        $notification = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email'])
-            ->find($id);
+        $notification = Notification::with(['fromUser:id,full_name,email'])->find($id);
 
         if (!$notification) {
             return ApiResponse::notFound('Notifikasi tidak ditemukan');
         }
 
+        $allRecipients = $this->getBatchRecipients($notification);
+
         $notification->status = 'sent';
+        $notification->recipients = $allRecipients;
+        $notification->recipient_count = $allRecipients->count();
 
         return ApiResponse::success(
             ['notification' => $notification],
             'Detail notifikasi berhasil diambil'
         );
+    }
+
+    private function getCustomers()
+    {
+        return Customer::whereHas('user')
+            ->with('user:id,full_name,email')
+            ->get();
+    }
+
+    private function calculateTrend($previous, $current): float
+    {
+        if ($previous > 0) {
+            return round((($current - $previous) / $previous) * 100, 2);
+        }
+
+        return $current > 0 ? 100 : 0;
+    }
+
+    private function formatRecipientPreview(array $recipientEmails, int $totalCount): string
+    {
+        $preview = implode(', ', array_slice($recipientEmails, 0, 3));
+
+        if ($totalCount > 3) {
+            $preview .= ' dan ' . ($totalCount - 3) . ' lainnya';
+        }
+
+        return $preview;
+    }
+
+    private function applyFilters($query, Request $request): void
+    {
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('body', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('from_user_id')) {
+            $query->where('from_user_id', $request->from_user_id);
+        }
+
+        if ($request->filled('to_user_id')) {
+            $query->where('to_user_id', $request->to_user_id);
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('created_at', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('created_at', '<=', $request->to);
+        }
+    }
+
+    private function getBatchRecipients($notification)
+    {
+        return Notification::with(['toUser:id,full_name,email'])
+            ->where('created_at', $notification->created_at)
+            ->where('from_user_id', $notification->from_user_id)
+            ->where('title', $notification->title)
+            ->where('body', $notification->body)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->toUser->id,
+                    'full_name' => $item->toUser->full_name,
+                    'email' => $item->toUser->email
+                ];
+            });
     }
 }

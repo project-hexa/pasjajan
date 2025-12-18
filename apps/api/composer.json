@@ -13,7 +13,6 @@
         "evenement/evenement": "3.0",
         "google/apiclient": "^2.18",
         "laravel/framework": "^12.0",
-        "laravel/reverb": "^1.6",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "midtrans/midtrans-php": "^2.6"
