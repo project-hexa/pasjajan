@@ -29,26 +29,34 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 */
 
-// Payment Methods
+// Payment Methods (public - tidak perlu login)
 Route::get('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
 
-// Checkout & Create Transaction
-Route::post('/checkout', [OrderController::class, 'checkout']);
+// ============= CUSTOMER CHECKOUT & ORDER ROUTES =============
+// Memerlukan autentikasi user
+Route::middleware('auth:sanctum')->group(function () {
+	// Checkout & Create Transaction
+	Route::post('/checkout', [OrderController::class, 'checkout']);
 
-// Process Payment (setelah pilih metode)
-Route::post('/payment/process', [PaymentController::class, 'processPayment']);
+	// Get Order List (untuk customer yang login)
+	Route::get('/orders', [OrderController::class, 'getOrders']);
 
-// Check Order & Payment Status
-Route::get('/orders/{code}', [OrderController::class, 'getOrder']);
+	// Check Order & Payment Status (ownership check di controller)
+	Route::get('/orders/{code}', [OrderController::class, 'getOrder']);
 
-// Get Order List (untuk customer)
-Route::get('/orders', [OrderController::class, 'getOrders']);
+	// Cancel Order (jika masih pending)
+	Route::post('/orders/{code}/cancel', [OrderController::class, 'cancelOrder']);
 
-// Cancel Order (jika masih pending)
-Route::post('/orders/{code}/cancel', [OrderController::class, 'cancelOrder']);
+	// Process Payment (setelah pilih metode)
+	Route::post('/payment/process', [PaymentController::class, 'processPayment']);
 
-// Check payment status manually
-Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
+	// Check payment status manually
+	Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
+
+	// Get payment receipt (bukti pembayaran)
+	Route::get('/orders/{code}/receipt', [OrderController::class, 'getPaymentReceipt']);
+});
+
 
 
 // ============= STAFF ROUTES =============
@@ -126,14 +134,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
 		// --- List Kurir & Cek Ongkir ---
-        Route::get('/delivery/methods', 'getDeliveryMethods');
-        Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
-        // --- Get Status Pengiriman ---
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // --- Kirim Ulasan ---
-        Route::post('/delivery/{order_id}/review', 'submitReview');
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 
