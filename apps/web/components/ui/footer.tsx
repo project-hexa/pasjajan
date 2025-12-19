@@ -1,54 +1,48 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@workspace/ui/components/accordion";
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
 import { Item, ItemContent, ItemTitle } from "@workspace/ui/components/item";
 import Image from "next/image";
 import Link from "next/link";
 
-const paymentMethods = [
+export const faqs: { question: string; answer?: string }[] = [
   {
-    name: "BCA",
-    url: "/payment-methods/bca",
+    question: "Apa itu PasJajan?",
+    answer:
+      "PasJajan adalah platform e-commerce untuk belanja kebutuhan sehari-hari dan produk lainnya secara online.",
   },
   {
-    name: "Mandiri",
-    url: "/payment-methods/mandiri",
+    question: "Bagaimana cara berbelanja di PasJajan?",
+    answer:
+      "Buat akun atau masuk, cari produk, masukkan ke keranjang, pilih metode pengiriman dan pembayaran, lalu konfirmasi pesanan. Setelah bayar, pantau status pesanan di halaman 'Pesanan'.",
   },
   {
-    name: "BNI",
-    url: "/payment-methods/bni",
+    question: "Metode pembayaran apa saja yang tersedia di PasJajan?",
+    answer:
+      "Kami menerima transfer bank, kartu kredit/debit, e-wallet populer (mis. GoPay, OVO, Dana), dan opsi COD di wilayah tertentu.",
   },
   {
-    name: "Permata Bank",
-    url: "/payment-methods/permata-bank",
-  },
-  {
-    name: "BRI",
-    url: "/payment-methods/bri",
-  },
-  {
-    name: "ShopeePay",
-    url: "/payment-methods/shopeepay",
-  },
-  {
-    name: "QRIS",
-    url: "/payment-methods/qris",
-  },
-  {
-    name: "Gopay",
-    url: "/payment-methods/gopay",
+    question: "Bagaimana cara melacak status toko saya?",
+    answer:
+      "Buka halaman 'Pesanan' di akun Anda, pilih pesanan terkait untuk melihat status pengiriman dan nomor resi. Untuk masalah lebih lanjut, hubungi penjual atau dukungan pelanggan.",
   },
 ];
 
 export const Footer = () => {
   return (
     <footer className="bg-primary">
-      <div className="grid w-full bg-background pb-5 rounded-br-full grid-cols-[repeat(1,auto)] gap-4 max-md:pb-10 lg:grid-cols-[repeat(4,auto)] lg:gap-10 items-start">
-        <div className="bg-primary text-primary-foreground relative flex w-full md:w-max md:h-full items-center justify-between gap-4 md:gap-10 rounded-br-full px-4 md:px-10 py-5 md:shadow-[70px_-10px_0_-10px_var(--secondary)] shadow-[20px_0_0_-10px_var(--secondary)]">
+      <div className="bg-background grid w-full grid-cols-[repeat(1,auto)] items-start gap-4 pb-5 max-md:pb-10 lg:grid-cols-[repeat(4,auto)] lg:gap-10">
+        <div className="bg-primary text-primary-foreground relative flex w-full items-center justify-between gap-4 rounded-br-full px-4 py-5 shadow-[20px_0_0_-10px_var(--secondary)] md:h-60 md:w-max md:gap-10 md:px-10 md:shadow-[50px_-10px_0_-10px_var(--secondary)]">
           <div className="flex flex-col items-center justify-center gap-2">
-            <div className="w-14 h-10 relative">
-            <Image src="/logo-footer.png" alt="logo" fill />
+            <div className="relative h-32 w-38">
+              <Image src="/logo-footer.png" alt="logo" fill />
             </div>
-            <span className="text-lg md:text-2xl font-bold">PasJajan</span>
+            <span className="text-lg font-bold md:text-4xl">PasJajan</span>
           </div>
           <p className="max-w-[250px] font-bold">
             Solusi belanja kelontong dalam genggaman.
@@ -58,12 +52,18 @@ export const Footer = () => {
           <ItemContent>
             <ItemTitle className="text-xl font-bold">Bantuan</ItemTitle>
             <Link href="" className="w-max">
-              <Button variant="link" className="text-secondary-foreground h-max">
+              <Button
+                variant="link"
+                className="text-secondary-foreground h-max"
+              >
                 Tentang Kami
               </Button>
             </Link>
             <Link href="" className="w-max">
-              <Button variant="link" className="text-secondary-foreground h-max">
+              <Button
+                variant="link"
+                className="text-secondary-foreground h-max"
+              >
                 Keamanan dan Privasi
               </Button>
             </Link>
@@ -71,21 +71,15 @@ export const Footer = () => {
         </Item>
         <Item>
           <ItemContent>
-            <ItemTitle className="text-xl font-bold">
-              Metode Pembayaran
-            </ItemTitle>
-            <div className="grid grid-cols-2 gap-2">
-              {paymentMethods.map((pm, i) => (
-                <Link href={pm.url} className="w-max" key={i}>
-                  <Button
-                    variant="link"
-                    className="text-secondary-foreground h-max"
-                  >
-                    {pm.name}
-                  </Button>
-                </Link>
+            <ItemTitle className="text-xl font-bold">FAQ</ItemTitle>
+            <Accordion type="single" collapsible>
+              {faqs.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i + 1}`}>
+                  <AccordionTrigger>{faq.question}</AccordionTrigger>
+                  <AccordionContent>{faq.answer}</AccordionContent>
+                </AccordionItem>
               ))}
-            </div>
+            </Accordion>
           </ItemContent>
         </Item>
         <Item>
@@ -112,7 +106,7 @@ export const Footer = () => {
         </Item>
       </div>
 
-      <p className="text-primary-foreground text-center text-sm py-2">
+      <p className="text-primary-foreground py-2 text-center text-sm">
         &copy; 2025 PasJajan - All Right Reserved
       </p>
     </footer>

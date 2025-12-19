@@ -79,7 +79,7 @@ export const Navbar = ({ className }: { className?: string }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-primary">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
                   <Icon icon="lucide:settings" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem>
