@@ -23,7 +23,16 @@ import React from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export const Cart = () => {
-  const [items, setItems] = React.useState<any[]>([]);
+  type CartItem = {
+    id?: string | number;
+    name?: string;
+    variant?: string;
+    price?: number;
+    quantity?: number;
+    image?: string;
+  };
+
+  const [items, setItems] = React.useState<CartItem[]>([]);
   const { token } = useAuthStore();
 
   const readCart = React.useCallback(() => {
@@ -33,8 +42,8 @@ export const Cart = () => {
         setItems([]);
         return;
       }
-      const parsed = JSON.parse(raw) as any[];
-      setItems(parsed);
+      const parsed = JSON.parse(raw) as CartItem[];
+      setItems(parsed || []);
     } catch (err) {
       console.error("Failed to read cart", err);
       setItems([]);
@@ -87,7 +96,7 @@ export const Cart = () => {
                   <ItemMedia variant={"image"}>
                     <Image
                       src={it.image || `https://placehold.co/100?text=Produk`}
-                      alt={it.name}
+                      alt={it.name ?? ""}
                       width={80}
                       height={80}
                       unoptimized

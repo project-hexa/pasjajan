@@ -241,11 +241,11 @@ export default function StoreProductList({
                       setTimeout(() => {
                         try {
                           router.push("/login");
-                        } catch (e) {
+                        } catch {
                           /* ignore */
                         }
                       }, 3500);
-                    } catch (e) {
+                    } catch {
                       // ignore
                     }
                     return;
@@ -280,7 +280,7 @@ export default function StoreProductList({
                     // notify other components (navbar) that cart changed
                     try {
                       window.dispatchEvent(new CustomEvent("cart_updated"));
-                    } catch (e) {
+                    } catch {
                       // ignore
                     }
                     showToast("Barang berhasil di tambahkan ke keranjang");
