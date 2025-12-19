@@ -168,7 +168,7 @@ export default function StoreProductList({
             <button
               type="button"
               onClick={closeProduct}
-              className="absolute -left-5 -top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#EF4444] text-lg font-semibold text-white shadow-lg transition hover:bg-[#DC2626]"
+              className="absolute -left-5 -top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#D3BCBC] border border-black text-lg font-semibold text-black shadow-lg transition hover:bg-[#D3BCBC]"
               aria-label="Tutup detail produk"
             >
               ×
