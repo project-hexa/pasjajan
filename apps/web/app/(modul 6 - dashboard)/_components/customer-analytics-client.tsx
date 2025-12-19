@@ -1,17 +1,17 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect, useTransition, useMemo, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useTransition,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@workspace/ui/components/popover";
-import { Calendar } from "@workspace/ui/components/calendar";
 import { format } from "date-fns";
-import { DateRange } from "react-day-picker";
 import {
   Table,
   TableBody,
@@ -31,6 +31,8 @@ import {
 } from "@workspace/ui/components/pagination";
 import { CustomerListResponse } from "@/lib/schema/customers-analytics.schema";
 import { Icon } from "@workspace/ui/components/icon";
+import { exportCustomerReport } from "@/services/customers-analytics";
+import { DateRangePicker } from "@/app/(modul 6 - dashboard)/_components/date-range-picker";
 
 interface CustomerAnalyticsClientProps {
   initialData: CustomerListResponse["data"];
@@ -42,48 +44,72 @@ export default function CustomerAnalyticsClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const previousSearchValue = useRef(searchParams.get("search") || "");
 
   const [searchValue, setSearchValue] = useState(
     searchParams.get("search") || "",
   );
   const [period, setPeriod] = useState<
     "daily" | "monthly" | "yearly" | "custom"
-  >((searchParams.get("period") as any) || "monthly");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+  >(
+    (searchParams.get("period") as "daily" | "monthly" | "yearly" | "custom") ||
+      "monthly",
+  );
+  const [fromDate, setFromDate] = useState<Date | undefined>(() => {
     const startDate = searchParams.get("start_date");
+    return startDate ? new Date(startDate) : undefined;
+  });
+  const [toDate, setToDate] = useState<Date | undefined>(() => {
     const endDate = searchParams.get("end_date");
-    if (startDate && endDate) {
-      return {
-        from: new Date(startDate),
-        to: new Date(endDate),
-      };
-    }
-    return undefined;
+    return endDate ? new Date(endDate) : undefined;
   });
 
-  const updateURL = useCallback((updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams.toString());
+  const updateURL = useCallback(
+    (updates: Record<string, string>) => {
+      const params = new URLSearchParams(searchParams.toString());
 
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value) {
+          params.set(key, value);
+        } else {
+          params.delete(key);
+        }
+      });
 
-    startTransition(() => {
-      router.push(`?${params.toString()}`);
-    });
-  }, [searchParams, router]);
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
+    },
+    [searchParams, router],
+  );
 
   useEffect(() => {
+    if (searchValue === previousSearchValue.current) {
+      return;
+    }
+
+    previousSearchValue.current = searchValue;
+
     const timer = setTimeout(() => {
-      updateURL({ search: searchValue, page: "1" });
+      const params = new URLSearchParams(searchParams.toString());
+
+      Object.entries({ search: searchValue, page: "1" }).forEach(
+        ([key, value]) => {
+          if (value) {
+            params.set(key, value);
+          } else {
+            params.delete(key);
+          }
+        },
+      );
+
+      startTransition(() => {
+        router.push(`?${params.toString()}`);
+      });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchValue, updateURL]);
+  }, [searchValue, searchParams, router]);
 
   const handlePeriodChange = (
     newPeriod: "daily" | "monthly" | "yearly" | "custom",
@@ -93,7 +119,8 @@ export default function CustomerAnalyticsClient({
 
     if (newPeriod !== "custom") {
       // Clear date range when not custom
-      setDateRange(undefined);
+      setFromDate(undefined);
+      setToDate(undefined);
       updates.start_date = "";
       updates.end_date = "";
     }
@@ -101,16 +128,49 @@ export default function CustomerAnalyticsClient({
     updateURL(updates);
   };
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-    if (range?.from && range?.to) {
-      updateURL({
-        period: "custom",
-        start_date: format(range.from, "yyyy-MM-dd"),
-        end_date: format(range.to, "yyyy-MM-dd"),
+  const handleFromDateChange = (date: Date | undefined) => {
+    setFromDate(date);
+
+    // Only update URL if both dates are selected
+    if (date && toDate) {
+      const updates: Record<string, string> = {
         page: "1",
-      });
+        start_date: format(date, "yyyy-MM-dd"),
+        end_date: format(toDate, "yyyy-MM-dd"),
+        period: "custom",
+      };
       setPeriod("custom");
+      updateURL(updates);
+    } else if (!date) {
+      // Clear start_date if date is undefined
+      const updates: Record<string, string> = {
+        page: "1",
+        start_date: "",
+      };
+      updateURL(updates);
+    }
+  };
+
+  const handleToDateChange = (date: Date | undefined) => {
+    setToDate(date);
+
+    // Only update URL if both dates are selected
+    if (date && fromDate) {
+      const updates: Record<string, string> = {
+        page: "1",
+        start_date: format(fromDate, "yyyy-MM-dd"),
+        end_date: format(date, "yyyy-MM-dd"),
+        period: "custom",
+      };
+      setPeriod("custom");
+      updateURL(updates);
+    } else if (!date) {
+      // Clear end_date if date is undefined
+      const updates: Record<string, string> = {
+        page: "1",
+        end_date: "",
+      };
+      updateURL(updates);
     }
   };
 
@@ -168,37 +228,12 @@ export default function CustomerAnalyticsClient({
       </div>
       <div className="flex items-center justify-between rounded-2xl bg-[#F7FFFB] p-4 shadow-xl">
         <div className="flex gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={period === "custom" ? "default" : "outline"}
-                data-empty={!dateRange}
-                className="data-[empty=true]:text-muted-foreground w-[280px] justify-start text-left font-normal"
-              >
-                <Icon icon={"lucide:calendar"} />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, "d MMM yyyy")} -{" "}
-                      {format(dateRange.to, "d MMM yyyy")}
-                    </>
-                  ) : (
-                    format(dateRange.from, "d MMM yyyy")
-                  )
-                ) : (
-                  <span>Pick a date range</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="range"
-                selected={dateRange}
-                onSelect={handleDateRangeChange}
-                numberOfMonths={2}
-              />
-            </PopoverContent>
-          </Popover>
+          <DateRangePicker
+            fromDate={fromDate}
+            toDate={toDate}
+            onFromDateChange={handleFromDateChange}
+            onToDateChange={handleToDateChange}
+          />
         </div>
         <div className="flex gap-2">
           <Button
@@ -218,6 +253,13 @@ export default function CustomerAnalyticsClient({
             onClick={() => handlePeriodChange("yearly")}
           >
             Yearly
+          </Button>
+          <Button
+            onClick={() => {
+              exportCustomerReport(searchValue);
+            }}
+          >
+            Export CSV
           </Button>
         </div>
       </div>

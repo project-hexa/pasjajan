@@ -21,7 +21,7 @@ class OrderSeeder extends Seeder
     $stores = Store::where('is_active', true)->get();
     $products = Product::all();
 
-    $statuses = ['COMPLETED', 'COMPLETED', 'COMPLETED', 'COMPLETED', 'PENDING'];
+    $statuses = ['COMPLETED', 'PENDING'];
 
     $startDate = Carbon::now()->subMonths(12);
     $endDate = Carbon::now();
@@ -75,11 +75,14 @@ class OrderSeeder extends Seeder
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
-        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
+        'shipping_address' => $address ? $address->detail_address : 'Alamat Default',
         'status' => $status,
+        'payment_status' => $status === 'COMPLETED' ? 'paid' : 'unpaid',
         'sub_total' => $sub_total,
+        'discount' => $discount,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
+        'paid_at' => $status === 'COMPLETED' ? $orderDate : null,
         'created_at' => $orderDate,
         'updated_at' => $orderDate,
       ]);
@@ -133,11 +136,14 @@ class OrderSeeder extends Seeder
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
-        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
+        'shipping_address' => $address ? $address->detail_address : 'Alamat Default',
         'status' => $status,
+        'payment_status' => $status === 'COMPLETED' ? 'paid' : 'unpaid',
         'sub_total' => $sub_total,
+        'discount' => $discount,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
+        'paid_at' => $status === 'COMPLETED' ? $orderDate : null,
         'created_at' => $orderDate,
         'updated_at' => $orderDate,
       ]);
@@ -203,11 +209,14 @@ class OrderSeeder extends Seeder
         'store_id' => $stores->random()->id,
         'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id,
         'code' => 'ORD-' . strtoupper(uniqid()),
-        'shipping_address' => $address ? $address->street . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code : 'Default Address',
+        'shipping_address' => $address ? $address->detail_address : 'Alamat Default',
         'status' => $status,
+        'payment_status' => $status === 'COMPLETED' ? 'paid' : 'unpaid',
         'sub_total' => $sub_total,
+        'discount' => $discount,
         'shipping_fee' => $shippingFee,
         'grand_total' => $grandTotal,
+        'paid_at' => $status === 'COMPLETED' ? $orderDate : null,
         'created_at' => $orderDate,
         'updated_at' => $orderDate,
       ]);

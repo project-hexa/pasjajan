@@ -13,7 +13,7 @@ import { Separator } from "@workspace/ui/components/separator";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Logout } from "../../app/(modul 1 - auth)/_components/logout";
+import { Logout } from "../../app/(modul 1 - user management)/_components/logout";
 import { Cart } from "./cart";
 import { Search } from "./search";
 
@@ -79,7 +79,7 @@ export const Navbar = ({ className }: { className?: string }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-primary">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
                   <Icon icon="lucide:settings" /> Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem>

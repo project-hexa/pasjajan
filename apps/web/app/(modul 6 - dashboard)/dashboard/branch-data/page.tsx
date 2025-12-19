@@ -1,0 +1,291 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@workspace/ui/components/button";
+import Link from "next/link";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@workspace/ui/components/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@workspace/ui/components/pagination";
+import { Icon } from "@workspace/ui/components/icon";
+
+interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  income: string | number;
+  contact: string;
+  status: "active" | "inactive";
+  code?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export default function BranchManagementPage() {
+  const router = useRouter();
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 8;
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/branches`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || "Gagal mengambil data cabang");
+        }
+
+        const responseData = await response.json();
+        console.log("API Response:", responseData);
+
+        // Get branches from the nested data.branches
+        const branchesData = responseData.data?.branches || [];
+
+        // Transform the API response to match our Branch interface
+        const formattedBranches = branchesData.map((branch: any) => ({
+          id: branch.id?.toString() || "",
+          name: branch.name || "Nama tidak tersedia",
+          address: branch.address || "Alamat tidak tersedia",
+          income: branch.penghasilan || "Rp 0",
+          contact: branch.phone_number || "-",
+          status: branch.is_active ? "active" : "inactive",
+          code: branch.code || "",
+          latitude: branch.latitude,
+          longitude: branch.longitude,
+        }));
+
+        setBranches(formattedBranches);
+        setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error fetching branches:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
+  // Get current branches for pagination
+  const indexOfLastBranch = currentPage * itemsPerPage;
+  const indexOfFirstBranch = indexOfLastBranch - itemsPerPage;
+  const currentBranches = branches.slice(indexOfFirstBranch, indexOfLastBranch);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleStatusChange = async (
+    branchId: string,
+    action: "activate" | "deactivate",
+  ) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/branches/${branchId}/${action}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} branch`);
+      }
+
+      // Update the local state to reflect the change
+      setBranches(
+        branches.map((branch) =>
+          branch.id === branchId
+            ? {
+                ...branch,
+                status: action === "activate" ? "active" : "inactive",
+              }
+            : branch,
+        ),
+      );
+    } catch (err) {
+      console.error(`Error ${action}ing branch:`, err);
+      alert(
+        `Gagal ${action === "activate" ? "mengaktifkan" : "menonaktifkan"} cabang. Silakan coba lagi.`,
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Manajemen Data Cabang
+          </h2>
+        </div>
+        <Button
+          onClick={() => router.push("/dashboard/branch-data/create")}
+          className="bg-[#1E8F59] text-white hover:bg-[#166E45]"
+        >
+          Tambah Cabang
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-t-2 border-b-2 border-[#1E8F59]"></div>
+        </div>
+      ) : error ? (
+        <div
+          className="relative rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700"
+          role="alert"
+        >
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      ) : (
+        <div>
+          <Table className="w-full overflow-clip rounded-2xl bg-[#F7FFFB]">
+            <TableHeader>
+              <TableRow className="bg-[#B9DCCC]">
+                <TableHead className="w-1/5 pl-8 text-left">Nama</TableHead>
+                <TableHead className="w-2/5 text-left">Alamat</TableHead>
+                <TableHead className="w-1/6 text-center">Penghasilan</TableHead>
+                <TableHead className="w-1/6 text-center">Kontak</TableHead>
+                <TableHead className="w-1/6 pr-8 text-right">Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentBranches.length > 0 ? (
+                currentBranches.map((branch) => (
+                  <TableRow key={branch.id} className="h-16">
+                    <TableCell className="pl-8 text-left font-medium">
+                      {branch.name}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {branch.address}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {branch.income}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {branch.contact}
+                    </TableCell>
+                    <TableCell className="pr-8">
+                      <div className="flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 p-0 hover:bg-[#B9DCCC]"
+                          asChild
+                        >
+                          <Link
+                            href={`/dashboard/branch-data/edit/${branch.id}`}
+                          >
+                            <Icon icon="lucide:pencil" className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className="py-8 text-center text-gray-500"
+                  >
+                    Tidak ada data cabang yang tersedia.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) handlePageChange(currentPage - 1);
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                          isActive={page === currentPage}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ),
+                  )}
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages)
+                          handlePageChange(currentPage + 1);
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
