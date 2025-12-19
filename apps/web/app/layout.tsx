@@ -2,6 +2,7 @@ import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],

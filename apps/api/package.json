@@ -6,6 +6,7 @@
     "type": "module",
     "scripts": {
         "dev": "composer run dev",
+        "start": "composer run dev",
         "test": "composer run test"
     },
     "devDependencies": {
