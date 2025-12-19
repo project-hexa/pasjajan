@@ -8,10 +8,11 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Notification;
 use App\Services\MidtransService;
-use App\Events\NotificationSent;
+use App\Mail\NotificationMail;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
@@ -329,22 +330,31 @@ class PaymentController extends Controller
     private function sendPaymentPendingNotification(Order $order): void
     {
         try {
-            $order->load('customer');
+            $order->load('customer.user');
             $customer = $order->customer;
             if (!$customer || !$customer->user_id) return;
 
-            $notification = Notification::create([
-                'title' => 'Menunggu Pembayaran 💳',
-                'body' => "Mohon selesaikan pembayaran untuk Invoice #{$order->code}",
+            $user = $customer->user;
+            if (!$user || !$user->email) return;
+
+            $title = 'Menunggu Pembayaran 💳';
+            $body = "Mohon selesaikan pembayaran untuk Invoice #{$order->code}";
+
+            // Simpan ke database
+            Notification::create([
+                'title' => $title,
+                'body' => $body,
                 'from_user_id' => null,
                 'to_user_id' => $customer->user_id,
             ]);
 
-            broadcast(new NotificationSent($notification))->toOthers();
+            // Kirim email
+            Mail::to($user->email)->send(new NotificationMail($title, $body));
 
             Log::info('Payment pending notification sent', [
                 'order_code' => $order->code,
                 'user_id' => $customer->user_id,
+                'email' => $user->email,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to send payment pending notification', [
