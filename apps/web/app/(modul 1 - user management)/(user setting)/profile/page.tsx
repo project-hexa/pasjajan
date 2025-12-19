@@ -4,7 +4,12 @@ import {
   CardDescription,
   CardTitle,
 } from "@workspace/ui/components/card";
+import { Metadata } from "next";
 import { UserProfileForm } from "../../_components/user-profile-form";
+
+export const metadata: Metadata = {
+  title: "Profile",
+};
 
 export default function ProfilePage() {
   return (
