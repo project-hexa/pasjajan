@@ -39,6 +39,7 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
 
 export const registerSchema = z
   .object({
+    token: z.string({ message: "Credentials dibutuhkan" }),
     full_name: z
       .string()
       .min(3, "Nama lengkap minimal harus 3 karakter")

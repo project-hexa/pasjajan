@@ -24,7 +24,7 @@ export const Logout = () => {
     const result = await logout();
 
     if (result.ok) {
-      toast.success(result.message, {
+      toast.success(result.message || "Logout Berhasil!", {
         toasterId: "global",
       });
       router.push("/login");
