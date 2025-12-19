@@ -155,7 +155,7 @@ export function HeroBanner({
             )}
             aria-label="Next slide"
           >
-            <Icon icon={"lucide:chevron-left"} className="h-4 w-4" />
+            <Icon icon={"lucide:chevron-right"} className="h-4 w-4" />
           </button>
         </>
       )}
