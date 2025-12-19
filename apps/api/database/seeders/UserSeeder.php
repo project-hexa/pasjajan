@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
         User::create([
             'full_name' => 'Admin System',
             'email' => 'admin@pasjajan.com',
-            'phone_number' => '081234567890',
+            'phone_number' => '+6281234567890',
             'password' => Hash::make('Password123!'),
             'role' => 'Admin',
             'phone_number_verified_at' => now(),
@@ -29,7 +29,7 @@ class UserSeeder extends Seeder
         User::create([
             'full_name' => 'Staff One',
             'email' => 'staff@pasjajan.com',
-            'phone_number' => '081234567891',
+            'phone_number' => '+6281234567891',
             'password' => Hash::make('Password123!'),
             'role' => 'Staff',
             'phone_number_verified_at' => now(),
@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
         User::create([
             'full_name' => 'John Doe',
             'email' => 'john@example.com',
-            'phone_number' => '081234567892',
+            'phone_number' => '+6281234567892',
             'password' => Hash::make('Password123!'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
@@ -51,7 +51,7 @@ class UserSeeder extends Seeder
         User::create([
             'full_name' => 'Jane Smith',
             'email' => 'jane@example.com',
-            'phone_number' => '081234567893',
+            'phone_number' => '+6281234567893',
             'password' => Hash::make('Password123!'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
