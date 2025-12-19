@@ -409,7 +409,8 @@ class UserController extends BaseController
 		}
 
 		// Cari alamat milik user
-		$addresses = $user->customer()->addresses()->get();
+		$customer = $user->customer()->first();
+		$addresses = $customer->addresses()->get();
 		$address = $addresses->find($addressId);
 
 		// Jika alamat tidak ditemukan pada database, maka
