@@ -46,10 +46,10 @@ export default function NotificationsForm() {
   }
 
   return (
-    <Form {...form}>
+    <Form {...(form as any)}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="title"
           render={({ field }) => (
             <FormItem>
@@ -66,7 +66,7 @@ export default function NotificationsForm() {
           )}
         />
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="body"
           render={({ field }) => (
             <FormItem>
