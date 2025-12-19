@@ -77,9 +77,9 @@ export const UserProfileForm = () => {
       phone_number: user.phone_number,
       gender: user.gender,
       birthday: {
-        day: user.birth_date && user.birth_date.getDate(),
-        month: user.birth_date && user.birth_date.getMonth(),
-        year: user.birth_date && user.birth_date.getFullYear(),
+        day: user.birth_date && new Date(user.birth_date).getDate(),
+        month: user.birth_date && new Date(user.birth_date).getMonth(),
+        year: user.birth_date && new Date(user.birth_date).getFullYear(),
       },
     });
   }, [user, profileForm]);
@@ -249,7 +249,10 @@ export const UserProfileForm = () => {
                       </FieldLabel>
                     )
                   ) : (
-                    <RadioGroup {...field}>
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
                       <div className="flex items-center gap-5">
                         <Field orientation={"horizontal"}>
                           <RadioGroupItem value="Laki-Laki" id={"laki-laki"} />
@@ -421,7 +424,7 @@ export const UserProfileForm = () => {
 
           <Button type="button">Ubah Profile</Button>
 
-          <div className="text-muted-foreground text-sm flex flex-col text-center">
+          <div className="text-muted-foreground flex flex-col text-center text-sm">
             <span>Ukuran Gambar: maks 2 MB</span>
             <span>Format Gambar: JPG, JPEG, PNG</span>
           </div>
@@ -429,7 +432,7 @@ export const UserProfileForm = () => {
       </div>
 
       {editingFields.size > 0 && (
-        <Button type="submit" form="profile-form">
+        <Button type="submit" form="profile-form" className="mb-4">
           Simpan
         </Button>
       )}
