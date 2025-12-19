@@ -12,6 +12,7 @@ class Otp extends Model
 		'email',
 		'otp',
 		'expires_at',
+		'attempt_count',
 		'is_verified',
 	];
 
