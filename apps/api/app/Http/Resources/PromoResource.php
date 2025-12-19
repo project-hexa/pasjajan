@@ -28,18 +28,30 @@ class PromoResource extends JsonResource
             'applies_to_product' => $this->applies_to_product,
 
             // Relasi (kalau mau ditampilkan)
-
+            'stores' => $this->whenLoaded('stores', function () {
+                return $this->stores->map(function ($store) {
+                    return [
+                        'id' => $store->id,
+                        'name' => $store->name ?? null,
+                    ];
+                });
+            }),
             'products' => $this->whenLoaded('products', function () {
-                return $this->products->map(function ($product) {
+                $discountPercentage = (float) $this->discount_percentage;
+                return $this->products->map(function ($product) use ($discountPercentage) {
+                    $price = (float) ($product->price ?? 0);
+                    $discountedPrice = $price * (1 - $discountPercentage / 100);
                     return [
                         'id' => $product->id,
                         'name' => $product->name ?? null,
                         'price' => $product->price ?? null,
+                        'discounted_price' => round($discountedPrice, 2),
                         'stock' => $product->stock ?? null,
                         'image_url' => $product->image_url ?? null,
                     ];
                 });
             }),
+
         ];
     }
 }

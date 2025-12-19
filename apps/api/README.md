@@ -9,16 +9,10 @@ Dokumentasi untuk menjalankan dan mengembangkan API aplikasi ini
 
 ## Konfigurasi environment
 
-- Pastikan untuk membuat salinan `.env.example` di direktori API ini
+- agar fitur kirim email, login google, midtrans dapat berjalan lancar, harap jalankan command berikut:
 
 ```bash
-cp .env.example .env
-```
-
-- Lalu agar fitur kirim email, login google, midtrans dapat berjalan lancar, harap jalankan command berikut:
-
-```bash
-# Command ini akan menghasilkan .env dari .env.encrypted,
+# Command ini akan menghasilkan .env dari .env.encrypted jadi jika sudah ada .env tolong hapus terlebih dahulu,
 # dengan isi dari file .env.example ditambah beberapa variabel konfigurasi
 # yang berguna untuk keperluan kirim email ,login google dan
 php artisan env:decrypt

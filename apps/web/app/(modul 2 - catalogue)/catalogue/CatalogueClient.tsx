@@ -17,6 +17,31 @@ const promoBanners = [
   { id: 4, image: "/images/Screenshot 2025-10-25 203225.png", title: "Belanja hemat bulanan", link: "/promo/beli-hemat", cta: "cek sekarang" },
 ];
 
+const baseRestaurant = {
+  slug: "pas-jajan-setiabudhi",
+  title: "Pas Jajan - Setiabudhi",
+  image: "/img/logo2.png",
+  offers: ["Diskon 25%", "Diskon Ongkir"],
+};
+
+const topRatedRestaurants = Array.from({ length: 7 }, (_, i) => ({
+  id: i + 1,
+  slug: baseRestaurant.slug,
+  title: baseRestaurant.title,
+  image: baseRestaurant.image,
+  offers: baseRestaurant.offers,
+}));
+
+const mockProducts = [
+  { id: 1, name: "Beng - Beng", description: "Kemasan Extra", image: "/images/Screenshot 2025-10-25 174036.png", price: 18500 },
+  { id: 2, name: "Kusuka Keripik", description: "Singkong", image: "/images/Screenshot 2025-10-25 174142.png", price: 9500 },
+  { id: 3, name: "Happy Tos", description: "Keripik 140 g", image: "/images/Screenshot 2025-10-25 174230.png", price: 14500 },
+  { id: 4, name: "Mie Sedap", description: "Goreng Selection", image: "/images/Screenshot 2025-10-25 174329.png", price: 3500 },
+  { id: 5, name: "Lays", description: "Rasa Rumput laut", image: "/images/Screenshot 2025-10-25 174436.png", price: 9700 },
+  { id: 6, name: "Garuda Atom", description: "Original Flavor", image: "/images/Screenshot 2025-10-25 175114.png", price: 6800 },
+  { id: 7, name: "TicTac Snack", description: "Rasa Sapi", image: "/images/Screenshot 2025-10-25 175203.png", price: 8500 },
+  { id: 8, name: "Yupie Permen", description: "Gummy 9 Rasa", image: "/images/Screenshot 2025-10-25 175227.png", price: 14500 },
+];
 
 export default function CatalogueClient() {
   const params = useSearchParams();
@@ -25,31 +50,6 @@ export default function CatalogueClient() {
   const router = useRouter();
   const { search, setSearch } = useSearchStore();
   const [isLoading, setIsLoading] = React.useState(false);
-
-  // dynamic data from API
-  interface StoreSummary {
-    id: string;
-    slug: string;
-    title: string;
-    image: string;
-    offers?: string[];
-  }
-
-  interface ProductSummary {
-    id: string;
-    image_url?: string;
-    image?: string;
-    name?: string;
-    title?: string;
-    description?: string;
-    short_description?: string;
-    price?: number;
-    final_price?: number;
-  }
-
-  const [topRatedRestaurants, setTopRatedRestaurants] = React.useState<StoreSummary[]>([]);
-  const [products, setProducts] = React.useState<ProductSummary[]>([]);
-  const [dataLoading, setDataLoading] = React.useState(true);
 
   const categories = [
     { title: "Rekomendasi", items: ["Sushi Day", "Burger Baik", "Jus 1L", "Ayam Gebrak"] },
@@ -78,8 +78,8 @@ export default function CatalogueClient() {
     const val = (search || "").trim();
     if (!val) return [];
     const ql = val.toLowerCase();
-    return topRatedRestaurants.filter((r) => (r.title || "").toLowerCase().includes(ql));
-  }, [search, topRatedRestaurants]);
+    return topRatedRestaurants.filter((r) => r.title.toLowerCase().includes(ql));
+  }, [search]);
 
   React.useEffect(() => {
     setIsLoading(true);
@@ -110,91 +110,12 @@ export default function CatalogueClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  // Fetch stores and products from API
-  React.useEffect(() => {
-    let mounted = true;
-    setDataLoading(true);
-
-    const fetchStores = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/api/stores");
-        const json = await res.json();
-        if (!mounted) return;
-        let stores: unknown[] = [];
-        if (json && json.success) {
-          // support multiple response shapes
-          if (Array.isArray(json.data)) stores = json.data;
-          else if (Array.isArray(json.data?.data)) stores = json.data.data;
-          else if (Array.isArray(json.data?.stores)) stores = json.data.stores;
-        }
-
-        if (stores.length > 0) {
-          const mapped = stores.map((s) => {
-            const si = s as Record<string, unknown>;
-            const id = String(si.id ?? si.store_id ?? "");
-            const slug = String(si.code ?? si.slug ?? `store-${id}`);
-            const title = String(si.name ?? si.title ?? "Store");
-            const image = String(si.image_url ?? si.logo_url ?? "");
-            const offersRaw = si.offers;
-            const offers = Array.isArray(offersRaw) ? (offersRaw as unknown[]).map((o) => String(o)) : [];
-
-            return {
-              id,
-              slug,
-              title,
-              image: image || "/img/logo2.png",
-              offers,
-            } as StoreSummary;
-          });
-          setTopRatedRestaurants(mapped);
-        }
-      } catch (err) {
-        console.error("Failed to fetch stores:", err);
-      }
-    };
-
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/api/products");
-        const json = await res.json();
-        if (!mounted) return;
-        let items: unknown[] = [];
-        if (json && json.success) {
-          if (Array.isArray(json.data?.products)) items = json.data.products;
-          else if (Array.isArray(json.data)) items = json.data;
-          else if (Array.isArray(json.data?.data)) items = json.data.data;
-        }
-
-        const mapped = items.map((p) => {
-          const pp = p as Record<string, unknown>;
-          return {
-            id: String(pp.id ?? pp.product_id ?? ""),
-            image_url: String(pp.image_url ?? pp.image ?? ""),
-            image: String(pp.image ?? pp.image_url ?? ""),
-            name: String(pp.name ?? pp.title ?? ""),
-            title: String(pp.title ?? pp.name ?? ""),
-            description: String(pp.description ?? pp.short_description ?? ""),
-            short_description: String(pp.short_description ?? pp.description ?? ""),
-            price: Number(pp.price ?? pp.final_price ?? 0),
-            final_price: Number(pp.final_price ?? pp.price ?? 0),
-          } as ProductSummary;
-        });
-        setProducts(mapped);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-      }
-    };
-
-    Promise.all([fetchStores(), fetchProducts()]).finally(() => {
-      if (mounted) setDataLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const next = (search || "").trim();
+    if (next) router.push(`/catalogue?search=${encodeURIComponent(next)}`);
+    else router.push(`/catalogue`);
+  };
 
   return (
     <>
@@ -267,10 +188,10 @@ export default function CatalogueClient() {
             )}
 
             <h3 className="mb-4 text-2xl font-semibold">Rekomendasi</h3>
-            <TopRatedCarousel restaurants={topRatedRestaurants} showHeading={false} />
+            <TopRatedCarousel restaurants={topRatedRestaurants.slice(0, 1)} showHeading={false} />
           </section>
         ) : (
-          <TopRatedCarousel restaurants={topRatedRestaurants} />
+          <TopRatedCarousel restaurants={topRatedRestaurants.slice(0, 1)} />
         )}
       </div>
     </>
