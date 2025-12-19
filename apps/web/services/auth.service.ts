@@ -1,8 +1,8 @@
 import {
   loginSchema,
-  otpSchema,
   registerSchema,
-  verificationCodeSchema,
+  sendOTPSchema,
+  verifyOTPSchema,
 } from "@/lib/schema/auth.schema";
 import { api } from "@/lib/utils/axios";
 import { isAxiosError } from "axios";
@@ -19,7 +19,7 @@ export const authService = {
       return {
         ok: true,
         token: data.data.token,
-        user: data.data.user,
+        user: data.data.user_data,
         message: data.message || "Berhasil Masuk!",
       };
     } catch (error) {
@@ -56,7 +56,7 @@ export const authService = {
       };
     }
   },
-  sendOTP: async (payload: z.infer<typeof verificationCodeSchema>) => {
+  sendOTP: async (payload: z.infer<typeof sendOTPSchema>) => {
     try {
       const { data } = await api.post("/auth/send-otp", payload);
 
@@ -77,11 +77,11 @@ export const authService = {
       };
     }
   },
-  verifyOTP: async (payload: z.infer<typeof otpSchema>) => {
+  verifyOTP: async (payload: z.infer<typeof verifyOTPSchema>) => {
     try {
       const { data } = await api.post("/auth/verify-otp", {
         otp: payload.pin,
-        ...payload,
+        email: payload.email,
       });
 
       return {

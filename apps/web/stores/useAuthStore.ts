@@ -3,9 +3,7 @@ import {
   registerSchema,
   resetPasswordSchema,
 } from "@/lib/schema/auth.schema";
-import { api } from "@/lib/utils/axios";
 import { authService } from "@/services/auth.service";
-import { isAxiosError } from "axios";
 import Cookies from "js-cookie";
 import z from "zod";
 import { create } from "zustand";
@@ -65,7 +63,9 @@ export const useAuthStore = create<authStore>()(
         }
 
         Cookies.set("token", token, cookiesOptions);
-        Cookies.set("userRole", user.role, cookiesOptions);
+        if (data.role) {
+          Cookies.set("userRole", data.role, cookiesOptions);
+        }
 
         set({ user, token });
 
@@ -157,6 +157,7 @@ export const useAuthStore = create<authStore>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        registerHold: state.registerHold,
       }),
     },
   ),
