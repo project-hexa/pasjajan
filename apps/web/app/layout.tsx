@@ -29,7 +29,6 @@ export default function RootLayout({
         {children}
         <Toaster
           position="top-center"
-          id="global"
           style={
             {
               "--normal-bg": "var(--primary)",

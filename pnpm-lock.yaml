@@ -137,10 +137,10 @@ importers:
         version: 8.1.0(mapbox-gl@3.17.0)(react-dom@19.0.0-rc.1(react@19.0.0-rc.1))(react@19.0.0-rc.1)
       recharts:
         specifier: ^2.15.4
-        version: 2.15.4(react-dom@19.0.0-rc.1(react@19.0.0-rc.1))(react@19.0.0-rc.1)
-      tailwind-merge:
-        specifier: ^3.3.1
-        version: 3.3.1
+        version: 2.15.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      sonner:
+        specifier: ^2.0.7
+        version: 2.0.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -255,6 +255,9 @@ importers:
       '@diceui/mention':
         specifier: ^0.7.1
         version: 0.7.1(@types/react-dom@19.1.7(@types/react@19.1.9))(@types/react@19.1.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.68.0(react@19.1.1))
       '@iconify-icon/react':
         specifier: ^3.0.3
         version: 3.0.3(react@19.1.1)
@@ -336,6 +339,9 @@ importers:
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
+      react-hook-form:
+        specifier: ^7.68.0
+        version: 7.68.0(react@19.1.1)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)

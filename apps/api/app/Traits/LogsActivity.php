@@ -12,11 +12,12 @@ trait LogsActivity
    * 
    * @param string $activityType Type of activity (CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc)
    * @param string $description Description of the activity
+   * @param int|null $userId Optional user ID (for login before auth)
    * @return void
    */
-  protected function logActivity(string $activityType, string $description): void
+  protected function logActivity(string $activityType, string $description, ?int $userId = null): void
   {
-    $user = Auth::user();
+    $user = $userId ? \App\Models\User::find($userId) : Auth::user();
 
     if (!$user) {
       return;
