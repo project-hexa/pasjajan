@@ -53,7 +53,7 @@ export const RegisterForm = () => {
     data.phone_number = phone_number;
 
     setRegisterHold(data);
-    router.push("/verification-code");
+    router.push("/send-otp");
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { otpSchema } from "@/lib/schema/auth.schema";
+import { verifyOTPSchema } from "@/lib/schema/auth.schema";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
@@ -11,6 +11,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@workspace/ui/components/field";
+import { Icon } from "@workspace/ui/components/icon";
 import { InputOTP, InputOTPSlot } from "@workspace/ui/components/input-otp";
 import { toast } from "@workspace/ui/components/sonner";
 import { useRouter } from "next/navigation";
@@ -19,24 +20,24 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 export default function OTPPage() {
-  const otpForm = useForm<z.infer<typeof otpSchema>>({
-    resolver: zodResolver(otpSchema),
-    defaultValues: {
-      pin: "",
-    },
-  });
   const router = useRouter();
   const { verifyOTP, register, registerHold } = useAuthStore();
   const [emailForOTP, setEmailForOTP] = useState<string>("");
+  const otpForm = useForm<z.infer<typeof verifyOTPSchema>>({
+    resolver: zodResolver(verifyOTPSchema),
+    defaultValues: {
+      email: emailForOTP,
+      pin: "",
+    },
+  });
 
   useEffect(() => {
     const email = sessionStorage.getItem("emailForOTP") || "";
     setEmailForOTP(email);
-  }, []);
+    otpForm.setValue("email", email);
+  }, [otpForm]);
 
-  console.log("registerHold:", registerHold);
-
-  const handleSubmit = async (data: z.infer<typeof otpSchema>) => {
+  const handleOnSubmit = async (data: z.infer<typeof verifyOTPSchema>) => {
     const result = await verifyOTP(emailForOTP, data.pin);
 
     if (result.ok) {
@@ -46,10 +47,12 @@ export default function OTPPage() {
 
       const regist = await register(registerHold!);
       if (regist.ok) {
-        toast.success("Berhasil Register!", {
-          description: "Silahkan login menggunakan akun anda.",
-          toasterId: "global",
-        });
+        setTimeout(() => {
+          toast.success("Berhasil Register!", {
+            description: "Silahkan login menggunakan akun anda.",
+            toasterId: "global",
+          });
+        }, 150);
 
         router.push("/login");
       } else {
@@ -69,7 +72,7 @@ export default function OTPPage() {
       <Card className="flex flex-col overflow-hidden p-0 max-sm:mx-5 max-sm:-mt-40 md:border-2 md:border-black lg:h-2/3 lg:w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center p-0">
           <form
-            onSubmit={otpForm.handleSubmit(handleSubmit)}
+            onSubmit={otpForm.handleSubmit(handleOnSubmit)}
             id="otpForm"
             className="flex flex-col items-center justify-center gap-4 max-lg:p-5"
           >
@@ -80,8 +83,8 @@ export default function OTPPage() {
                 <Field>
                   <FieldLabel className="sr-only">One-Time Password</FieldLabel>
                   <FieldDescription className="max-w-md">
-                    Kami telah mengirimkan kode OTP ke example@example.com,
-                    silahkan masukan kode OTP anda.
+                    Kami telah mengirimkan kode OTP ke {emailForOTP}, silahkan
+                    masukan kode OTP anda.
                   </FieldDescription>
                   <InputOTP
                     maxLength={6}
@@ -110,8 +113,20 @@ export default function OTPPage() {
               </Button>
             </p>
 
-            <Button type="submit" form="otpForm">
-              Kirim
+            <Button
+              form="otpForm"
+              type="submit"
+              disabled={otpForm.formState.isSubmitting}
+            >
+              {otpForm.formState.isSubmitting ? (
+                <Icon
+                  icon={"lucide:loader-circle"}
+                  width={24}
+                  className="animate-spin"
+                />
+              ) : (
+                "Kirim"
+              )}
             </Button>
           </form>
         </CardContent>
