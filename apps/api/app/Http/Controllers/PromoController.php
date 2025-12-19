@@ -37,9 +37,8 @@ class PromoController extends Controller
 
     public function show($id, Request $request)
     {
-        $promo = Promo::with(['products'])
+        $promo = Promo::with(['products', 'stores'])
             ->where('id', $id)
-            ->active()
             ->firstOrFail();
 
         return new PromoResource($promo);
@@ -62,7 +61,7 @@ class PromoController extends Controller
      */
     public function index(Request $request)
     {
-        // $this->ensureAdmin();
+        $this->ensureAdmin();
 
         $perPage = $request->query('per_page', 15);
 
@@ -74,23 +73,13 @@ class PromoController extends Controller
 
     }
 
-    public function listStores()
-    {
-        return response()->json(Store::select('id', 'name')->get());
-    }
-
-    public function listProducts()
-    {
-        return response()->json(Product::select('id', 'name')->get());
-    }
-
     /**
      * POST /api/admin/promos
      * Tambah promo baru
      */
     public function store(Request $request)
     {
-        // $this->ensureAdmin();
+        $this->ensureAdmin();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',

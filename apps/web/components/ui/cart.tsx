@@ -1,4 +1,3 @@
-import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
@@ -6,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Icon } from "@workspace/ui/components/icon";
 import {

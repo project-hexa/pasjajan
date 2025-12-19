@@ -7,10 +7,11 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Notification;
 use App\Services\MidtransService;
-use App\Events\NotificationSent;
+use App\Mail\NotificationMail;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
@@ -243,18 +244,27 @@ class WebhookController extends Controller
             $customer = $order->customer;
             if (!$customer || !$customer->user_id) return;
 
-            $notification = Notification::create([
-                'title' => 'Pembayaran Berhasil! 🎉',
-                'body' => 'Pembayaran sukses dikonfirmasi. Duduk manis ya, paketmu segera meluncur!',
+            $user = $customer->user;
+            if (!$user || !$user->email) return;
+
+            $title = 'Pembayaran Berhasil! 🎉';
+            $body = 'Pembayaran sukses dikonfirmasi. Duduk manis ya, paketmu segera meluncur!';
+
+            // Simpan ke database
+            Notification::create([
+                'title' => $title,
+                'body' => $body,
                 'from_user_id' => null,
                 'to_user_id' => $customer->user_id,
             ]);
 
-            broadcast(new NotificationSent($notification))->toOthers();
+            // Kirim email
+            Mail::to($user->email)->send(new NotificationMail($title, $body));
 
             Log::info('Payment success notification sent to customer', [
                 'order_code' => $order->code,
                 'user_id' => $customer->user_id,
+                'email' => $user->email,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to send payment success notification', [
@@ -277,15 +287,22 @@ class WebhookController extends Controller
             $paymentMethod = $order->paymentMethod->method_name ?? 'Unknown';
             $itemCount = $order->items->count();
 
+            $title = "Pembayaran dari {$buyerName} 💰";
+            $body = "Pembayaran berhasil, metode pembayaran {$paymentMethod}, {$itemCount} produk. Kode: {$order->code}";
+
             foreach ($staffUsers as $staff) {
-                $notification = Notification::create([
-                    'title' => "Pembayaran dari {$buyerName} 💰",
-                    'body' => "Pembayaran berhasil, metode pembayaran {$paymentMethod}, {$itemCount} produk. Kode: {$order->code}",
+                // Simpan ke database
+                Notification::create([
+                    'title' => $title,
+                    'body' => $body,
                     'from_user_id' => null,
                     'to_user_id' => $staff->id,
                 ]);
 
-                broadcast(new NotificationSent($notification))->toOthers();
+                // Kirim email
+                if ($staff->email) {
+                    Mail::to($staff->email)->send(new NotificationMail($title, $body));
+                }
             }
 
             Log::info('Payment success notification sent to staff', [
@@ -309,18 +326,27 @@ class WebhookController extends Controller
             $customer = $order->customer;
             if (!$customer || !$customer->user_id) return;
 
-            $notification = Notification::create([
-                'title' => 'Pembayaran Kedaluwarsa ⏰',
-                'body' => 'Batas waktu pembayaran untuk pesanan ini telah berakhir. Silahkan lakukan pemesanan ulang.',
+            $user = $customer->user;
+            if (!$user || !$user->email) return;
+
+            $title = 'Pembayaran Kedaluwarsa ⏰';
+            $body = 'Batas waktu pembayaran untuk pesanan ini telah berakhir. Silahkan lakukan pemesanan ulang.';
+
+            // Simpan ke database
+            Notification::create([
+                'title' => $title,
+                'body' => $body,
                 'from_user_id' => null,
                 'to_user_id' => $customer->user_id,
             ]);
 
-            broadcast(new NotificationSent($notification))->toOthers();
+            // Kirim email
+            Mail::to($user->email)->send(new NotificationMail($title, $body));
 
             Log::info('Payment expired notification sent to customer', [
                 'order_code' => $order->code,
                 'user_id' => $customer->user_id,
+                'email' => $user->email,
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to send payment expired notification', [

@@ -63,7 +63,7 @@ export default function EditBranchPage() {
     if (params.id) {
       fetchBranch();
     }
-  }, [params.id, toast]);
+  }, [params.id]);
 
   const handleSubmit = async (formData: any) => {
     try {
