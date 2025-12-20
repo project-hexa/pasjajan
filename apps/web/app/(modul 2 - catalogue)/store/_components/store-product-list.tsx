@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 type ClassValue = string | false | null | undefined;
 
@@ -35,10 +37,12 @@ export default function StoreProductList({
   outerClassName,
   innerClassName,
 }: StoreProductListProps) {
+  const router = useRouter();
   const [selectedProduct, setSelectedProduct] = React.useState<StoreProduct | null>(null);
   const [quantity, setQuantity] = React.useState(1);
   const [toast, setToast] = React.useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
   const toastTimerRef = React.useRef<number | null>(null);
+  const { token } = useAuthStore();
 
   React.useEffect(() => {
     if (selectedProduct) {
@@ -124,7 +128,7 @@ export default function StoreProductList({
                 <div className="p-3 pb-16">
                   <div className="relative h-32 w-full overflow-hidden rounded-md bg-white">
                     <Image
-                      src={product.image}
+                      src={product.image || '/images/Screenshot 2025-10-25 173437.png'}
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 50vw, (max-width: 1280px) 20vw, 15vw"
@@ -141,9 +145,9 @@ export default function StoreProductList({
                   type="button"
                   className="absolute inset-x-0 bottom-0 rounded-2xl bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
                   onClick={(event) => {
-                    event.stopPropagation();
-                    openProduct(product);
-                  }}
+                      event.stopPropagation();
+                      openProduct(product);
+                    }}
                 >
                   Tambah
                 </button>
@@ -178,7 +182,7 @@ export default function StoreProductList({
               <div className="flex justify-center">
                 <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
                   <Image
-                    src={selectedProduct.image}
+                    src={selectedProduct.image || '/images/Screenshot 2025-10-25 173437.png'}
                     alt={selectedProduct.name}
                     fill
                     sizes="(max-width: 768px) 60vw, (max-width: 1280px) 30vw, 20vw"
@@ -227,9 +231,64 @@ export default function StoreProductList({
                 type="button"
                 className="mt-8 w-full rounded-full bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
                 onClick={() => {
-                  // simulate add to cart
-                  showToast("Barang berhasil di tambahkan ke keranjang");
-                  closeProduct();
+                  if (!selectedProduct) return;
+
+                  // require login
+                  if (!token) {
+                    showToast("Silakan masuk terlebih dahulu untuk menambahkan produk ke keranjang");
+                    try {
+                      // delay navigation so the toast is visible longer
+                      setTimeout(() => {
+                        try {
+                          router.push("/login");
+                        } catch {
+                          /* ignore */
+                        }
+                      }, 3500);
+                    } catch {
+                      // ignore
+                    }
+                    return;
+                  }
+
+                  try {
+                    const key = "pasjajan_cart";
+                    const raw = localStorage.getItem(key);
+                    const parsed: unknown[] = raw ? (JSON.parse(raw) as unknown[]) : [];
+
+                    const existingIndex = parsed.findIndex((i) => {
+                      const entry = i as Record<string, unknown>;
+                      const id = entry.id ?? entry.product_id;
+                      return String(id ?? "") === selectedProduct.id;
+                    });
+
+                    if (existingIndex !== -1) {
+                      const existing = parsed[existingIndex] as Record<string, unknown>;
+                      existing.quantity = Number(existing.quantity ?? 0) + quantity;
+                    } else {
+                      parsed.push({
+                        id: selectedProduct.id,
+                        name: selectedProduct.name,
+                        variant: selectedProduct.details ?? "",
+                        price: selectedProduct.price,
+                        quantity,
+                        image: selectedProduct.image,
+                      } as unknown);
+                    }
+
+                    localStorage.setItem(key, JSON.stringify(parsed));
+                    // notify other components (navbar) that cart changed
+                    try {
+                      window.dispatchEvent(new CustomEvent("cart_updated"));
+                    } catch {
+                      // ignore
+                    }
+                    showToast("Barang berhasil di tambahkan ke keranjang");
+                    closeProduct();
+                  } catch (err) {
+                    console.error(err);
+                    showToast("Gagal menambahkan ke keranjang");
+                  }
                 }}
               >
                 Tambah Keranjang

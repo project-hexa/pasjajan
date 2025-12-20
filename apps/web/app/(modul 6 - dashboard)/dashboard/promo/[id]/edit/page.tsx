@@ -21,6 +21,7 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
         const fetchPromo = async () => {
             try {
                 const response = await api.get(`/promos/${id}`);
+                // ApiResponse format: { success, message, data: { ...promo } }
                 setInitialData(response.data.data);
             } catch (error: any) {
                 console.error(error);

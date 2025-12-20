@@ -16,6 +16,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\VoucherController;
 
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
@@ -91,12 +92,16 @@ if (config('app.env') !== 'production') {
 	Route::post('/payment/webhook/test', [WebhookController::class, 'testWebhook']);
 }
 
+// User Management: Authentication
 // Membungkus route yang berkaitan dengan autentifikasi user ke route group yang menjalankan AuthController
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
 	Route::post('/auth/login/google', 'loginViaGoogle');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
+
+	// Endpoint untuk mengetest email
+	Route::post('/auth/test-send-email', 'testSendEmail');
 
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
 	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
@@ -106,26 +111,28 @@ Route::controller(AuthController::class)->group(function () {
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/auth/logout', 'logout');
+		Route::post('/auth/logout', 'logout');
 	});
 });
 
+// User Management
 // Membungkus route yang berkaitan dengan control atau data user ke route group yang menjalankan UserController
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/user/profile', 'getProfile');
-		Route::post('/user/change-profile', 'changeProfile');
-		Route::post('/user/add-address', 'createAddress');
-		Route::post('/user/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/change-password', 'changePassword');
-		Route::get('/user/total-point', 'getPoint');
-		Route::get('/user/order-history', 'getOrderHistory');
-		Route::get('/admin/users/{role}', 'index');
-		Route::get('/admin/user/{id}', 'show');
-		Route::post('/admin/add-user', 'store');
-		Route::post('/admin/edit-user/{id}', 'update');
-		Route::get('/admin/delete-user/{id}', 'destroy');
+		Route::get('/user/profile', 'getProfile')->name('user.profile');
+		Route::patch('/user/change-profile', 'changeProfile')->name('user.change.profile');
+		Route::post('/user/add-address', 'createAddress')->name('user.create.address');
+		Route::patch('/user/change-address/{addressId}', 'changeAddress')->name('user.change.address');
+		Route::delete('/user/delete-address/{addressId}', 'deleteAddress')->name('user.delete.address');
+		Route::put('/user/change-password', 'changePassword')->name('user.change.password');
+		Route::get('/user/total-point', 'getPoint')->name('user.point');
+		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');
+		Route::get('/admin/users/{role}', 'index')->name('admin.users');
+		Route::get('/admin/user/{id}', 'show')->name('admin.user');
+		Route::post('/admin/add-user', 'store')->name('admin.create.user');
+		Route::patch('/admin/edit-user/{id}', 'update')->name('admin.change.user');
+		Route::delete('/admin/delete-user/{id}', 'destroy')->name('admin.delete.user');
 	});
 });
 
@@ -196,9 +203,21 @@ Route::middleware('auth:sanctum')->group(function () {
 		Route::put('/admin/promos/{id}', 'update');
 		Route::delete('/admin/promos/{id}', 'destroy');
 	});
+
+	Route::controller(CustomerController::class)->group(function () {
+		Route::get('/admin/customers/points', 'getCustomersWithPoints')->name('customers.points');
+		Route::get('/admin/customers/{id}/point-history', 'getCustomerPointHistory')->name('customers.point-history');
+	});
 });
 
 
+// ============= CUSTOMER VOUCHER & POINTS =============
+Route::middleware('auth:sanctum')->group(function () {
+	Route::get('/customer/points', [VoucherController::class, 'getCustomerPoints']);
+	Route::get('/customer/vouchers', [VoucherController::class, 'getCustomerVouchers']);
+	Route::get('/vouchers/available', [VoucherController::class, 'getAvailableVouchers']);
+	Route::post('/customer/vouchers/redeem', [VoucherController::class, 'redeemVoucher']);
+});
 
 // ================= PRODUCT ROUTES =================
 //Stores

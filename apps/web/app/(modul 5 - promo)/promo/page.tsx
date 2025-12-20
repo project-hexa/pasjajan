@@ -42,8 +42,10 @@ export default function PromoPage() {
     setLoading(true);
     try {
       const response = await api.get(`/promos?page=${page}`);
-      setPromos(response.data.data);
-      setMeta(response.data.meta);
+      // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+      const responseData = response.data.data;
+      setPromos(responseData.data || []);
+      setMeta(responseData.meta || null);
     } catch (error) {
       console.error("Failed to fetch promos", error);
     } finally {

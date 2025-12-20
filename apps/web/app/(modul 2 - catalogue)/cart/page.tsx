@@ -15,32 +15,7 @@ interface CartItem {
   image: string;
 }
 
-const initialCart: CartItem[] = [
-  {
-    id: "teh-kotak",
-    name: "Teh Kotak - 300 ML",
-    variant: "300 ML",
-    price: 9000,
-    quantity: 1,
-    image: "/images/Screenshot 2025-10-25 175403.png",
-  },
-  {
-    id: "yupie-strawberry",
-    name: "Yupie Strawberry",
-    variant: "Gummy 57 g",
-    price: 18000,
-    quantity: 2,
-    image: "/images/Screenshot 2025-10-25 175227.png",
-  },
-  {
-    id: "chitato-barbeque",
-    name: "Chitato - Barbeque",
-    variant: "Snack 68 g",
-    price: 20000,
-    quantity: 2,
-    image: "/images/Screenshot 2025-10-25 175518.png",
-  },
-];
+const initialCart: CartItem[] = [];
 
 const SHIPPING_COST = 9000;
 const ADMIN_FEE = 1000;
@@ -50,6 +25,85 @@ const formatPrice = (value: number) => `Rp. ${value.toLocaleString("id-ID")}`;
 export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = React.useState<CartItem[]>(initialCart);
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pasjajan_cart");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown[];
+      const normalized = parsed.map((rawItem) => {
+        const it = rawItem as Record<string, unknown>;
+        return {
+          id: String(it.id ?? it.product_id ?? ""),
+          name: String(it.name ?? it.product_name ?? ""),
+          variant: String(it.variant ?? it.product_variant ?? ""),
+          price: Number(it.price ?? it.product_price ?? 0),
+          quantity: Number(it.quantity ?? it.qty ?? 1),
+          image: String(it.image ?? it.image_url ?? "/images/Screenshot 2025-10-25 173437.png"),
+        } as CartItem;
+      });
+
+      // try to fetch latest product data from API and merge
+      (async () => {
+        try {
+          const ids = Array.from(new Set(normalized.map((i) => i.id).filter(Boolean)));
+          if (ids.length === 0) {
+            setItems(normalized);
+            return;
+          }
+
+          // fetch products in parallel using product detail endpoint
+          const fetches = ids.map((id) =>
+            fetch(`${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$|\/$/, '') || "http://localhost:8000"}/api/products/${id}`).then((r) => {
+              if (!r.ok) return null;
+              return r.json().catch(() => null);
+            }).catch(() => null),
+          );
+
+          const results = await Promise.all(fetches);
+
+          const byId = new Map<string, unknown>();
+          results.forEach((res) => {
+            if (!res) return;
+            // support different shapes: { success, data: { product } } or { success, data } or direct product
+            const product = res.data?.product ?? res.data ?? res.product ?? null;
+            if (product && (product.id ?? product.product_id)) {
+              const pid = (product.id ?? product.product_id).toString();
+              byId.set(pid, product);
+            }
+          });
+
+          const merged = normalized.map((it) => {
+            const pRaw = byId.get(it.id);
+            if (!pRaw) return it;
+            const p = pRaw as Record<string, unknown>;
+            return {
+              ...it,
+              name: String(p.name ?? p.title ?? it.name),
+              price: Number(p.price ?? p.final_price ?? it.price ?? 0),
+              image: String(p.image_url ?? p.image ?? it.image),
+              variant: it.variant || String(p.details ?? it.variant),
+            } as CartItem;
+          });
+
+          setItems(merged);
+        } catch (err) {
+          console.error("Failed to refresh cart product data", err);
+          setItems(normalized);
+        }
+      })();
+    } catch (err) {
+      console.error("Failed to load cart from localStorage", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("pasjajan_cart", JSON.stringify(items));
+    } catch (err) {
+      console.error("Failed to persist cart to localStorage", err);
+    }
+  }, [items]);
 
   const totalItems = React.useMemo(
     () => items.reduce((acc, item) => acc + item.quantity, 0),
