@@ -48,6 +48,16 @@ export default function BranchManagementPage() {
     const fetchBranches = async () => {
       try {
         setLoading(true);
+
+        // Mock Data Override
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const formattedBranches = [
+          { id: "1", name: "Cabang Pusat", address: "Jl. Sudirman No. 1", income: "Rp 150.000.000", contact: "081234567890", status: "active", code: "PST", latitude: -6.1, longitude: 106.8 },
+          { id: "2", name: "Cabang Jakarta Barat", address: "Jl. Panjang No. 10", income: "Rp 80.000.000", contact: "081298765432", status: "active", code: "JKB", latitude: -6.2, longitude: 106.7 },
+          { id: "3", name: "Cabang Bandung", address: "Jl. Asia Afrika", income: "Rp 95.000.000", contact: "0811223344", status: "active", code: "BDG", latitude: -6.9, longitude: 107.6 }
+        ];
+
+        /*
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/branches`,
           {
@@ -81,8 +91,9 @@ export default function BranchManagementPage() {
           latitude: branch.latitude,
           longitude: branch.longitude,
         }));
+        */
 
-        setBranches(formattedBranches);
+        setBranches(formattedBranches as any);
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -130,9 +141,9 @@ export default function BranchManagementPage() {
         branches.map((branch) =>
           branch.id === branchId
             ? {
-                ...branch,
-                status: action === "activate" ? "active" : "inactive",
-              }
+              ...branch,
+              status: action === "activate" ? "active" : "inactive",
+            }
             : branch,
         ),
       );

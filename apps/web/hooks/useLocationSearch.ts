@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import axios from "axios";
+import { api as axios } from "@/lib/utils/axios";
 
 interface LocationResult {
   name: string;
