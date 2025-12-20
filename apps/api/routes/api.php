@@ -99,6 +99,9 @@ Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
 
+	// Endpoint untuk mengetest email
+	Route::post('/auth/test-send-email', 'testSendEmail');
+
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
 	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
 		Route::post('/auth/register', 'registerPost');
