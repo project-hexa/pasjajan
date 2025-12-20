@@ -107,7 +107,7 @@ Route::controller(AuthController::class)->group(function () {
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/auth/logout', 'logout');
+		Route::post('/auth/logout', 'logout');
 	});
 });
 
@@ -117,18 +117,18 @@ Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
 		Route::get('/user/profile', 'getProfile')->name('user.profile');
-		Route::post('/user/change-profile', 'changeProfile')->name('user.change.profile');
+		Route::patch('/user/change-profile', 'changeProfile')->name('user.change.profile');
 		Route::post('/user/add-address', 'createAddress')->name('user.create.address');
-		Route::post('/user/change-address/{addressId}', 'changeAddress')->name('user.change.address');
-		Route::post('/user/delete-address/{addressId}', 'deleteAddress')->name('user.delete.address');
-		Route::post('/user/change-password', 'changePassword')->name('user.change.password');
+		Route::patch('/user/change-address/{addressId}', 'changeAddress')->name('user.change.address');
+		Route::delete('/user/delete-address/{addressId}', 'deleteAddress')->name('user.delete.address');
+		Route::put('/user/change-password', 'changePassword')->name('user.change.password');
 		Route::get('/user/total-point', 'getPoint')->name('user.point');
 		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');
 		Route::get('/admin/users/{role}', 'index')->name('admin.users');
 		Route::get('/admin/user/{id}', 'show')->name('admin.user');
 		Route::post('/admin/add-user', 'store')->name('admin.create.user');
-		Route::post('/admin/edit-user/{id}', 'update')->name('admin.change.user');
-		Route::get('/admin/delete-user/{id}', 'destroy')->name('admin.delete.user');
+		Route::patch('/admin/edit-user/{id}', 'update')->name('admin.change.user');
+		Route::delete('/admin/delete-user/{id}', 'destroy')->name('admin.delete.user');
 	});
 });
 
