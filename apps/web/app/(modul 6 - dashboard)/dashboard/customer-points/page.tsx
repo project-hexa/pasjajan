@@ -107,7 +107,7 @@ export default function CustomerPointsPage() {
                 {/* Table */}
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-100">
+                        <thead className="bg-[#B9DCCC]">
                             <tr>
                                 <th className="px-4 py-3 font-semibold">No</th>
                                 <th className="px-4 py-3 font-semibold">Nama</th>
@@ -139,7 +139,7 @@ export default function CustomerPointsPage() {
                                 </tr>
                             ) : (
                                 customers.map((customer, index) => (
-                                    <tr key={customer.id} className="border-b hover:bg-gray-50">
+                                    <tr key={customer.id} className="border-b hover:bg-green-50">
                                         <td className="px-4 py-3">
                                             {((currentPage - 1) * 15) + index + 1}
                                         </td>

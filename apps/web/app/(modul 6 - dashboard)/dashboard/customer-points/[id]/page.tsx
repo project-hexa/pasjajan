@@ -138,7 +138,7 @@ export default function CustomerPointHistoryPage() {
                 <CardContent>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-gray-100">
+                            <thead className="bg-[#B9DCCC]">
                                 <tr>
                                     <th className="px-4 py-3 font-semibold">Tanggal</th>
                                     <th className="px-4 py-3 font-semibold">Tipe</th>
@@ -165,7 +165,7 @@ export default function CustomerPointHistoryPage() {
                                     </tr>
                                 ) : (
                                     history.map((item) => (
-                                        <tr key={item.id} className="border-b hover:bg-gray-50">
+                                        <tr key={item.id} className="border-b hover:bg-green-50">
                                             <td className="px-4 py-3 text-gray-600">{item.created_at}</td>
                                             <td className="px-4 py-3">
                                                 <Badge
