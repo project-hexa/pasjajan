@@ -5,11 +5,19 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { BranchForm } from "../_components/branch-form";
 
+type BranchFormValues = {
+  code: string;
+  name: string;
+  address: string;
+  phone_number: string;
+  status: "Active" | "Inactive";
+};
+
 export default function CreateBranchPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: BranchFormValues) => {
     setIsLoading(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/branches`, {
@@ -20,10 +28,12 @@ export default function CreateBranchPage() {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          ...data,
+          code: data.code,
+          name: data.name,
+          address: data.address,
+          phone_number: data.phone_number,
+          status: data.status,
           is_active: true,
-          latitude: parseFloat(data.latitude) || 0,
-          longitude: parseFloat(data.longitude) || 0
         }),
       });
 
@@ -34,9 +44,10 @@ export default function CreateBranchPage() {
       }
 
       router.push('/dashboard/branch-data');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating branch:", error);
-      alert(error.message || "Terjadi kesalahan saat menambahkan cabang");
+      const message = error instanceof Error ? error.message : "Terjadi kesalahan saat menambahkan cabang";
+      alert(message);
     } finally {
       setIsLoading(false);
     }

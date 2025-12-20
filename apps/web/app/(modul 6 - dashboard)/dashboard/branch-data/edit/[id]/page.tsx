@@ -18,12 +18,30 @@ interface BranchData {
   status: "active" | "inactive";
 }
 
+type BranchFormValues = {
+  code: string;
+  name: string;
+  address: string;
+  phone_number: string;
+  status: "Active" | "Inactive";
+};
+
+type ApiBranch = Partial<{
+  id: string | number;
+  name: string;
+  address: string;
+  phone_number: string;
+  code: string;
+  latitude: number;
+  longitude: number;
+  is_active: boolean;
+}>;
+
 export default function EditBranchPage() {
   const params = useParams();
   const router = useRouter();
   const [branch, setBranch] = useState<BranchData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [statusLoading, setStatusLoading] = useState(false);
 
   useEffect(() => {
     const fetchBranch = async () => {
@@ -44,11 +62,11 @@ export default function EditBranchPage() {
 
         const responseData = await response.json();
         // Normalisasi bentuk data: dukung data langsung, data.branch, atau data.branches (array)
-        let raw: any = null;
+        let raw: ApiBranch | null = null;
         const idParam = String(params.id);
         if (responseData?.data) {
           if (Array.isArray(responseData.data.branches)) {
-            raw = responseData.data.branches.find((b: any) => String(b.id) === idParam) || null;
+            raw = (responseData.data.branches as ApiBranch[]).find((b) => String(b.id) === idParam) || null;
           } else if (responseData.data.branch) {
             raw = responseData.data.branch;
           } else {
@@ -62,12 +80,12 @@ export default function EditBranchPage() {
 
         setBranch({
           id: String(raw.id),
-          name: raw.name,
-          address: raw.address,
-          phone_number: raw.phone_number,
-          code: raw.code,
-          latitude: raw.latitude ?? 0,
-          longitude: raw.longitude ?? 0,
+          name: (raw.name as string),
+          address: (raw.address as string),
+          phone_number: (raw.phone_number as string),
+          code: (raw.code as string),
+          latitude: (raw.latitude as number) ?? 0,
+          longitude: (raw.longitude as number) ?? 0,
           status: raw.is_active ? 'active' : 'inactive',
         });
       } catch (error) {
@@ -81,16 +99,18 @@ export default function EditBranchPage() {
     if (params.id) {
       fetchBranch();
     }
-  }, [params.id, toast]);
+  }, [params.id]);
 
-  const handleStatusChange = async (newStatus: "Active" | "Inactive"): Promise<boolean> => {
+  const handleStatusChange = async (_newStatus: "Active" | "Inactive"): Promise<boolean> => {
     // Tidak memanggil API di sini; hanya update state lokal.
     // Perubahan status akan dipersist saat tombol "Simpan Perubahan" ditekan (PUT /branches/{id}).
     if (!branch) return false;
+    // Gunakan parameter agar tidak dianggap unused oleh ESLint
+    void _newStatus;
     return true;
   };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: BranchFormValues) => {
     try {
       setIsLoading(true);
       const response = await fetch(
@@ -106,8 +126,6 @@ export default function EditBranchPage() {
             code: formData.code,
             address: formData.address,
             phone_number: formData.phone_number,
-            latitude: parseFloat(formData.latitude) || 0,
-            longitude: parseFloat(formData.longitude) || 0,
             // Beberapa backend mengabaikan is_active pada PUT. Tetap kirim jika didukung.
             is_active: formData.status === 'Active',
           }),
@@ -137,9 +155,10 @@ export default function EditBranchPage() {
 
       toast.success('Data cabang berhasil diperbarui');
       router.push('/dashboard/branch-data');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating branch:", error);
-      toast.error(error.message || "Terjadi kesalahan saat memperbarui cabang");
+      const message = error instanceof Error ? error.message : "Terjadi kesalahan saat memperbarui cabang";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +198,7 @@ export default function EditBranchPage() {
                 status: branch.status === 'active' ? 'Active' : 'Inactive' as 'Active' | 'Inactive'
               }}
               onSubmit={handleSubmit}
-              isLoading={isLoading || statusLoading}
+              isLoading={isLoading}
               onStatusChange={handleStatusChange}
             />
           </CardContent>

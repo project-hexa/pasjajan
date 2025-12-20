@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -8,13 +8,6 @@ import { Button } from "@workspace/ui/components/button";
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { Label } from "@workspace/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
 
 const branchSchema = z.object({
   code: z.string().min(3, "Kode cabang minimal 3 karakter"),
@@ -46,8 +39,6 @@ export function BranchForm({ initialData, onSubmit, isLoading }: BranchFormProps
     register,
     handleSubmit,
     reset,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<BranchFormValues>({
     resolver: zodResolver(branchSchema),
@@ -59,8 +50,6 @@ export function BranchForm({ initialData, onSubmit, isLoading }: BranchFormProps
       status: "Active",
     },
   });
-
-  const status = watch("status");
 
   useEffect(() => {
     if (initialData) {

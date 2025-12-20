@@ -35,6 +35,19 @@ interface Branch {
   longitude?: number;
 }
 
+type ApiBranch = Partial<{
+  id: string | number;
+  name: string;
+  address: string;
+  penghasilan: string | number;
+  phone_number: string;
+  is_active: boolean;
+  code?: string;
+  latitude?: number;
+  longitude?: number;
+  created_at?: string;
+}>;
+
 export default function BranchManagementPage() {
   const router = useRouter();
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -67,7 +80,7 @@ export default function BranchManagementPage() {
         console.log("API Response:", responseData);
 
         // Get branches from the nested data.branches
-        let branchesData = responseData.data?.branches || [];
+        let branchesData: ApiBranch[] = (responseData.data?.branches as ApiBranch[]) || [];
         
         // Sort branches by created_at (newest first) or by ID if created_at is not available
         branchesData = [...branchesData].sort((a, b) => {
@@ -76,15 +89,15 @@ export default function BranchManagementPage() {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           }
           // Fallback to ID if created_at is not available
-          return parseInt(b.id) - parseInt(a.id);
+          return parseInt(String(b.id || "0")) - parseInt(String(a.id || "0"));
         });
         
         // Transform the API response to match our Branch interface
-        const formattedBranches = branchesData.map((branch: any) => ({
-          id: branch.id?.toString() || "",
+        const formattedBranches: Branch[] = branchesData.map((branch) => ({
+          id: (branch.id !== undefined && branch.id !== null) ? String(branch.id) : "",
           name: branch.name || "Nama tidak tersedia",
           address: branch.address || "Alamat tidak tersedia",
-          income: branch.penghasilan || "Rp 0",
+          income: branch.penghasilan ?? "Rp 0",
           contact: branch.phone_number || "-",
           status: branch.is_active ? "active" : "inactive",
           code: branch.code || "",
@@ -113,45 +126,6 @@ export default function BranchManagementPage() {
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-  };
-
-  const handleStatusChange = async (
-    branchId: string,
-    action: "activate" | "deactivate",
-  ) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/branches/${branchId}/${action}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} branch`);
-      }
-
-      // Update the local state to reflect the change
-      setBranches(
-        branches.map((branch) =>
-          branch.id === branchId
-            ? {
-                ...branch,
-                status: action === "activate" ? "active" : "inactive",
-              }
-            : branch,
-        ),
-      );
-    } catch (err) {
-      console.error(`Error ${action}ing branch:`, err);
-      alert(
-        `Gagal ${action === "activate" ? "mengaktifkan" : "menonaktifkan"} cabang. Silakan coba lagi.`,
-      );
-    }
   };
 
   return (

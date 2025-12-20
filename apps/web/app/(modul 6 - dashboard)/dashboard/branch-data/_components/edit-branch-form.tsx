@@ -93,7 +93,7 @@ export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChang
                     if (!ok) return;
                   }
                   setValue('status', newStatus, { shouldDirty: true, shouldTouch: true });
-                } catch (_e) {
+                } catch {
                   // ignore
                 }
               }}
