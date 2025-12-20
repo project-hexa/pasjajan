@@ -258,11 +258,13 @@ class UserController extends BaseController
 	{
 		// Tetapkan aturan (rules) untuk validasi ganti profile
 		$rules = [
-			'full_name' => 'nullable|string',
-			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
-			'address' => 'nullable|string',
 			'email_before' => 'required|exists:App\Models\User,email|string|email',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
+			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
+			'full_name' => 'nullable|string',
+			'birth_date' => 'nullable|date',
+			'gender' => 'nullable|alpha:ascii',
+			'avatar' => 'nullable|string',
 		];
 
 		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
@@ -300,7 +302,6 @@ class UserController extends BaseController
 		$user['birth_date'] = $data['birth_date'] ?? $user['birth_date'];
 		$user['gender'] = $data['gender'] ?? $user['gender'];
 		$user['avatar'] = $data['avatar'] ?? $user['avatar'];
-		$user['status_account'] = $data['status_account'] ?? $user['status_account'];
 
 		$user->save();
 
