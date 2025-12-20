@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
 @plugin "@tailwindcss/typography";
 @plugin "tailwind-scrollbar" {
   nocompatible: true;

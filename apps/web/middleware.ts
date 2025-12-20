@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export default function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const verificationStep = request.cookies.get("verificationStep")?.value;
-  const { pathname, search } = request.nextUrl;
-  const currentURL = pathname + search;
+  const { pathname } = request.nextUrl;
 
   // Routes yang memerlukan token (authenticated)
   const protectedRoute = ["/dashboard", "/profile"].some((route) =>
@@ -24,7 +23,6 @@ export default function middleware(request: NextRequest) {
   // 1. Jika akses protected route tanpa token, redirect ke login
   if (protectedRoute && !token) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", currentURL);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -64,7 +62,7 @@ export const config = {
   matcher: [
     "/verification-code:path*",
     "/one-time-password:path*",
-    // "/dashboard:path*",
+    "/dashboard:path*",
     "/profile:path*",
     "/login:path*",
     "/register:path*",

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\PaymentController;
@@ -20,6 +21,8 @@ use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
 use App\Http\Controllers\Product\CartController;
+use App\Http\Middleware\EnsureOtpIsVerified;
+
 /*
 Route::get('/user', function (Request $request) {
 	return $request->user();

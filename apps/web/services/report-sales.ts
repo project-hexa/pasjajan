@@ -2,7 +2,7 @@ import {
   ReportSalesResponse,
   reportSalesSchema,
 } from "@/lib/schema/report-sales.schema";
-import { getToken } from "@/lib/utils";
+import { api, createServerApi } from "@/lib/utils/axios";
 
 interface ReportSalesParams {
   period: "monthly" | "yearly" | "daily" | "custom";
@@ -11,30 +11,56 @@ interface ReportSalesParams {
   storeId?: "string";
 }
 
+// Client-side version
 export const getReportSales = async ({
   period,
   from,
   to,
   storeId,
 }: ReportSalesParams): Promise<ReportSalesResponse> => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/reports/sales?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
-    {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    },
-  );
+  const params: Record<string, string> = { period };
+
+  if (from) params.from = from;
+  if (to) params.to = to;
+  if (storeId) params.storeId = storeId;
+
+  const response = await api.get("/reports/sales", {
+    params,
+  });
 
   console.log(response);
 
-  if (!response.ok) {
+  const parsedData = reportSalesSchema.safeParse(response.data);
+
+  if (!parsedData.success) {
+    console.error("Report Sales Schema Validation Error:", parsedData.error);
     throw new Error("Gagal memuat data laporan penjualan.");
   }
 
-  const data = await response.json();
+  return parsedData.data;
+};
 
-  const parsedData = reportSalesSchema.safeParse(data);
+// Server-side version for Server Components
+export const getReportSalesServer = async ({
+  period,
+  from,
+  to,
+  storeId,
+}: ReportSalesParams): Promise<ReportSalesResponse> => {
+  const serverApi = await createServerApi();
+  const params: Record<string, string> = { period };
+
+  if (from) params.from = from;
+  if (to) params.to = to;
+  if (storeId) params.storeId = storeId;
+
+  const response = await serverApi.get("/reports/sales", {
+    params,
+  });
+
+  console.log(response);
+
+  const parsedData = reportSalesSchema.safeParse(response.data);
 
   if (!parsedData.success) {
     console.error("Report Sales Schema Validation Error:", parsedData.error);
@@ -57,20 +83,18 @@ export const exportReportSales = async ({
   to,
   storeId,
 }: ExportReportSalesParams) => {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/sales/export?period=${period}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}${storeId ? `&storeId=${storeId}` : ""}`,
-    {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    },
-  );
+  const params: Record<string, string> = { period };
 
-  if (!response.ok) {
-    throw new Error("Gagal mengekspor laporan penjualan.");
-  }
+  if (from) params.from = from;
+  if (to) params.to = to;
+  if (storeId) params.storeId = storeId;
 
-  const blob = await response.blob();
+  const response = await api.get("/sales/export", {
+    params,
+    responseType: "blob",
+  });
+
+  const blob = response.data;
   const url = window.URL.createObjectURL(new Blob([blob]));
   const link = document.createElement("a");
   link.href = url;
