@@ -275,7 +275,7 @@ class AuthController extends BaseController
 
 		// Menetapkan aturan (rules) validasi kirim otp
 		$rules = [
-			$input_type => 'required|' . ($input_type == 'email' ? $input_type : 'numeric') . '|unique:otps,' . $input_type,
+			$input_type => 'required|' . ($input_type == 'email' ? $input_type : 'numeric'),
 		];
 
 		// Validasi inputan user berdasarkan aturan validasi kirim otp yang telah ditetapkan sebelumnya
@@ -292,26 +292,55 @@ class AuthController extends BaseController
 		// Ambil data inputan user yang sudah divalidasi
 		$data = $validator->validated();
 
-		// Mencari user dengan email yang sama dengan email inputan user, lalu membuatkan otp utk user tsb
+		// Mencari user dengan email yang sama dengan email inputan user
 		$user = User::where($input_type, $data[$input_type])->first();
-		$otp = null;
+		$otp = $user ? Otp::where('user_id', $user['id'])->first() : Otp::where($input_type, $data[$input_type])->first();
 		$emailAddress = null;
+		$expiringTime = 1; // Dalam hitungan menit
 
-		// Jika tidak ditemukan, maka
-		if (!$user) {
-			$otp = $this->createOtp(email: $data[$input_type]);
-			$emailAddress = $otp['email'];
+		// Jika otp tidak ditemukan, maka
+		if (!$otp) {
+			// Jika user tidak ditemukan, maka
+			if (!$user) {
+				// Buat & masukkan otp baru milik user ke database
+				$otp = $this->createOtp($expiringTime, email: $data[$input_type]);
+				$emailAddress = $otp['email'];
 
-			//return $this->sendFailResponse("User dengan $input_type $data[$input_type] tidak ditemukan. Gagal mengirim OTP.", code:401);
+				//return $this->sendFailResponse("User dengan $input_type $data[$input_type] tidak ditemukan. Gagal mengirim OTP.", code:401);
+			} else {
+				// Jika user ditemukan, maka
+				// Buat & masukkan otp baru milik user ke database
+				$otp = $this->createOtp($expiringTime, user: $user);
+				$emailAddress = $user['email'];
+			}
 		} else {
-			// Jika ditemukan, maka
-			// Buat & masukkan otp baru milik user ke database
-			$otp = $this->createOtp(user: $user);
-			$emailAddress = $user['email'];
+			// Jika otp ditemukan, maka
+			// Cek jika jumlah total pengiriman otp untuk user telah lebih dari 3 kali
+			if ($otp['attempt_count'] >= 3) {
+				return $this->sendFailResponse("Otp telah dikirim lebih dari tiga kali. Harap hubungi admin untuk memulihkan akun Anda.");
+			} else {
+				// Jika total pengiriman otp masih kurang dari 3 kali, maka
+				// Hitung total waktu sebelum kode otp expired
+				$expiringTime = (($otp['attempt_count'] * 2) + 1);
+
+				// Jika user tidak ditemukan, maka
+				if (!$user) {
+					// Buat & masukkan otp baru milik user ke database
+					$otp = $this->updateOtp($expiringTime, email: $data[$input_type]);
+					$emailAddress = $otp['email'];
+
+					//return $this->sendFailResponse("User dengan $input_type $data[$input_type] tidak ditemukan. Gagal mengirim OTP.", code:401);
+				} else {
+					// Jika user ditemukan, maka
+					// Buat & masukkan otp baru milik user ke database
+					$otp = $this->updateOtp($expiringTime, user: $user);
+					$emailAddress = $user['email'];
+				}
+			}
 		}
 
 		// Tetapkan isi konten pada badan email/chat/sms
-		$content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam 5 menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
+		$content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam " . $expiringTime . " menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
 
 		if ($input_type == 'email') {
 			// Mengirim otp ke alamat email milik user terkait
@@ -419,12 +448,12 @@ class AuthController extends BaseController
 	}
 
 	// Method untuk memasukkan data inputan otp dari user ke database
-	private function createOtp(User $user = null, string $email = null): Otp
+	private function createOtp(int $expiringTime, User $user = null, string $email = null): Otp
 	{
 		// Membuat otp, berikut bentuk hash & waktu kadaluarsanya
 		$otp = rand(100000, 999999);
 		//$hashedOtp = Hash::make($otp);
-		$expiresAt = now()->addMinutes(5);
+		$expiresAt = now()->addMinutes($expiringTime);
 
 		// Jika data user tidak ditemukan, maka
 		if (!$user) {
@@ -433,6 +462,7 @@ class AuthController extends BaseController
 				'email' => $email,
 				'otp' => $otp,
 				'expires_at' => $expiresAt,
+				'attempt_count' => 1,
 			]);
 		}
 
@@ -441,6 +471,35 @@ class AuthController extends BaseController
 			'user_id' => $user['id'],
 			'otp' => $otp,
 			'expires_at' => $expiresAt,
+			'attempt_count' => 1,
 		]);
+	}
+
+	// Method untuk mengubah data otp milik user di database
+	private function updateOtp(int $expiringTime, User $user = null, string $email = null): Otp
+	{
+		// Membuat kode otp, berikut bentuk hash & waktu kadaluarsanya
+		$otp_code = rand(100000, 999999);
+		//$hashedOtp = Hash::make($otp);
+		$otp = null;
+
+		// Jika data user tidak ditemukan, maka
+		if (!$user) {
+			// Mencari otp milik user di database
+			$otp = Otp::where('email', $email)->first();
+		} else {
+			// Jika data user ditemukan, maka
+			// Mencari otp milik user di database
+			$otp = Otp::where('user_id', $user['id'])->first();
+		}
+
+		// Mengubah (update) data otp (tanpa data user) di database
+		$otp['otp'] = $otp_code;
+		$otp['attempt_count'] += 1;
+		$otp['expires_at'] = now()->addMinutes($expiringTime);
+
+		$otp->save();
+
+		return $otp;
 	}
 }
