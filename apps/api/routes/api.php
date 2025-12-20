@@ -200,6 +200,11 @@ Route::middleware('auth:sanctum')->group(function () {
 		Route::put('/admin/promos/{id}', 'update');
 		Route::delete('/admin/promos/{id}', 'destroy');
 	});
+
+	Route::controller(CustomerController::class)->group(function () {
+		Route::get('/admin/customers/points', 'getCustomersWithPoints')->name('customers.points');
+		Route::get('/admin/customers/{id}/point-history', 'getCustomerPointHistory')->name('customers.point-history');
+	});
 });
 
 

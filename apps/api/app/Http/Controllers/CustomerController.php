@@ -228,10 +228,12 @@ class CustomerController extends Controller
 
             $query = Customer::with('user')
                 ->withCount('orders')
-                ->withSum(['orders as total_price' => function ($q) {
-                    $q->where('status', 'COMPLETED')
-                        ->where('payment_status', 'paid');
-                }], 'grand_total');
+                ->withSum([
+                    'orders as total_price' => function ($q) {
+                        $q->where('status', 'COMPLETED')
+                            ->where('payment_status', 'paid');
+                    }
+                ], 'grand_total');
 
 
             if ($request->filled('search')) {
@@ -390,16 +392,20 @@ class CustomerController extends Controller
             [$from, $to] = $this->getDateRange($period, $request);
 
             $customers = Customer::with('user')
-                ->withCount(['orders' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->where('status', 'COMPLETED')
-                        ->where('payment_status', 'paid');
-                }])
-                ->withSum(['orders as total_spent' => function ($query) use ($from, $to) {
-                    $query->whereBetween('created_at', [$from, $to])
-                        ->where('status', 'COMPLETED')
-                        ->where('payment_status', 'paid');
-                }], 'grand_total')
+                ->withCount([
+                    'orders' => function ($query) use ($from, $to) {
+                        $query->whereBetween('created_at', [$from, $to])
+                            ->where('status', 'COMPLETED')
+                            ->where('payment_status', 'paid');
+                    }
+                ])
+                ->withSum([
+                    'orders as total_spent' => function ($query) use ($from, $to) {
+                        $query->whereBetween('created_at', [$from, $to])
+                            ->where('status', 'COMPLETED')
+                            ->where('payment_status', 'paid');
+                    }
+                ], 'grand_total')
                 ->get();
 
             $csvData = "ID,Name,Email,Phone,Total Orders,Total Spent,Member Since\n";
@@ -684,5 +690,130 @@ class CustomerController extends Controller
                 'transactions' => (int) $item->count,
             ];
         });
+    }
+
+    public function getCustomersWithPoints(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'per_page' => 'nullable|integer|min:5|max:100',
+                'page' => 'nullable|integer|min:1',
+                'search' => 'nullable|string|max:255',
+                'sort' => 'nullable|in:highest,lowest,newest,oldest',
+            ]);
+
+            if ($validator->fails()) {
+                return ApiResponse::validationError($validator->errors()->toArray());
+            }
+
+            $perPage = $request->input('per_page', 15);
+            $search = $request->input('search');
+            $sort = $request->input('sort', 'newest');
+
+            $query = Customer::with('user')
+                ->whereHas('user', function ($q) {
+                    $q->where('role', 'Customer');
+                });
+
+            if ($search) {
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone_number', 'like', "%{$search}%");
+                });
+            }
+
+            switch ($sort) {
+                case 'highest':
+                    $query->orderBy('point', 'desc');
+                    break;
+                case 'lowest':
+                    $query->orderBy('point', 'asc');
+                    break;
+                case 'oldest':
+                    $query->orderBy('created_at', 'asc');
+                    break;
+                default:
+                    $query->orderBy('created_at', 'desc');
+            }
+
+            $customers = $query->paginate($perPage);
+
+            return ApiResponse::success([
+                'customers' => $customers->map(function ($customer) {
+                    return [
+                        'id' => $customer->id,
+                        'user_id' => $customer->user_id,
+                        'name' => $customer->user->full_name,
+                        'email' => $customer->user->email,
+                        'phone' => $customer->user->phone_number,
+                        'point' => $customer->point,
+                        'formatted_point' => number_format($customer->point, 0, ',', '.'),
+                        'member_since' => $customer->created_at->format('Y-m-d'),
+                    ];
+                }),
+                'pagination' => [
+                    'current_page' => $customers->currentPage(),
+                    'per_page' => $customers->perPage(),
+                    'total' => $customers->total(),
+                    'last_page' => $customers->lastPage(),
+                ],
+            ], 'Customer points retrieved successfully');
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Failed to get customer points',
+                ['error' => $e->getMessage()]
+            );
+        }
+    }
+
+    public function getCustomerPointHistory(Request $request, $id)
+    {
+        try {
+            $customer = Customer::with('user')->find($id);
+
+            if (!$customer) {
+                return ApiResponse::notFound('Customer not found');
+            }
+
+            $perPage = $request->input('per_page', 15);
+
+            $historyPoints = \App\Models\HistoryPoint::where('customer_id', $id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            return ApiResponse::success([
+                'customer' => [
+                    'id' => $customer->id,
+                    'name' => $customer->user->full_name,
+                    'email' => $customer->user->email,
+                    'phone' => $customer->user->phone_number,
+                    'current_point' => $customer->point,
+                    'formatted_point' => number_format($customer->point, 0, ',', '.'),
+                    'member_since' => $customer->created_at->format('Y-m-d'),
+                ],
+                'history' => $historyPoints->map(function ($history) {
+                    return [
+                        'id' => $history->id,
+                        'type' => $history->type,
+                        'notes' => $history->notes,
+                        'total_point' => $history->total_point,
+                        'formatted_point' => ($history->type === 'credit' ? '+' : '-') . number_format($history->total_point, 0, ',', '.'),
+                        'created_at' => $history->created_at->format('Y-m-d H:i:s'),
+                    ];
+                }),
+                'pagination' => [
+                    'current_page' => $historyPoints->currentPage(),
+                    'per_page' => $historyPoints->perPage(),
+                    'total' => $historyPoints->total(),
+                    'last_page' => $historyPoints->lastPage(),
+                ],
+            ], 'Customer point history retrieved successfully');
+        } catch (\Exception $e) {
+            return ApiResponse::serverError(
+                'Failed to get customer point history',
+                ['error' => $e->getMessage()]
+            );
+        }
     }
 }
