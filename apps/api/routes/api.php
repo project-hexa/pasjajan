@@ -3,8 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Middleware\EnsureOtpIsVerified;
-
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
@@ -30,6 +28,10 @@ Route::get('/user', function (Request $request) {
 	return $request->user();
 })->middleware('auth:sanctum');
 */
+
+// ================= PUBLIC ROUTES (NO AUTH) =================
+// Public Branches/Stores endpoint (untuk customer pilih cabang)
+Route::get('/branches/public', [BranchController::class, 'publicIndex']);
 
 // Payment Methods
 Route::get('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
@@ -108,17 +110,13 @@ Route::controller(AuthController::class)->group(function () {
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		// User management by user himself
 		Route::get('/user/profile', 'getProfile');
 		Route::post('/user/change-profile', 'changeProfile');
 		Route::post('/user/add-address', 'createAddress');
 		Route::post('/user/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/delete-address/{addressId}', 'deleteAddress');
 		Route::post('/user/change-password', 'changePassword');
 		Route::get('/user/total-point', 'getPoint');
 		Route::get('/user/order-history', 'getOrderHistory');
-
-		// User management by admin
 		Route::get('/admin/users/{role}', 'index');
 		Route::get('/admin/user/{id}', 'show');
 		Route::post('/admin/add-user', 'store');
@@ -132,14 +130,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
 	Route::controller(DeliveryController::class)->group(function () {
 		// --- List Kurir & Cek Ongkir ---
-        Route::get('/delivery/methods', 'getDeliveryMethods');
-        Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
-        // --- Get Status Pengiriman ---
-        Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
-        // --- Kirim Ulasan ---
-        Route::post('/delivery/{order_id}/review', 'submitReview');
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
 
 

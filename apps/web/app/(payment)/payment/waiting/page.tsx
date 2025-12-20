@@ -1,8 +1,11 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PaymentInstructionsModal } from '@/components/PaymentInstructionsModal';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 interface PaymentData {
     order_code: string;
@@ -100,7 +103,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean }
     );
 };
 
-export default function WaitingPage() {
+function WaitingPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
@@ -110,27 +113,93 @@ export default function WaitingPage() {
     const [isExpired, setIsExpired] = useState(false);
     const [showInstructions, setShowInstructions] = useState(false);
     const [showQrPreview, setShowQrPreview] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
+    
+    // Get logged-in user from auth store
+    const { user } = useAuthStore();
 
+    // Load payment data from localStorage or API
     useEffect(() => {
-        const data = localStorage.getItem("payment_data");
-        if (data) {
-            const parsed = JSON.parse(data);
-            setPaymentData(parsed);
-            
-            if (parsed.payment_status === 'expired') {
-                setIsExpired(true);
-                setPaymentStatus('expired');
+        const loadPaymentData = async () => {
+            const data = localStorage.getItem("payment_data");
+            if (data) {
+                const parsed = JSON.parse(data);
+                setPaymentData(parsed);
+                
+                if (parsed.payment_status === 'expired') {
+                    setIsExpired(true);
+                    setPaymentStatus('expired');
+                }
+                setLoading(false);
+            } else if (orderCode) {
+                // No localStorage data, try to fetch from API
+                try {
+                    const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+                    const result = await res.json();
+                    
+                    if (result.success && result.data.order) {
+                        const order = result.data.order;
+                        const status = order.payment_status;
+                        
+                        // Check payment status FIRST before checking expired_at
+                        if (status === 'paid' || status === 'settlement' || status === 'capture') {
+                            setIsRedirecting(true);
+                            router.replace(`/payment/success?order=${orderCode}`);
+                            return;
+                        }
+                        
+                        if (status === 'expired' || status === 'failed' || status === 'cancelled') {
+                            setIsRedirecting(true);
+                            router.replace(`/payment/failed?order=${orderCode}`);
+                            return;
+                        }
+                        
+                        // Check if order is expired based on timestamp (for pending orders)
+                        const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
+                        const now = Date.now();
+                        
+                        if (expiredAt && now > expiredAt) {
+                            // Order is expired, redirect to failed
+                            setIsRedirecting(true);
+                            router.replace(`/payment/failed?order=${orderCode}`);
+                            return;
+                        }
+                        
+                        // Order is still pending, set minimal payment data for display
+                        setPaymentData({
+                            order_code: order.order_code,
+                            payment_method: order.payment_method || { code: '', name: 'Unknown', category: 'bank_transfer' },
+                            payment_status: order.payment_status,
+                            grand_total: order.grand_total,
+                            expired_at: order.expired_at,
+                            va_number: order.va_number,
+                            payment_code: order.payment_code,
+                        });
+                    } else {
+                        // Order not found
+                        alert("Order tidak ditemukan!");
+                        router.push("/");
+                    }
+                } catch (error) {
+                    console.error("Error fetching order:", error);
+                    alert("Gagal memuat data order!");
+                    router.push("/");
+                }
+                setLoading(false);
+            } else {
+                // No localStorage and no orderCode
+                alert("Data pembayaran tidak ditemukan!");
+                router.push("/");
+                setLoading(false);
             }
-        } else {
-            alert("Data pembayaran tidak ditemukan!");
-            router.push("/");
-        }
-        setLoading(false);
-    }, [router]);
+        };
+
+        loadPaymentData();
+    }, [router, orderCode]);
 
     // Auto-check payment status
     useEffect(() => {
-        if (!orderCode || isExpired) return;
+        if (!orderCode || isExpired || isRedirecting) return;
 
         const checkStatus = async () => {
             try {
@@ -146,18 +215,16 @@ export default function WaitingPage() {
                     setPaymentStatus(status);
                     
                     if (status === 'paid' || status === 'settlement' || status === 'capture') {
-                        setTimeout(() => {
-                            localStorage.removeItem("payment_data");
-                            router.push(`/payment/success?order=${orderCode}`);
-                        }, 500);
+                        setIsRedirecting(true);
+                        localStorage.removeItem("payment_data");
+                        router.replace(`/payment/success?order=${orderCode}`);
                         return;
                     }
                     
                     if (status === 'expired') {
-                        setTimeout(() => {
-                            setIsExpired(true);
-                            localStorage.removeItem("payment_data");
-                        }, 500);
+                        setIsExpired(true);
+                        setIsRedirecting(true);
+                        localStorage.removeItem("payment_data");
                         return;
                     }
                 }
@@ -172,14 +239,16 @@ export default function WaitingPage() {
         return () => {
             clearInterval(interval);
         };
-    }, [orderCode, router, isExpired]);
+    }, [orderCode, router, isExpired, isRedirecting]);
 
-    // Redirect to failed page when expired - using useEffect to avoid setState during render
+    // Redirect to failed page when expired
     useEffect(() => {
-        if (isExpired || paymentStatus === 'expired') {
-            router.push(`/payment/failed?order=${orderCode}`);
+        if ((isExpired || paymentStatus === 'expired') && !isRedirecting) {
+            setIsRedirecting(true);
+            localStorage.removeItem("payment_data");
+            router.replace(`/payment/failed?order=${orderCode}`);
         }
-    }, [isExpired, paymentStatus, router, orderCode]);
+    }, [isExpired, paymentStatus, router, orderCode, isRedirecting]);
 
     const handleExpired = () => {
         setIsExpired(true);
@@ -187,7 +256,7 @@ export default function WaitingPage() {
     };
 
     if (loading) {
-        return <div className="min-h-screen flex items-center justify-center"><p>Memuat...</p></div>;
+        return <div className="min-h-screen flex items-center justify-center"><p>Mengalihkan...</p></div>;
     }
 
     if (!paymentData) {
@@ -196,8 +265,8 @@ export default function WaitingPage() {
 
     const { payment_method, grand_total, expired_at, va_number, payment_code, company_code, qr_code_url, deeplink } = paymentData;
 
-    // Show loading while redirecting
-    if (isExpired || paymentStatus === 'expired') {
+    // If redirecting, show loading and don't render content
+    if (isRedirecting) {
         return <div className="min-h-screen flex items-center justify-center"><p>Mengalihkan...</p></div>;
     }
 
@@ -215,8 +284,20 @@ export default function WaitingPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-emerald-50/50">
-            <main className="flex-grow flex flex-col items-center justify-center py-10 px-4">
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Header 
+                logoSrc="/images/pasjajan2.png" 
+                logoAlt="PasJajan Logo"
+                userName={user?.full_name}
+                userInitials={user?.full_name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                userAvatar={user?.avatar}
+            />
+            <main className="flex-grow flex flex-col items-center justify-center py-10 px-4 bg-emerald-50/50">
                 <div className={`w-full bg-white rounded-2xl shadow-xl p-8 ${
                     payment_method.category === 'bank_transfer' ? 'max-w-xl' : 'max-w-md'
                 }`}>
@@ -255,7 +336,7 @@ export default function WaitingPage() {
                                 Klik tombol untuk membayar di aplikasi {payment_method.name} anda
                             </p>
 
-                            {/* Open App Button - smaller, centered */}
+                            {/* Open App Button */}
                             {deeplink && (
                                 <div className="flex justify-center mb-6">
                                     <a 
@@ -379,7 +460,7 @@ export default function WaitingPage() {
                     {/* Bank Transfer Layout */}
                     {payment_method.category === 'bank_transfer' && (
                         <>
-                        {/* Amount - divider dibawah jumlah pembayaran */}
+                            {/* Amount */}
                             <div className="flex justify-between items-center pt-4 mt-4 pb-4 mb-4 border-b">
                                 <span className="font-semibold text-gray-700">Jumlah Pembayaran</span>
                                 <span className="text-xl font-bold text-emerald-600">
@@ -400,10 +481,8 @@ export default function WaitingPage() {
                             <DetailRow label="ID Pesanan" value={paymentData.order_code} />
                             <DetailRow label="Status Pesanan" value="Menunggu Pembayaran" />
 
-                            
-
-                            {/* Action Buttons - centered with max-width */}
-                            <div className="flex justify-center">
+                            {/* Action Buttons */}
+                            <div className="flex justify-center mt-6">
                                 <div className="flex gap-3 w-full max-w-md">
                                     <button 
                                         onClick={() => router.push('/cart')}
@@ -453,6 +532,7 @@ export default function WaitingPage() {
                     {' '}Kami.
                 </p>
             </main>
+            <Footer />
             
             {/* QR Preview Modal */}
             {showQrPreview && qr_code_url && (
@@ -485,5 +565,17 @@ export default function WaitingPage() {
                 paymentMethod={payment_method}
             />
         </div>
+    );
+}
+
+export default function WaitingPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Mengalihkan...</p>
+            </div>
+        }>
+            <WaitingPageContent />
+        </Suspense>
     );
 }

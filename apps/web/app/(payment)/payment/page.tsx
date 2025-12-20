@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -15,6 +15,9 @@ import { Icon } from "@workspace/ui/components/icon";
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -48,7 +51,7 @@ interface PaymentItem {
   image_url: string;
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get("order");
@@ -57,13 +60,31 @@ export default function CheckoutPage() {
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [orderData, setOrderData] = React.useState<any>(null);
+  const [branchName, setBranchName] = React.useState<string>("");
+  
+  // Get logged-in user from auth store
+  const { user } = useAuthStore();
 
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
+        // Fetch branch name from API (always fetch, regardless of order)
+        const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
+        const branchesResult = await branchesResponse.json();
+        
+        console.log("Branch API Response:", branchesResult);
+        
+        if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
+          // Get first active branch or specific branch
+          console.log("Setting branch name:", branchesResult.data.branches[0].name);
+          setBranchName(branchesResult.data.branches[0].name);
+        } else {
+          console.log("No branches found or API error");
+        }
+
         if (!orderCode) {
-          alert("Order code tidak ditemukan!");
-          router.push("/cart");
+          // Allow page to display without order code
+          setLoading(false);
           return;
         }
 
@@ -72,8 +93,9 @@ export default function CheckoutPage() {
         const result = await response.json();
 
         if (!result.success || !result.data.order) {
-          alert("Order tidak ditemukan!");
-          router.push("/cart");
+          // Allow page to display even if order not found
+          console.log("Order not found, displaying empty page");
+          setLoading(false);
           return;
         }
 
@@ -104,8 +126,7 @@ export default function CheckoutPage() {
         }
       } catch (error) {
         console.error("Error loading order data:", error);
-        alert("Gagal memuat data order!");
-        router.push("/cart");
+        // Allow page to display even on error
       } finally {
         setLoading(false);
       }
@@ -199,21 +220,19 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* NAVBAR */}
-      <div className="w-full border-b bg-emerald-700 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold">
-            <span className="rounded bg-white/10 px-2 py-1">PasJajan</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-8 w-8 rounded-full bg-white/10 grid place-items-center">
-              JD
-            </div>
-            <span>John Doe</span>
-          </div>
-        </div>
-      </div>
+      {/* HEADER */}
+      <Header 
+        logoSrc="/images/pasjajan2.png" 
+        logoAlt="PasJajan Logo"
+        userName={user?.full_name}
+        userInitials={user?.full_name
+          ?.split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)}
+        userAvatar={user?.avatar}
+      />
 
       {/* MAIN CONTENT */}
       <main className="mx-auto max-w-6xl px-4 py-6">
@@ -273,10 +292,15 @@ export default function CheckoutPage() {
             <div className="space-y-3">
               {/* Header Card */}
               <Card className="bg-white shadow-sm py-2">
-                <CardContent className="px-4 py-2">
+                <CardContent className="px-4 py-2 flex items-center justify-between">
                   <h2 className="text-emerald-700 text-sm font-semibold">
                     Pesanan
                   </h2>
+                  {branchName && (
+                    <p className="text-emerald-700 text-sm font-semibold">
+                      Cabang {branchName}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -415,10 +439,20 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <footer className="mt-8 text-center text-xs text-slate-500">
-          © 2025 PasJajan — All Right Reserved
-        </footer>
+        <Footer />
       </main>
     </div>
   );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
+                <p className="text-lg">Memuat...</p>
+            </div>
+        }>
+            <CheckoutPageContent />
+        </Suspense>
+    );
 }

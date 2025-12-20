@@ -59,6 +59,7 @@ export const loginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   rememberMe: z.boolean().optional(),
+  role: z.enum(["Admin", "Staff", "Customer"]).optional(),
 });
 
 export const otpSchema = z.object({

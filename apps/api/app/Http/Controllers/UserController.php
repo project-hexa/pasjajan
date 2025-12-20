@@ -42,7 +42,7 @@ class UserController extends BaseController
 		$rules = [
 			'full_name' => 'required|string',
 			'email' => 'required|unique:App\Models\User,email|string|email',
-			'phone_number' => 'required|unique:App\Models\User,phone_number|numeric',
+			'phone_number' => 'required|numeric',
 			'password' => [
 				'required',
 				'string',
@@ -113,7 +113,7 @@ class UserController extends BaseController
 		$rules = [
 			'full_name' => 'nullable|string',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
-			'phone_number' => 'nullable|unique:App\Models\User,phone_number|numeric',
+			'phone_number' => 'nullable|numeric',
 			'password' => [
 				'nullable',
 				'string',
@@ -378,25 +378,6 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mengganti alamat.", $result);
 	}
 
-	public function deleteAddress(string $addressId): JsonResponse
-	{
-		// Cari alamat dengan id dari parameter
-		$address = Address::find($addressId);
-
-		// Jika alamat tidak ditemukan, maka
-		if (!$address) {
-			return $this->sendFailResponse("Alamat tidak ditemukan. Gagal menghapus data alamat.");
-		}
-
-		// Jika alamat ditemukan, maka
-		// Hapus alamat dengan mekanisme softdelete
-		$address->delete();
-
-		$result['address_data'] = $address;
-
-		return $this->sendSuccessResponse('Berhasil menghapus data alamat.', $result);
-	}
-
 	public function changePassword(Request $request): JsonResponse
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti password
@@ -447,7 +428,7 @@ class UserController extends BaseController
 
 		// Mencari user di database dengan email
 		$user = User::where('email', $data['email'])->first()->load('customer');
-		
+
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
 			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data point user.");
@@ -484,7 +465,7 @@ class UserController extends BaseController
 
 		// Mencari user di database dengan email
 		$user = User::where('email', $data['email'])->first()->load('customer');
-		
+
 		// Jika user tidak ditemukan, maka
 		if (!$user) {
 			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal mendapatkan data riwayat transaksi user.");
@@ -499,7 +480,7 @@ class UserController extends BaseController
 	}
 
 	// Method private custom buatan sendiri khusus untuk UserController
-	// Method untuk memasukkan data inputan admin ke database 
+	// Method untuk memasukkan data inputan admin ke database
 	private function createUser(array $data): User
 	{
 		// Memasukkan (insert) isi parameter array $data ke database

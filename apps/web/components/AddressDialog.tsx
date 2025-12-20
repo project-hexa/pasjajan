@@ -9,7 +9,8 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Button } from "@workspace/ui/components/button";
 import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
-import { ChevronLeft, MapPin } from "lucide-react";
+import { Icon } from "@workspace/ui/components/icon";
+
 
 interface Address {
   id: string;
@@ -74,7 +75,7 @@ export default function AddressDialog({
               onClick={() => setOpen(false)}
               className="absolute left-4 grid h-8 w-8 place-items-center rounded-full text-slate-800 hover:bg-slate-100"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <Icon icon="lucide:chevron-left" className="h-4 w-4" />
             </button>
             <p className="text-sm font-semibold text-slate-900">Pilih Alamat</p>
           </div>
@@ -94,7 +95,7 @@ export default function AddressDialog({
                         {addr.label}
                       </p>
                       <div className="flex items-start gap-2">
-                        <MapPin className="h-5 w-5 text-emerald-700 mt-0.5" />
+                        <Icon icon="lucide:map-pin" className="h-5 w-5 text-emerald-700 mt-0.5" />
                         <div>
                           <p className="font-semibold text-slate-900 text-sm">{addr.name}</p>
                           <p className="text-slate-700 text-xs leading-snug">{addr.address}</p>

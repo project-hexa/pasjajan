@@ -29,13 +29,6 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       Cookies.remove("token", { path: "/" });
-
-      if (
-        typeof window !== "undefined" &&
-        !window.location.pathname.includes("/login")
-      ) {
-        window.location.href = `/login?redirect=${window.location.pathname}`;
-      }
     }
 
     return Promise.reject(error);
