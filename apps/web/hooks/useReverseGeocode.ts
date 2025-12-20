@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api as axios } from "@/lib/utils/axios";
 
 interface ReverseResult {
   fullAddress: string;

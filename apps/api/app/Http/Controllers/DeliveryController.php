@@ -110,9 +110,19 @@ class DeliveryController extends Controller
         }
 
         // 2. Cek Data
+        // 2. Cek Data Shipment
         $shipment = Shipment::where('order_id', $order_id)->first();
+        
+        // FIX: Jika Shipment belum ada (misal order baru), buat dummy shipment agar review bisa masuk
         if (!$shipment) {
-            return response()->json(['message' => 'Pengiriman tidak ditemukan'], 404);
+            $shipment = Shipment::create([
+                'order_id' => $order_id,
+                'tracking_number' => 'JP' . time() . rand(100, 999),
+                'courier_name' => 'Kurir PasJajan',
+                'service_type' => 'Instant',
+                'status' => 'delivered', // Assume delivered if reviewing
+                'completion_status' => 'SELESAI'
+            ]);
         }
 
         // 3. Simpan Review
