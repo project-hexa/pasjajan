@@ -120,6 +120,7 @@ Route::controller(UserController::class)->group(function () {
 		Route::post('/user/change-profile', 'changeProfile')->name('user.change.profile');
 		Route::post('/user/add-address', 'createAddress')->name('user.create.address');
 		Route::post('/user/change-address/{addressId}', 'changeAddress')->name('user.change.address');
+		Route::post('/user/delete-address/{addressId}', 'deleteAddress')->name('user.delete.address');
 		Route::post('/user/change-password', 'changePassword')->name('user.change.password');
 		Route::get('/user/total-point', 'getPoint')->name('user.point');
 		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');

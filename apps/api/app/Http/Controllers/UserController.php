@@ -438,6 +438,57 @@ class UserController extends BaseController
 		return $this->sendSuccessResponse("Berhasil mengganti alamat.", $result);
 	}
 
+	public function deleteAddress(Request $request, string $addressId): JsonResponse
+	{
+		// Tetapkan aturan (rules) validasi untuk mengganti alamat
+		$rules = [
+			'email' => 'required|exists:App\Models\User,email|string|email',
+		];
+
+		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
+		$validator = $this->makeValidator($request->all(), $rules);
+
+		// Jika validasi gagal, maka
+		if ($validator->fails()) {
+			$errors['validation_errors'] = $validator->errors();
+
+			return $this->sendFailResponse("Validasi hapus alamat gagal.", $errors, 422);
+		}
+
+		// Jika validasi berhasil, maka
+		$data = $validator->validated();
+		$user = User::where('email', $data['email'])->first()->load('customer.addresses');
+
+		// Jika user tidak ditemukan pada database, maka
+		if (!$user) {
+			return $this->sendFailResponse("User dengan email " . $data['email'] . " tidak ditemukan. Gagal menghapus alamat user.");
+		}
+
+		// Jika user ditemukan, maka
+		// Cek apakah data user yang diakses adalah milik user yang mengakses
+		if ($request->user()->cannot('view', $user)) {
+			return $this->sendFailResponse('User tidak boleh mengakses data profile user lain. Gagal menghapus data alamat user.', code: 403);
+		}
+
+		// Cari alamat milik user
+		$customer = $user->customer()->first();
+		$addresses = $customer->addresses()->get();
+		$address = $addresses->find($addressId);
+
+		// Jika alamat tidak ditemukan, maka
+		if (!$address) {
+			return $this->sendFailResponse("Alamat dengan id $addressId tidak ditemukan sebagai alamat milik user. Gagal menghapus data alamat.");
+		}
+
+		// Jika alamat ditemukan, maka
+		// Hapus alamat dengan mekanisme softdelete
+		$address->delete();
+
+		$result['address_data'] = $address;
+
+		return $this->sendSuccessResponse('Berhasil menghapus data alamat.', $result);
+	}
+
 	public function changePassword(Request $request): JsonResponse
 	{
 		// Tetapkan aturan (rules) validasi untuk mengganti password
