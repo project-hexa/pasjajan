@@ -18,11 +18,12 @@ import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
 import { updateStatusAction } from "@/app/actions/order.actions";
 import { Textarea } from "@workspace/ui/components/textarea";
+import { Order } from "@/types/order";
 
 interface DeliveryActionButtonProps {
     orderId: number;
     initialStatus: string;
-    onStatusUpdate?: (newStatus: string) => void;
+    onStatusUpdate?: (newStatus: Order['delivery_status']) => void;
 }
 
 const statuses = [
@@ -83,7 +84,7 @@ export function DeliveryActionButton({
 
         // Optimistic Update Callback to Parent
         if (onStatusUpdate) {
-            onStatusUpdate(apiStatus);
+            onStatusUpdate(apiStatus as Order['delivery_status']);
         }
     };
 

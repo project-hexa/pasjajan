@@ -36,6 +36,8 @@ export const getNotificationsMetrics = async () => {
   // Mock Metrics
   await new Promise(resolve => setTimeout(resolve, 200));
   return {
+    success: true,
+    message: "Success",
     data: {
       total_notifications: {
         value: 154,
