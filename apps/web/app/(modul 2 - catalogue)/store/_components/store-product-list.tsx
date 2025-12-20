@@ -43,6 +43,59 @@ export default function StoreProductList({
   const [toast, setToast] = React.useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
   const toastTimerRef = React.useRef<number | null>(null);
   const { token } = useAuthStore();
+  
+  const [items, setItems] = React.useState<StoreProduct[]>(products ?? []);
+
+  // if no products passed, fetch from API products endpoint (seed data)
+  React.useEffect(() => {
+    if (items.length > 0) return;
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:8000/api";
+
+    let mounted = true;
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/products`);
+        const payload = await r.json();
+
+        // normalize response to array
+        let arr: unknown[] = [];
+        if (Array.isArray(payload)) arr = payload as unknown[];
+        else if (payload && typeof payload === "object") {
+          const p1 = payload as { data?: unknown; stores?: unknown };
+          if (Array.isArray(p1.data)) arr = p1.data as unknown[];
+          const pd = p1.data as { data?: unknown } | undefined;
+          if (Array.isArray(pd?.data)) arr = pd.data as unknown[];
+        }
+
+        const mapped: StoreProduct[] = arr.map((p: unknown) => {
+          const obj = p as Record<string, unknown>;
+          const id = String(obj.id ?? obj.product_id ?? obj.sku ?? Math.random());
+          const name = String(obj.name ?? obj.title ?? "Produk");
+          const description = String(obj.description ?? obj.short_description ?? "");
+          const price = Number(obj.price ?? obj.final_price ?? obj.sale_price ?? 0);
+          const image = String(obj.image_url ?? obj.image ?? "/images/Screenshot 2025-10-25 173437.png");
+          const details = (obj.details ?? obj.long_description) as string | undefined;
+
+          return {
+            id,
+            name,
+            description,
+            price,
+            image,
+            details,
+          } as StoreProduct;
+        });
+
+        if (mounted && mapped.length > 0) setItems(mapped);
+      } catch {
+        // ignore fetch errors
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [items.length]);
 
   React.useEffect(() => {
     if (selectedProduct) {
@@ -105,7 +158,7 @@ export default function StoreProductList({
     <>
       <div className={outerClasses}>
         <div className={innerClasses}>
-          {products.map((product) => {
+          {items.map((product) => {
             const cardClasses = cx(
               "relative flex min-h-[240px] flex-col rounded-2xl border border-[#E5E7EB] bg-white shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A6B3C]",
               variant === "scroll" && "w-[200px] flex-shrink-0",

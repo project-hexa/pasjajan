@@ -42,6 +42,11 @@ const navigation = [
     href: "/dashboard/promo",
     icon: "lucide:tag",
   },
+  {
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: "icon-park-outline:ad-product",
+  },
 ];
 
 export function Sidebar() {
