@@ -263,7 +263,7 @@ class UserController extends BaseController
 			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
 			'full_name' => 'nullable|string',
 			'birth_date' => 'nullable|date',
-			'gender' => 'nullable|alpha:ascii',
+			'gender' => 'nullable|string',
 			'avatar' => 'nullable|string',
 		];
 

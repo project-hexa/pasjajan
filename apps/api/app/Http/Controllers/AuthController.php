@@ -415,6 +415,24 @@ class AuthController extends BaseController
 		return $this->sendSuccessResponse("Verifikasi OTP berhasil.", $result);
 	}
 
+	public function testSendEmail(Request $request): JsonResponse
+	{
+		// Ambil email dari inputan
+		$email = $request->input('email');
+
+		// Tetapkan isi konten pada badan email/chat/sms
+		$content = "Test kirim email ke alamat email.";
+
+		// Mengirim otp ke alamat email milik user terkait
+		Mail::raw($content, function ($message) use ($email) {
+			$message->to($email)->subject('Test Email');
+		});
+
+		$result['email'] = $email;
+
+		return $this->sendSuccessResponse("Test kirim email berhasil.", $result);
+	}
+
 	// Method private custom buatan sendiri khusus untuk AuthController
 	// Method untuk memasukkan data inputan user ke database
 	private function createCustomer(array $data): Customer
