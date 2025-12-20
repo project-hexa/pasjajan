@@ -16,6 +16,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\VoucherController;
 
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
@@ -199,6 +200,13 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+// ============= CUSTOMER VOUCHER & POINTS =============
+Route::middleware('auth:sanctum')->group(function () {
+	Route::get('/customer/points', [VoucherController::class, 'getCustomerPoints']);
+	Route::get('/customer/vouchers', [VoucherController::class, 'getCustomerVouchers']);
+	Route::get('/vouchers/available', [VoucherController::class, 'getAvailableVouchers']);
+	Route::post('/customer/vouchers/redeem', [VoucherController::class, 'redeemVoucher']);
+});
 
 // ================= PRODUCT ROUTES =================
 //Stores
