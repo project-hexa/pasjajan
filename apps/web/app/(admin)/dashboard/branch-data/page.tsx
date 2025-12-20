@@ -63,7 +63,17 @@ export default function BranchManagementPage() {
         console.log('API Response:', responseData);
         
         // Get branches from the nested data.branches
-        const branchesData = responseData.data?.branches || [];
+        let branchesData = responseData.data?.branches || [];
+        
+        // Sort branches by created_at (newest first) or by ID if created_at is not available
+        branchesData = [...branchesData].sort((a, b) => {
+          // Try to sort by created_at if available
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          // Fallback to ID if created_at is not available
+          return parseInt(b.id) - parseInt(a.id);
+        });
         
         // Transform the API response to match our Branch interface
         const formattedBranches = branchesData.map((branch: any) => ({
@@ -162,6 +172,7 @@ export default function BranchManagementPage() {
                 <TableHead className="w-2/5 text-left">Alamat</TableHead>
                 <TableHead className="w-1/6 text-center">Penghasilan</TableHead>
                 <TableHead className="w-1/6 text-center">Kontak</TableHead>
+                <TableHead className="w-1/6 text-center">Status</TableHead>
                 <TableHead className="w-1/6 pr-8 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -173,6 +184,11 @@ export default function BranchManagementPage() {
                     <TableCell className="text-left">{branch.address}</TableCell>
                     <TableCell className="text-center">{branch.income}</TableCell>
                     <TableCell className="text-center">{branch.contact}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={branch.status === 'active' ? 'text-green-600' : 'text-red-600'}>
+                        {branch.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      </span>
+                    </TableCell>
                     <TableCell className="pr-8">
                       <div className="flex justify-end">
                         <Button 
@@ -191,7 +207,7 @@ export default function BranchManagementPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     Tidak ada data cabang yang tersedia.
                   </TableCell>
                 </TableRow>
