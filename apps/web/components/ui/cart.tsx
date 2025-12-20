@@ -68,7 +68,7 @@ export const Cart = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size={"icon"} className="p-0 text-white" variant={"ghost"}>
+        <Button size={"icon"} className="p-0 text-white" variant={"ghost"} suppressHydrationWarning>
           <div className="relative">
             <Icon icon="lucide:shopping-basket" />
             {totalCount > 0 && (

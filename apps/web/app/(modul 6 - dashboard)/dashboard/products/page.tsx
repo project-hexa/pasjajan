@@ -10,6 +10,7 @@ import {
 } from "react";
 import Image from "next/image";
 import { Icon } from "@workspace/ui/components/icon";
+import { api } from "@/lib/utils/axios";
 
 type Product = {
   id: number;
@@ -32,35 +33,6 @@ type ProductFormValues = {
   status: string;
 };
 
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "MieIndomie",
-    category: "Makanan",
-    price: "Rp123.131.020",
-    stock: "3.000",
-    status: "Aktif",
-    image: "/images/Screenshot 2025-10-25 174036.png",
-  },
-  {
-    id: 2,
-    name: "MieIndomie",
-    category: "Makanan",
-    price: "Rp123.131.020",
-    stock: "3.000",
-    status: "Aktif",
-    image: "/images/Screenshot 2025-10-25 174142.png",
-  },
-  {
-    id: 3,
-    name: "MieIndomie",
-    category: "Makanan",
-    price: "Rp123.131.020",
-    stock: "3.000",
-    status: "Aktif",
-    image: "/images/Screenshot 2025-10-25 174230.png",
-  },
-];
 
 const categoryOptions = ["Semua", "Makanan", "Minuman", "Snack"];
 const statusOptions = ["Semua", "Aktif", "Tidak Aktif"];
@@ -69,7 +41,7 @@ const timeRanges = [
   { value: "last30days", label: "Last 30 days" },
   { value: "last7months", label: "Last 7 months" },
 ];
-const fallbackProductImage = initialProducts[0]?.image ?? "/images/placeholder.png";
+const fallbackProductImage = "/images/placeholder.png";
 
 const getDefaultFormValues = (): ProductFormValues => ({
   name: "",
@@ -101,7 +73,7 @@ export default function ProductsDashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState(categoryOptions[0]);
   const [selectedStatus, setSelectedStatus] = useState(statusOptions[0]);
   const [showProductForm, setShowProductForm] = useState(false);
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [viewProduct, setViewProduct] = useState<Product | null>(null);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [formValues, setFormValues] = useState<ProductFormValues>(
@@ -132,6 +104,61 @@ export default function ProductsDashboardPage() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Fetch products from API (use seeder data from apps/api/database/seeders)
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        // prefer axios instance which uses NEXT_PUBLIC_API_URL, fallback to fetch
+        let data: unknown = null;
+        try {
+          const res = await api.get("/products");
+          data = res?.data ?? null;
+        } catch {
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+          const r = await fetch(`${apiBase}/products`);
+          data = await r.json();
+        }
+
+        let arr: unknown[] = [];
+        if (Array.isArray(data)) arr = data as unknown[];
+        else if (data && typeof data === "object") {
+          const d = data as { data?: unknown };
+          if (Array.isArray(d.data)) arr = d.data as unknown[];
+          const dd = d.data as { data?: unknown } | undefined;
+          if (Array.isArray(dd?.data)) arr = dd.data as unknown[];
+        }
+
+        if (!mounted) return;
+
+        const mapped = (arr as unknown[]).map((p: unknown, idx: number) => {
+          const obj = p as Record<string, unknown>;
+          const rawPrice = Number(obj.price ?? obj.final_price ?? obj.sale_price ?? 0) || 0;
+          const rawStock = Number(obj.stock ?? obj.qty ?? obj.quantity ?? 0) || 0;
+          return {
+            id: Number(obj.id ?? obj.product_id ?? obj.sku ?? Date.now() + idx),
+            name: String(obj.name ?? obj.title ?? "Produk"),
+            category: String(obj.category ?? obj.category_name ?? "Lainnya"),
+            price: formatCurrency(String(rawPrice)),
+            stock: formatNumber(String(rawStock)),
+            status: String(obj.status ?? (rawStock > 0 ? "Aktif" : "Tidak Aktif")),
+            image: String(obj.image_url ?? obj.image ?? fallbackProductImage),
+            description: String(obj.description ?? obj.short_description ?? ""),
+          } as Product;
+        });
+
+        if (mapped.length > 0) setProducts(mapped);
+      } catch {
+        // ignore error and keep local initialProducts
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -176,36 +203,123 @@ export default function ProductsDashboardPage() {
       : fallbackProductImage;
 
     if (editingProductId != null) {
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === editingProductId
-            ? {
-                ...product,
-                name: formValues.name,
-                category: formValues.category,
-                price: formattedPrice,
-                stock: formattedStock,
-                image: imagePath,
-                status: statusValue,
-                description: descriptionValue,
-              }
-            : product,
-        ),
-      );
-      setEditingProductId(null);
+      // Try to update product on API, fallback to local update
+      (async () => {
+        try {
+          const priceNumber = Number(formValues.price.replace(/\D/g, "")) || 0;
+          const payload = {
+            name: formValues.name,
+            description: descriptionValue,
+            price: priceNumber,
+            category: formValues.category,
+            stock: Number(formValues.stock.replace(/\D/g, "")) || 0,
+            image_url: imagePath,
+            status: statusValue,
+          };
+
+          const res = await api.put(`/products/${editingProductId}`, payload);
+          const created = res?.data?.data || res?.data || null;
+
+          setProducts((prev) =>
+            prev.map((product) =>
+              product.id === editingProductId
+                ? {
+                    ...product,
+                    name: formValues.name,
+                    category: formValues.category,
+                    price: formattedPrice,
+                    stock: formattedStock,
+                    image: imagePath,
+                    status: statusValue,
+                    description: descriptionValue,
+                    ...(created && typeof created === "object" ? created : {}),
+                  }
+                : product,
+            ),
+          );
+        } catch {
+          // fallback to local update on error
+          setProducts((prev) =>
+            prev.map((product) =>
+              product.id === editingProductId
+                ? {
+                    ...product,
+                    name: formValues.name,
+                    category: formValues.category,
+                    price: formattedPrice,
+                    stock: formattedStock,
+                    image: imagePath,
+                    status: statusValue,
+                    description: descriptionValue,
+                  }
+                : product,
+            ),
+          );
+        } finally {
+          setEditingProductId(null);
+        }
+      })();
     } else {
-      const nextId = products.reduce((max, product) => Math.max(max, product.id), 0) + 1;
-      const newProduct: Product = {
-        id: nextId,
-        name: formValues.name,
-        category: formValues.category,
-        price: formattedPrice,
-        stock: formattedStock,
-        status: statusValue,
-        image: imagePath,
-        description: descriptionValue,
-      };
-      setProducts((prev) => [...prev, newProduct]);
+      // Try to create product on API, fallback to local creation
+      (async () => {
+        try {
+          const priceNumber = Number(formValues.price.replace(/\D/g, "")) || 0;
+          const payload = {
+            name: formValues.name,
+            description: descriptionValue,
+            price: priceNumber,
+            category: formValues.category,
+            stock: Number(formValues.stock.replace(/\D/g, "")) || 0,
+            image_url: imagePath,
+            status: statusValue,
+          };
+
+          const res = await api.post("/products", payload);
+          const created = res?.data?.data || res?.data || null;
+
+          if (created && typeof created === "object") {
+            // try to normalize id
+            const newId = created.id ?? created.product_id ?? products.reduce((m, p) => Math.max(m, p.id), 0) + 1;
+            const newProduct: Product = {
+              id: Number(newId),
+              name: created.name || formValues.name,
+              category: created.category || formValues.category,
+              price: created.price ? formatCurrency(String(created.price)) : formattedPrice,
+              stock: created.stock ? formatNumber(String(created.stock)) : formattedStock,
+              status: created.status || statusValue,
+              image: created.image_url || imagePath,
+              description: created.description || descriptionValue,
+            };
+            setProducts((prev) => [...prev, newProduct]);
+          } else {
+            const nextId = products.reduce((max, product) => Math.max(max, product.id), 0) + 1;
+            const newProduct: Product = {
+              id: nextId,
+              name: formValues.name,
+              category: formValues.category,
+              price: formattedPrice,
+              stock: formattedStock,
+              status: statusValue,
+              image: imagePath,
+              description: descriptionValue,
+            };
+            setProducts((prev) => [...prev, newProduct]);
+          }
+        } catch {
+          const nextId = products.reduce((max, product) => Math.max(max, product.id), 0) + 1;
+          const newProduct: Product = {
+            id: nextId,
+            name: formValues.name,
+            category: formValues.category,
+            price: formattedPrice,
+            stock: formattedStock,
+            status: statusValue,
+            image: imagePath,
+            description: descriptionValue,
+          };
+          setProducts((prev) => [...prev, newProduct]);
+        }
+      })();
     }
 
     setShowProductForm(false);

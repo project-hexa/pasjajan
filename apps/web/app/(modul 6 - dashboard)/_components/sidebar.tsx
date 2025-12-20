@@ -43,6 +43,11 @@ const navigation = [
     icon: "lucide:tag",
   },
   {
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: "icon-park-outline:ad-product",
+  },
+  {
     name: "Delivery",
     href: "/dashboard/delivery",
     icon: "lucide:truck",
