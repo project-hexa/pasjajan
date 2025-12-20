@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ProcessPaymentRequest;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Models\Notification;
 use App\Services\MidtransService;
+use App\Mail\NotificationMail;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentController extends Controller
 {
@@ -66,10 +69,19 @@ class PaymentController extends Controller
     public function processPayment(ProcessPaymentRequest $request)
     {
         try {
-            // Get order
+            // Ambil customer dari user yang login
+            $user = $request->user();
+            $customer = $user->customer;
+
+            // Get order with ownership check
             $order = Order::where('code', $request->order_code)
+                ->where('customer_id', $customer->id) // Ownership check
                 ->with('items')
-                ->firstOrFail();
+                ->first();
+
+            if (!$order) {
+                return ApiResponse::notFound('Order tidak ditemukan atau bukan milik Anda');
+            }
 
             // Validate order status
             if (!$order->isPending() || !$order->isUnpaid()) {
@@ -127,6 +139,9 @@ class PaymentController extends Controller
                 'payment_status' => 'pending',
                 'expired_at' => now()->addHours(1), // Set expire time saat payment process
             ]);
+
+            // Kirim notifikasi pending payment ke customer
+            $this->sendPaymentPendingNotification($order);
 
             // Prepare response
             $response = [
@@ -192,9 +207,18 @@ class PaymentController extends Controller
         ]);
 
         try {
+            // Ambil customer dari user yang login
+            $user = $request->user();
+            $customer = $user->customer;
+
             $order = Order::where('code', $request->order_code)
+                ->where('customer_id', $customer->id) // Ownership check
                 ->with('paymentMethod')
-                ->firstOrFail();
+                ->first();
+
+            if (!$order) {
+                return ApiResponse::notFound('Order tidak ditemukan atau bukan milik Anda');
+            }
 
             // Check if order is expired
             if ($order->isExpired() && $order->payment_status !== 'paid') {
@@ -297,6 +321,46 @@ class PaymentController extends Controller
             return 'pending';
         } else {
             return 'failed';
+        }
+    }
+
+    /**
+     * Kirim notifikasi pending payment ke customer
+     */
+    private function sendPaymentPendingNotification(Order $order): void
+    {
+        try {
+            $order->load('customer.user');
+            $customer = $order->customer;
+            if (!$customer || !$customer->user_id) return;
+
+            $user = $customer->user;
+            if (!$user || !$user->email) return;
+
+            $title = 'Menunggu Pembayaran 💳';
+            $body = "Mohon selesaikan pembayaran untuk Invoice #{$order->code}";
+
+            // Simpan ke database
+            Notification::create([
+                'title' => $title,
+                'body' => $body,
+                'from_user_id' => null,
+                'to_user_id' => $customer->user_id,
+            ]);
+
+            // Kirim email
+            Mail::to($user->email)->send(new NotificationMail($title, $body));
+
+            Log::info('Payment pending notification sent', [
+                'order_code' => $order->code,
+                'user_id' => $customer->user_id,
+                'email' => $user->email,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send payment pending notification', [
+                'error' => $e->getMessage(),
+                'order_code' => $order->code,
+            ]);
         }
     }
 }

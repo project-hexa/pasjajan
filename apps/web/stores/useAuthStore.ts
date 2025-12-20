@@ -3,8 +3,7 @@ import {
   registerSchema,
   resetPasswordSchema,
 } from "@/lib/schema/auth.schema";
-import { api } from "@/lib/utils/axios";
-import { isAxiosError } from "axios";
+import { authService } from "@/services/auth.service";
 import Cookies from "js-cookie";
 import z from "zod";
 import { create } from "zustand";
@@ -29,7 +28,7 @@ type authStore = {
   setRegisterHold: (data: z.infer<typeof registerSchema>) => void;
   logout: () => Promise<AuthResponse>;
   sendOTP: (email: string) => Promise<AuthResponse>;
-  verifyOTP: (pin: string) => Promise<AuthResponse>;
+  verifyOTP: (email: string, pin: string) => Promise<AuthResponse>;
   forgotPassword: (email: string) => Promise<AuthResponse>;
   resetPassword: (
     data: z.infer<typeof resetPasswordSchema>,
@@ -50,171 +49,99 @@ export const useAuthStore = create<authStore>()(
       registerHold: null,
       setToken: (token) => set({ token }),
       login: async (data) => {
-        const { email, password, rememberMe, role } = data;
+        const res = await authService.login(data);
+        const { token, user, message } = res;
 
-        try {
-          const response = await api.post("/auth/login", {
-            user_identity: email,
-            password,
-            rememberMe,
-            role,
-          });
-
-          const newToken = response.data.data.token;
-          const userData = response.data.data.user_data;
-
-          if (rememberMe) {
-            Object.assign(cookiesOptions, { expires: 7 });
-          }
-
-          Cookies.set("token", newToken, cookiesOptions);
-          Cookies.set("userRole", userData.role, cookiesOptions);
-
-          set({ user: userData, token: newToken });
-
-          return {
-            ok: true,
-            message: response.data.message || "Berhasil Masuk!",
-            data: {
-              token: newToken,
-              user: userData,
-            },
-          };
-        } catch (error) {
-          let message = "Gagal Login!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
+
+        if (data.rememberMe) {
+          Object.assign(cookiesOptions, { expires: 7 });
         }
+
+        Cookies.set("token", token, cookiesOptions);
+        if (data.role) {
+          Cookies.set("userRole", data.role, cookiesOptions);
+        }
+
+        set({ user, token });
+
+        return {
+          ok: true,
+          message,
+          data: {
+            token,
+            user,
+          },
+        };
       },
       register: async (data) => {
-        const {
-          address,
-          email,
-          full_name,
-          password,
-          password_confirmation,
-          phone_number,
-        } = data;
+        const res = await authService.register(data);
+        const { message } = res;
 
-        try {
-          const response = await api.post("/auth/register", {
-            address,
-            email,
-            full_name,
-            password,
-            password_confirmation,
-            phone_number,
-          });
-
-          const newToken = response.data.token;
-          const userData = response.data.data.user_data;
-
-          Cookies.set("token", newToken, cookiesOptions);
-
-          set({ user: userData, token: newToken });
-
-          return {
-            ok: true,
-            message: response.data.message || "Berhasil Mendaftar!",
-            data: {
-              token: newToken,
-              user: userData,
-            },
-          };
-        } catch (error) {
-          let message = "Gagal Mendaftar!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        return {
+          ok: true,
+          message,
+        };
       },
       setRegisterHold: (data) => {
         Cookies.set("verificationStep", "email-sent", cookiesOptions);
+        sessionStorage.setItem("emailForOTP", data.email);
         set({ registerHold: data });
       },
       logout: async () => {
-        try {
-          Cookies.remove("token", { path: "/" });
-          Cookies.remove("userRole", { path: "/" });
+        Cookies.remove("token", { path: "/" });
+        Cookies.remove("userRole", { path: "/" });
 
-          set({ user: null, token: null });
+        set({ user: null, token: null });
 
-          return { ok: true, message: "Logout Berhasil!" };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
-          return {
-            ok: false,
-            message,
-          };
-        }
+        return { ok: true, message: "Logout Berhasil!" };
       },
       sendOTP: async (email) => {
-        try {
-          const response = await api.post("/auth/send-otp", {
-            email,
-          });
+        const res = await authService.sendOTP({ email });
+        const { message } = res;
 
-          Cookies.set("verificationStep", "otp-sent", cookiesOptions);
-
-          return {
-            ok: true,
-            message: response.data.message || "Kode OTP Berhasil Dikirim!",
-          };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        Cookies.set("verificationStep", "otp-sent", cookiesOptions);
+
+        return {
+          ok: true,
+          message,
+        };
       },
-      verifyOTP: async (pin) => {
-        try {
-          const response = await api.post("/auth/verify-otp", {
-            otp: pin,
-          });
+      verifyOTP: async (email, pin) => {
+        const res = await authService.verifyOTP({
+          email,
+          pin,
+        });
+        const { message } = res;
 
-          Cookies.remove("verificationStep", cookiesOptions);
-
-          return {
-            ok: true,
-            message: response.data.message || "Verifikasi OTP Berhasil!",
-          };
-        } catch (error) {
-          let message = "Logout Gagal!";
-
-          if (isAxiosError(error)) {
-            message = error.response?.data?.message ?? message;
-          }
-
+        if (!res.ok)
           return {
             ok: false,
             message,
           };
-        }
+
+        Cookies.remove("verificationStep", cookiesOptions);
+
+        return {
+          ok: true,
+          message,
+        };
       },
       forgotPassword: async () => {
         // TODO: Implementation of forgotPassword
@@ -230,6 +157,7 @@ export const useAuthStore = create<authStore>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        registerHold: state.registerHold,
       }),
     },
   ),

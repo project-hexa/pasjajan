@@ -1,10 +1,10 @@
 "use client";
 
+import React, { Suspense } from "react";
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import * as React from "react";
 
 interface CartItem {
   id: string;
@@ -15,32 +15,7 @@ interface CartItem {
   image: string;
 }
 
-const initialCart: CartItem[] = [
-  {
-    id: "teh-kotak",
-    name: "Teh Kotak - 300 ML",
-    variant: "300 ML",
-    price: 9000,
-    quantity: 1,
-    image: "/images/Screenshot 2025-10-25 175403.png",
-  },
-  {
-    id: "yupie-strawberry",
-    name: "Yupie Strawberry",
-    variant: "Gummy 57 g",
-    price: 18000,
-    quantity: 2,
-    image: "/images/Screenshot 2025-10-25 175227.png",
-  },
-  {
-    id: "chitato-barbeque",
-    name: "Chitato - Barbeque",
-    variant: "Snack 68 g",
-    price: 20000,
-    quantity: 2,
-    image: "/images/Screenshot 2025-10-25 175518.png",
-  },
-];
+const initialCart: CartItem[] = [];
 
 const SHIPPING_COST = 9000;
 const ADMIN_FEE = 1000;
@@ -50,6 +25,85 @@ const formatPrice = (value: number) => `Rp. ${value.toLocaleString("id-ID")}`;
 export default function CartPage() {
   const router = useRouter();
   const [items, setItems] = React.useState<CartItem[]>(initialCart);
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pasjajan_cart");
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown[];
+      const normalized = parsed.map((rawItem) => {
+        const it = rawItem as Record<string, unknown>;
+        return {
+          id: String(it.id ?? it.product_id ?? ""),
+          name: String(it.name ?? it.product_name ?? ""),
+          variant: String(it.variant ?? it.product_variant ?? ""),
+          price: Number(it.price ?? it.product_price ?? 0),
+          quantity: Number(it.quantity ?? it.qty ?? 1),
+          image: String(it.image ?? it.image_url ?? "/images/Screenshot 2025-10-25 173437.png"),
+        } as CartItem;
+      });
+
+      // try to fetch latest product data from API and merge
+      (async () => {
+        try {
+          const ids = Array.from(new Set(normalized.map((i) => i.id).filter(Boolean)));
+          if (ids.length === 0) {
+            setItems(normalized);
+            return;
+          }
+
+          // fetch products in parallel using product detail endpoint
+          const fetches = ids.map((id) =>
+            fetch(`${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$|\/$/, '') || "http://localhost:8000"}/api/products/${id}`).then((r) => {
+              if (!r.ok) return null;
+              return r.json().catch(() => null);
+            }).catch(() => null),
+          );
+
+          const results = await Promise.all(fetches);
+
+          const byId = new Map<string, unknown>();
+          results.forEach((res) => {
+            if (!res) return;
+            // support different shapes: { success, data: { product } } or { success, data } or direct product
+            const product = res.data?.product ?? res.data ?? res.product ?? null;
+            if (product && (product.id ?? product.product_id)) {
+              const pid = (product.id ?? product.product_id).toString();
+              byId.set(pid, product);
+            }
+          });
+
+          const merged = normalized.map((it) => {
+            const pRaw = byId.get(it.id);
+            if (!pRaw) return it;
+            const p = pRaw as Record<string, unknown>;
+            return {
+              ...it,
+              name: String(p.name ?? p.title ?? it.name),
+              price: Number(p.price ?? p.final_price ?? it.price ?? 0),
+              image: String(p.image_url ?? p.image ?? it.image),
+              variant: it.variant || String(p.details ?? it.variant),
+            } as CartItem;
+          });
+
+          setItems(merged);
+        } catch (err) {
+          console.error("Failed to refresh cart product data", err);
+          setItems(normalized);
+        }
+      })();
+    } catch (err) {
+      console.error("Failed to load cart from localStorage", err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem("pasjajan_cart", JSON.stringify(items));
+    } catch (err) {
+      console.error("Failed to persist cart to localStorage", err);
+    }
+  }, [items]);
 
   const totalItems = React.useMemo(
     () => items.reduce((acc, item) => acc + item.quantity, 0),
@@ -92,7 +146,9 @@ export default function CartPage() {
 
   return (
     <>
-      <Navbar />
+      <Suspense fallback={<div />}>
+        <Navbar />
+      </Suspense>
       <div className="flex-1">
         <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 text-[#111827]">
@@ -121,36 +177,7 @@ export default function CartPage() {
 
           <div className="mt-10 grid gap-8 lg:grid-cols-12">
             <div className="space-y-6 lg:col-span-8">
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0A6B3C]/10 text-[#0A6B3C]">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-6 w-6"
-                      >
-                        <path d="M12 2a7 7 0 0 0-7 7c0 5.25 6.19 11.22 6.46 11.48a.75.75 0 0 0 1.08 0C12.81 20.22 19 14.25 19 9a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5a2.5 2.5 0 0 1 0 5Z" />
-                      </svg>
-                    </span>
-                    <div>
-                      <h2 className="text-base font-semibold">
-                        Alamat Pengiriman
-                      </h2>
-                      <p className="text-sm text-[#6B7280]">
-                        Belum ada alamat yang dipilih
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="w-max rounded-full border border-[#E5E7EB] px-5 py-2 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Tambah
-                  </button>
-                </div>
-              </section>
+              
 
               <section className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -253,39 +280,7 @@ export default function CartPage() {
             </div>
 
             <aside className="space-y-6 lg:col-span-4">
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#111827]">
-                    Metode Pembayaran
-                  </h2>
-                  <button
-                    type="button"
-                    className="rounded-full border border-[#E5E7EB] px-4 py-1.5 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Pilih
-                  </button>
-                </div>
-                <p className="mt-3 text-sm text-[#6B7280]">
-                  Belum ada metode pembayaran yang dipilih
-                </p>
-              </section>
-
-              <section className="rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-[#111827]">
-                    Voucher dan Promo
-                  </h2>
-                  <button
-                    type="button"
-                    className="rounded-full border border-[#E5E7EB] px-4 py-1.5 text-sm font-medium text-[#0A6B3C] transition hover:border-[#0A6B3C]"
-                  >
-                    Pilih
-                  </button>
-                </div>
-                <p className="mt-3 text-sm text-[#6B7280]">
-                  Belum ada voucher yang digunakan
-                </p>
-              </section>
+              
 
               <section className="space-y-4 rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#111827]">

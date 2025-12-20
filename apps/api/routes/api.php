@@ -36,23 +36,31 @@ Route::get('/branches/public', [BranchController::class, 'publicIndex']);
 // Payment Methods
 Route::get('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
 
-// Checkout & Create Transaction
-Route::post('/checkout', [OrderController::class, 'checkout']);
+// ============= CUSTOMER CHECKOUT & ORDER ROUTES =============
+// Memerlukan autentikasi user
+Route::middleware('auth:sanctum')->group(function () {
+	// Checkout & Create Transaction
+	Route::post('/checkout', [OrderController::class, 'checkout']);
 
-// Process Payment (setelah pilih metode)
-Route::post('/payment/process', [PaymentController::class, 'processPayment']);
+	// Get Order List (untuk customer yang login)
+	Route::get('/orders', [OrderController::class, 'getOrders']);
 
-// Check Order & Payment Status
-Route::get('/orders/{code}', [OrderController::class, 'getOrder']);
+	// Check Order & Payment Status (ownership check di controller)
+	Route::get('/orders/{code}', [OrderController::class, 'getOrder']);
 
-// Get Order List (untuk customer)
-Route::get('/orders', [OrderController::class, 'getOrders']);
+	// Cancel Order (jika masih pending)
+	Route::post('/orders/{code}/cancel', [OrderController::class, 'cancelOrder']);
 
-// Cancel Order (jika masih pending)
-Route::post('/orders/{code}/cancel', [OrderController::class, 'cancelOrder']);
+	// Process Payment (setelah pilih metode)
+	Route::post('/payment/process', [PaymentController::class, 'processPayment']);
 
-// Check payment status manually
-Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
+	// Check payment status manually
+	Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
+
+	// Get payment receipt (bukti pembayaran)
+	Route::get('/orders/{code}/receipt', [OrderController::class, 'getPaymentReceipt']);
+});
+
 
 
 // ============= STAFF ROUTES =============
@@ -87,12 +95,16 @@ if (config('app.env') !== 'production') {
 	Route::post('/payment/webhook/test', [WebhookController::class, 'testWebhook']);
 }
 
+// User Management: Authentication
 // Membungkus route yang berkaitan dengan autentifikasi user ke route group yang menjalankan AuthController
 Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/login', 'loginPost');
 	Route::post('/auth/login/google', 'loginViaGoogle');
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
+
+	// Endpoint untuk mengetest email
+	Route::post('/auth/test-send-email', 'testSendEmail');
 
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
 	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
@@ -102,26 +114,28 @@ Route::controller(AuthController::class)->group(function () {
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/auth/logout', 'logout');
+		Route::post('/auth/logout', 'logout');
 	});
 });
 
+// User Management
 // Membungkus route yang berkaitan dengan control atau data user ke route group yang menjalankan UserController
 Route::controller(UserController::class)->group(function () {
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
-		Route::get('/user/profile', 'getProfile');
-		Route::post('/user/change-profile', 'changeProfile');
-		Route::post('/user/add-address', 'createAddress');
-		Route::post('/user/change-address/{addressId}', 'changeAddress');
-		Route::post('/user/change-password', 'changePassword');
-		Route::get('/user/total-point', 'getPoint');
-		Route::get('/user/order-history', 'getOrderHistory');
-		Route::get('/admin/users/{role}', 'index');
-		Route::get('/admin/user/{id}', 'show');
-		Route::post('/admin/add-user', 'store');
-		Route::post('/admin/edit-user/{id}', 'update');
-		Route::get('/admin/delete-user/{id}', 'destroy');
+		Route::get('/user/profile', 'getProfile')->name('user.profile');
+		Route::patch('/user/change-profile', 'changeProfile')->name('user.change.profile');
+		Route::post('/user/add-address', 'createAddress')->name('user.create.address');
+		Route::patch('/user/change-address/{addressId}', 'changeAddress')->name('user.change.address');
+		Route::delete('/user/delete-address/{addressId}', 'deleteAddress')->name('user.delete.address');
+		Route::put('/user/change-password', 'changePassword')->name('user.change.password');
+		Route::get('/user/total-point', 'getPoint')->name('user.point');
+		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');
+		Route::get('/admin/users/{role}', 'index')->name('admin.users');
+		Route::get('/admin/user/{id}', 'show')->name('admin.user');
+		Route::post('/admin/add-user', 'store')->name('admin.create.user');
+		Route::patch('/admin/edit-user/{id}', 'update')->name('admin.change.user');
+		Route::delete('/admin/delete-user/{id}', 'destroy')->name('admin.delete.user');
 	});
 });
 
@@ -132,10 +146,16 @@ Route::middleware('auth:sanctum')->group(function () {
 		// --- List Kurir & Cek Ongkir ---
 		Route::get('/delivery/methods', 'getDeliveryMethods');
 		Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
 		// --- Get Status Pengiriman ---
 		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 		// --- Kirim Ulasan ---
 		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
@@ -171,25 +191,28 @@ Route::middleware('auth:sanctum')->group(function () {
 
 		// Notifications
 		Route::get('/notifications/metrics', [NotificationController::class, 'metrics'])->name('notifications.metrics');
-		Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
+		Route::post('/notifications/send', [NotificationController::class, 'send'])->middleware('cors')->name('notifications.send');
 		Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 		Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
 	});
 });
 
 
-// Route::middleware('auth:sanctum')->group(function () {
 Route::controller(PromoController::class)->group(function () {
 	Route::get('/promos', 'active');
 	Route::get('/promos/{id}', 'show');
-
-	// Endpoint Admin
-	Route::get('/admin/promos', 'index');
-	Route::post('/admin/promos', 'store');
-	Route::put('/admin/promos/{id}', 'update');
-	Route::delete('/admin/promos/{id}', 'destroy');
 });
-// });
+
+Route::middleware('auth:sanctum')->group(function () {
+	Route::controller(PromoController::class)->group(function () {
+
+		// Endpoint Admin
+		Route::get('/admin/promos', 'index');
+		Route::post('/admin/promos', 'store');
+		Route::put('/admin/promos/{id}', 'update');
+		Route::delete('/admin/promos/{id}', 'destroy');
+	});
+});
 
 
 
