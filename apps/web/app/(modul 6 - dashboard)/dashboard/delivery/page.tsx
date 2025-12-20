@@ -28,7 +28,9 @@ const statusMap: Record<string, { label: string; color: string }> = {
     "Gagal Dikirim": { label: "Gagal Dikirim", color: "text-red-500" },
 };
 
-export default function DashboardPage() {
+import { Suspense } from "react";
+
+function DeliveryOrderList() {
     const searchParams = useSearchParams();
     const page = Number(searchParams.get("page")) || 1;
     const search = searchParams.get("search") || "";
@@ -169,5 +171,13 @@ export default function DashboardPage() {
                 </Button>
             </div>
         </section>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat Halaman...</div>}>
+            <DeliveryOrderList />
+        </Suspense>
     );
 }

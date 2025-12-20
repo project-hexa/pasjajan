@@ -18,7 +18,9 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ReportSalesResponse } from "@/lib/schema/report-sales.schema";
 
-export default function DashboardPage() {
+import { Suspense } from "react";
+
+function DashboardContent() {
   const searchParams = useSearchParams();
   const period = (searchParams.get("period") as "monthly" | "daily" | "yearly" | "custom") ?? "monthly";
   const [data, setData] = useState<ReportSalesResponse["data"] | null>(null);
@@ -119,5 +121,13 @@ export default function DashboardPage() {
         </Table>
       </div>
     </section>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
