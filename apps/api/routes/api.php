@@ -136,6 +136,12 @@ Route::controller(UserController::class)->group(function () {
 	});
 });
 
+// Membungkus route yang berkaitan dengan testing ke route group yang menjalankan TestController
+Route::controller(TestController::class)->group(function () {
+	// Route untuk mengetest koneksi smtp
+	Route::get('/test-smtp-connection', 'testSMTPConnection');
+});
+
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
 Route::middleware('auth:sanctum')->group(function () {
 
