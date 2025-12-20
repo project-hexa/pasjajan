@@ -46,6 +46,9 @@ const navigation = [
     name: "Delivery",
     href: "/dashboard/delivery",
     icon: "lucide:truck",
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: "icon-park-outline:ad-product",
   },
 ];
 

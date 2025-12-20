@@ -17,6 +17,15 @@ const promoBanners = [
   { id: 4, image: "/images/Screenshot 2025-10-25 203225.png", title: "Belanja hemat bulanan", link: "/promo/beli-hemat", cta: "cek sekarang" },
 ];
 
+type Banner = {
+  id?: string | number;
+  image?: string;
+  title?: string;
+  link?: string;
+  cta?: string;
+  [key: string]: unknown;
+};
+
 
 // treat mocked top rated restaurants with the same shape as fetched stores
 // store item shape used by client and mocked data
@@ -67,6 +76,7 @@ export default function CatalogueClient() {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const [stores, setStores] = React.useState<StoreItem[]>([]);
+  const [banners, setBanners] = React.useState<typeof promoBanners>(promoBanners);
 
   // categories removed (unused) and category overlay logic omitted until needed
 
@@ -120,6 +130,34 @@ export default function CatalogueClient() {
         }
       } catch {
         if (mounted) setStores([]);
+      }
+    })();
+
+    // fetch banners and categories in parallel (best-effort)
+    (async () => {
+      try {
+        const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:8000/api";
+
+        // banners/promos
+        const bannerCandidates = [`${apiBase}/banners`, `${apiBase}/promos`, `${apiBase}/campaigns`];
+        for (const url of bannerCandidates) {
+          try {
+            const r = await fetch(url);
+            if (!r.ok) continue;
+            const payload = await r.json();
+            const arr = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : Array.isArray(payload.data?.data) ? payload.data.data : [];
+            if (arr.length === 0) continue;
+            const mapped = arr.map((b: Banner, idx: number) => ({ id: b.id ?? idx, image: (b.image as string) ?? (b.image_url as string) ?? (b.banner as string) ?? (b.src as string) ?? "/images/placeholder.png", title: (b.title as string) ?? (b.name as string) ?? "", link: (b.link as string) ?? (b.url as string) ?? "", cta: (b.cta as string) ?? (b.button_text as string) ?? "Lihat" }));
+            setBanners(mapped);
+            break;
+          } catch {
+            // try next
+          }
+        }
+
+        // categories fetching removed — not used in this component
+      } catch {
+        // ignore
       }
     })();
     return () => {
@@ -191,7 +229,7 @@ export default function CatalogueClient() {
       <Navbar />
 
       <div className="flex w-full flex-col gap-10 px-4 pb-16 pt-8 sm:px-8 lg:px-12 xl:px-16">
-        <HeroBanner banners={promoBanners} itemsPerSlide={3} hideOnSearch={!!q} />
+        <HeroBanner banners={banners} itemsPerSlide={3} hideOnSearch={!!q} />
 
         {q ? (
           <section className="w-full">
