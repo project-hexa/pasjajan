@@ -50,7 +50,7 @@ export default function PromoPage() {
             setPromos(responseData.data || []);
         } catch (error) {
             console.error("Failed to fetch promos", error);
-            toast.error("Gagal memuat daftar promo");
+            toast.error("Gagal memuat daftar promo", { toasterId: "global" });
         } finally {
             setLoading(false);
         }
@@ -71,11 +71,11 @@ export default function PromoPage() {
         setIsDeleting(true);
         try {
             await api.delete(`/admin/promos/${promoToDelete.id}`);
-            toast.success("Promo berhasil dihapus!");
+            toast.success("Promo berhasil dihapus!", { toasterId: "global" });
             fetchPromos();
         } catch (error) {
             console.error("Failed to delete promo", error);
-            toast.error("Gagal menghapus promo");
+            toast.error("Gagal menghapus promo", { toasterId: "global" });
         } finally {
             setIsDeleting(false);
             setDeleteDialogOpen(false);

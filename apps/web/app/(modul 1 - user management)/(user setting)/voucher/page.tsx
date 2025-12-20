@@ -122,7 +122,7 @@ export default function VoucherPage() {
       setAvailableVouchers(availableRes.data.data || []);
     } catch (error) {
       console.error("Failed to fetch voucher data", error);
-      toast.error("Gagal memuat data voucher");
+      toast.error("Gagal memuat data voucher", { toasterId: "global" });
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,7 @@ export default function VoucherPage() {
         voucher_id: voucherId,
       });
 
-      toast.success("Voucher berhasil ditukar!");
+      toast.success("Voucher berhasil ditukar!", { toasterId: "global" });
 
       // Update points and refresh voucher lists
       setCustomerPoints(response.data.data.remaining_points);
@@ -145,7 +145,7 @@ export default function VoucherPage() {
       setActiveTab("voucher");
     } catch (error: any) {
       const message = error.response?.data?.message || "Gagal menukar voucher";
-      toast.error(message);
+      toast.error(message, { toasterId: "global" });
     } finally {
       setRedeemingId(null);
     }

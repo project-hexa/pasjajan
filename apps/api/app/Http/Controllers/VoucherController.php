@@ -126,7 +126,7 @@ class VoucherController extends Controller
             // Create history point record
             \App\Models\HistoryPoint::create([
                 'customer_id' => $customer->id,
-                'type' => 'debit',
+                'type' => 'Keluar',
                 'notes' => 'Redeem voucher: ' . $voucher->name,
                 'total_point' => $voucher->required_points,
             ]);

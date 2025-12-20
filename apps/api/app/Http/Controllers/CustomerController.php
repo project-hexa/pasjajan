@@ -798,7 +798,7 @@ class CustomerController extends Controller
                         'type' => $history->type,
                         'notes' => $history->notes,
                         'total_point' => $history->total_point,
-                        'formatted_point' => ($history->type === 'credit' ? '+' : '-') . number_format($history->total_point, 0, ',', '.'),
+                        'formatted_point' => ($history->type === 'Masuk' ? '+' : '-') . number_format($history->total_point, 0, ',', '.'),
                         'created_at' => $history->created_at->format('Y-m-d H:i:s'),
                     ];
                 }),

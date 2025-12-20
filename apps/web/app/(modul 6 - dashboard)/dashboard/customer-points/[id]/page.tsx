@@ -23,7 +23,7 @@ interface Customer {
 
 interface HistoryPoint {
     id: number;
-    type: "credit" | "debit";
+    type: "Masuk" | "Keluar";
     notes: string;
     total_point: number;
     formatted_point: string;
@@ -170,18 +170,18 @@ export default function CustomerPointHistoryPage() {
                                             <td className="px-4 py-3">
                                                 <Badge
                                                     className={
-                                                        item.type === "credit"
+                                                        item.type === "Masuk"
                                                             ? "bg-green-100 text-green-700"
                                                             : "bg-red-100 text-red-700"
                                                     }
                                                 >
-                                                    {item.type === "credit" ? "Masuk" : "Keluar"}
+                                                    {item.type}
                                                 </Badge>
                                             </td>
                                             <td className="px-4 py-3">{item.notes || "-"}</td>
                                             <td className="px-4 py-3 text-right">
                                                 <span
-                                                    className={`font-semibold ${item.type === "credit" ? "text-green-600" : "text-red-600"
+                                                    className={`font-semibold ${item.type === "Masuk" ? "text-green-600" : "text-red-600"
                                                         }`}
                                                 >
                                                     {item.formatted_point}

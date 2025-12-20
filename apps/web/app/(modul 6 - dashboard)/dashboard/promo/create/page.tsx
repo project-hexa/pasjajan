@@ -47,13 +47,13 @@ export default function CreatePromoPage() {
                 },
             });
 
-            toast.success("Promo berhasil dibuat!");
+            toast.success("Promo berhasil dibuat!", { toasterId: "global" });
             router.push("/dashboard/promo");
             router.refresh();
         } catch (error: any) {
             console.error(error);
             const message = error.response?.data?.message || "Terjadi kesalahan";
-            toast.error(`Gagal membuat promo: ${message}`);
+            toast.error(`Gagal membuat promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }

@@ -25,7 +25,7 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
                 setInitialData(response.data.data);
             } catch (error: any) {
                 console.error(error);
-                toast.error("Gagal memuat detail promo");
+                toast.error("Gagal memuat detail promo", { toasterId: "global" });
                 router.push("/dashboard/promo");
             } finally {
                 setFetching(false);
@@ -70,13 +70,13 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
                 },
             });
 
-            toast.success("Promo berhasil diperbarui!");
+            toast.success("Promo berhasil diperbarui!", { toasterId: "global" });
             router.push("/dashboard/promo");
             router.refresh();
         } catch (error: any) {
             console.error(error);
             const message = error.response?.data?.message || "Terjadi kesalahan";
-            toast.error(`Gagal memperbarui promo: ${message}`);
+            toast.error(`Gagal memperbarui promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }
