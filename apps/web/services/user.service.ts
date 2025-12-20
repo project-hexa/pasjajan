@@ -5,6 +5,19 @@ import z from "zod";
 
 export const userService = {
   getUserProfile: async (email: string) => {
+    // Mock Profile
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return {
+      ok: true,
+      data: {
+        full_name: "Admin Demo",
+        email: email || "admin@example.com",
+        phone_number: "08123456789",
+        role: "admin"
+      },
+      message: "Profile Berhasil diambil! (Mock)",
+    };
+    /*
     try {
       const { data } = await api.get("/user/profile", {
         params: {
@@ -29,6 +42,7 @@ export const userService = {
         message,
       };
     }
+    */
   },
   editUserProfile: async (payload: z.infer<typeof editProfileSchema>) => {
     try {

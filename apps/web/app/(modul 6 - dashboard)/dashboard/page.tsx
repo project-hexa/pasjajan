@@ -1,7 +1,9 @@
+"use client";
+
 import AnalyticCard from "@/app/(modul 6 - dashboard)/_components/analytic-card";
 import { AnalyticChart } from "@/app/(modul 6 - dashboard)/_components/analytic-chart";
 import ExportCsvButton from "@/app/(modul 6 - dashboard)/_components/export-csv-button";
-import { getReportSalesServer } from "@/services/report-sales";
+import { getReportSales } from "@/services/report-sales"; // Use Client Service
 import { Button } from "@workspace/ui/components/button";
 import {
   Table,
@@ -12,21 +14,34 @@ import {
   TableRow,
 } from "@workspace/ui/components/table";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ReportSalesResponse } from "@/lib/schema/report-sales.schema";
 
-interface DashboardPageProps {
-  searchParams: Promise<{
-    period?: "monthly" | "yearly" | "daily" | "custom";
-  }>;
-}
+export default function DashboardPage() {
+  const searchParams = useSearchParams();
+  const period = (searchParams.get("period") as "monthly" | "daily" | "yearly" | "custom") ?? "monthly";
+  const [data, setData] = useState<ReportSalesResponse["data"] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function DashboardPage({
-  searchParams,
-}: DashboardPageProps) {
-  const params = await searchParams;
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await getReportSales({ period });
+        setData(response.data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [period]);
 
-  const period = params.period ?? "monthly";
-
-  const { data } = await getReportSalesServer({ period });
+  if (loading || !data) {
+    return <div className="p-8 text-center">Loading Dashboard...</div>;
+  }
 
   return (
     <section className="space-y-4">
