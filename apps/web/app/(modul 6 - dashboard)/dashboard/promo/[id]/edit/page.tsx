@@ -21,10 +21,11 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
         const fetchPromo = async () => {
             try {
                 const response = await api.get(`/promos/${id}`);
+                // ApiResponse format: { success, message, data: { ...promo } }
                 setInitialData(response.data.data);
             } catch (error: any) {
                 console.error(error);
-                toast.error("Gagal memuat detail promo", { toasterId: "global" });
+                toast.error("Gagal memuat detail promo");
                 router.push("/dashboard/promo");
             } finally {
                 setFetching(false);
@@ -69,13 +70,13 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
                 },
             });
 
-            toast.success("Promo berhasil diperbarui!", { toasterId: "global" });
+            toast.success("Promo berhasil diperbarui!");
             router.push("/dashboard/promo");
             router.refresh();
         } catch (error: any) {
             console.error(error);
             const message = error.response?.data?.message || "Terjadi kesalahan";
-            toast.error(`Gagal memperbarui promo: ${message}`, { toasterId: "global" });
+            toast.error(`Gagal memperbarui promo: ${message}`);
         } finally {
             setLoading(false);
         }

@@ -45,10 +45,12 @@ export default function PromoPage() {
     const fetchPromos = async () => {
         try {
             const response = await api.get("/admin/promos");
-            setPromos(response.data.data);
+            // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+            const responseData = response.data.data;
+            setPromos(responseData.data || []);
         } catch (error) {
             console.error("Failed to fetch promos", error);
-            toast.error("Gagal memuat daftar promo", { toasterId: "global" });
+            toast.error("Gagal memuat daftar promo");
         } finally {
             setLoading(false);
         }
@@ -69,11 +71,11 @@ export default function PromoPage() {
         setIsDeleting(true);
         try {
             await api.delete(`/admin/promos/${promoToDelete.id}`);
-            toast.success("Promo berhasil dihapus!", { toasterId: "global" });
+            toast.success("Promo berhasil dihapus!");
             fetchPromos();
         } catch (error) {
             console.error("Failed to delete promo", error);
-            toast.error("Gagal menghapus promo", { toasterId: "global" });
+            toast.error("Gagal menghapus promo");
         } finally {
             setIsDeleting(false);
             setDeleteDialogOpen(false);
