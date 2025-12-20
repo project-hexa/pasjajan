@@ -45,7 +45,9 @@ export default function PromoPage() {
     const fetchPromos = async () => {
         try {
             const response = await api.get("/admin/promos");
-            setPromos(response.data.data);
+            // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+            const responseData = response.data.data;
+            setPromos(responseData.data || []);
         } catch (error) {
             console.error("Failed to fetch promos", error);
             toast.error("Gagal memuat daftar promo", { toasterId: "global" });
