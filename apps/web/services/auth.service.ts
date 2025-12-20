@@ -9,51 +9,59 @@ import { isAxiosError } from "axios";
 import z from "zod";
 
 export const authService = {
-  login: async (payload: z.infer<typeof loginSchema>) => {
+  login: async (
+    payload: z.infer<typeof loginSchema>,
+  ): Promise<LoginResponse> => {
     try {
-      const { data } = await api.post("/auth/login", {
-        user_identity: payload.email,
-        ...payload,
-      });
+      const { data } = await api.post<APIResponse<LoginResponse>>(
+        "/auth/login",
+        {
+          user_identity: payload.email,
+          ...payload,
+        },
+      );
 
-      return {
-        ok: true,
-        token: data.data.token,
-        user: data.data.user_data,
-        message: data.message || "Berhasil Masuk!",
-      };
-    } catch (error) {
-      let message = "Gagal Masuk!";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.message ?? message;
+      if (!data.success) {
+        throw data;
       }
 
-      return {
-        ok: false,
-        message,
-      };
+      return data.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message ?? "Gagal Masuk!",
+          errors: error.response?.data?.errors,
+          status: error.response?.status,
+        } satisfies APIError;
+      }
+
+      throw error;
     }
   },
-  register: async (payload: z.infer<typeof registerSchema>) => {
+  register: async (
+    payload: z.infer<typeof registerSchema>,
+  ): Promise<RegisterResponse> => {
     try {
-      const { data } = await api.post("/auth/register", payload);
+      const { data } = await api.post<APIResponse<RegisterResponse>>(
+        "/auth/register",
+        payload,
+      );
 
-      return {
-        ok: true,
-        message: data.message || "Berhasil Daftar Akun!",
-      };
-    } catch (error) {
-      let message = "Gagal Mendaftar!";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.message ?? message;
+      if (!data.success) {
+        throw data;
       }
 
-      return {
-        ok: false,
-        message,
-      };
+      return data.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message ?? "Gagal Masuk!",
+          errors: error.response?.data?.errors,
+          status: error.response?.status,
+        } satisfies APIError;
+      }
+
+      throw error;
     }
   },
   sendOTP: async (payload: z.infer<typeof sendOTPSchema>) => {
@@ -99,6 +107,30 @@ export const authService = {
         ok: false,
         message,
       };
+    }
+  },
+  logout: async (token: string) => {
+    try {
+      const { data } = await api.post<APIResponse<{ token: string }>>(
+        "/auth/logout",
+        { token },
+      );
+
+      if (!data.success) {
+        throw data;
+      }
+
+      return data.data;
+    } catch (error) {
+      if (isAxiosError(error)) {
+        throw {
+          message: error.response?.data?.message ?? "Gagal Masuk!",
+          errors: error.response?.data?.errors,
+          status: error.response?.status,
+        } satisfies APIError;
+      }
+
+      throw error;
     }
   },
 };

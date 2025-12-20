@@ -73,6 +73,12 @@ class AuthController extends BaseController
 			return $this->sendFailResponse("$userIdentityIs atau password anda salah. Login gagal.", code: 401);
 		}
 
+        if (!$user->email_verified_at) {
+            return response()->json([
+                'message' => 'Email belum diverifikasi.',
+            ], 403);
+        }
+
 		// Jika sesuai
 		// Hapus token auth sebelumnya milik user terkait, jika ada
 		$user->tokens()->delete();
@@ -137,25 +143,7 @@ class AuthController extends BaseController
 		// Lalu masukkan data inputan user ke database
 		$customer = $this->createCustomer($data);
 
-		// Hapus otp milik user terkait
-		// Cari user beserta otpnya dengan email dari data yang baru dibuat
-		$userOtp = User::where('email', $customer->user['email'])->first()->load('otps');
-		$otp = $userOtp->otps;
-
-		// Jika otp ditemukan namun berupa Collection kosong, maka
-		if ($otp->isEmpty()) {
-			// Ambil data otp dari entitas otp
-			$otp = Otp::where('email', $customer->user['email'])->first();
-		} else {
-			// Jika otp ditemukan $ ada isinya, maka ambil data otp tsb
-			$otp = $userOtp->otps()->first();
-		}
-
-		// Method utk menghapus otp yg telah terverifikasi
-		$this->deleteVerifiedOtp($otp);
-
-		// Membuat token auth untuk user
-		$result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
+        $result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
 		$result['customer_data'] = $customer;
 
 		return $this->sendSuccessResponse("User berhasil register.", $result);
@@ -374,11 +362,15 @@ class AuthController extends BaseController
 			return $this->sendFailResponse("OTP salah atau sudah expired. Verifikasi OTP gagal.", code: 401);
 		}
 
+        $user->update([
+            'email_verified_at' => now(),
+        ]);
+
 		// Jika otp sesuai & tidak kadaluarsa, maka
 		// Hapus otp milik user terkait
-		//$otp->delete();
+		$otp->delete();
 		// Update otp menjadi verified
-		$otp['is_verified'] = true;
+		// $otp['is_verified'] = true;
 		$otp->save();
 
 		$result['otp'] = $otp;

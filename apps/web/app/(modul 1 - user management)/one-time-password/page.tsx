@@ -7,6 +7,7 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
@@ -21,7 +22,7 @@ import z from "zod";
 
 export default function OTPPage() {
   const router = useRouter();
-  const { verifyOTP, register, registerHold } = useAuthStore();
+  const { verifyOTP } = useAuthStore();
   const [emailForOTP, setEmailForOTP] = useState<string>("");
   const otpForm = useForm<z.infer<typeof verifyOTPSchema>>({
     resolver: zodResolver(verifyOTPSchema),
@@ -45,21 +46,7 @@ export default function OTPPage() {
         toasterId: "global",
       });
 
-      const regist = await register(registerHold!);
-      if (regist.ok) {
-        setTimeout(() => {
-          toast.success("Berhasil Register!", {
-            description: "Silahkan login menggunakan akun anda.",
-            toasterId: "global",
-          });
-        }, 150);
-
-        router.push("/login");
-      } else {
-        toast.error(regist.message, {
-          toasterId: "global",
-        });
-      }
+      router.push("/");
     } else {
       toast.error(result.message, {
         toasterId: "global",
@@ -69,7 +56,7 @@ export default function OTPPage() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex flex-col overflow-hidden p-0 max-sm:mx-5 max-sm:-mt-40 md:border-2 md:border-black lg:h-2/3 lg:w-1/2">
+      <Card className="flex flex-col overflow-hidden p-0 max-sm:mx-5 max-sm:-mt-40 md:border-2 md:border-black lg:min-h-2/3 lg:min-w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center p-0">
           <form
             onSubmit={otpForm.handleSubmit(handleOnSubmit)}
@@ -80,33 +67,35 @@ export default function OTPPage() {
               control={otpForm.control}
               name="pin"
               render={({ field, fieldState }) => (
-                <Field>
+                <Field className="px-4">
                   <FieldLabel className="sr-only">One-Time Password</FieldLabel>
                   <FieldDescription className="max-w-md">
                     Kami telah mengirimkan kode OTP ke {emailForOTP}, silahkan
                     masukan kode OTP anda.
                   </FieldDescription>
-                  <InputOTP
-                    maxLength={6}
-                    containerClassName="gap-5 md:gap-10 justify-center"
-                    {...field}
-                  >
-                    {[...Array(6)].map((_, index) => (
-                      <InputOTPSlot
-                        key={index}
-                        index={index}
-                        aria-invalid={fieldState.invalid}
-                        className="max-sm:size-10"
-                      />
-                    ))}
-                  </InputOTP>
+                  <FieldContent>
+                    <InputOTP
+                      maxLength={6}
+                      containerClassName="gap-5 md:gap-10 justify-center"
+                      {...field}
+                    >
+                      {[...Array(6)].map((_, index) => (
+                        <InputOTPSlot
+                          key={index}
+                          index={index}
+                          aria-invalid={fieldState.invalid}
+                          className="max-sm:size-10"
+                        />
+                      ))}
+                    </InputOTP>
+                  </FieldContent>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
               )}
             />
-            <p className="self-start">
+            <p className="self-start px-4">
               Kirim ulang kode OTP?{" "}
               <Button variant={"link"} className="p-0" type="button">
                 Kirim Ulang

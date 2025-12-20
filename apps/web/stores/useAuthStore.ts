@@ -9,31 +9,34 @@ import z from "zod";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface AuthResponse {
-  ok: boolean;
-  message: string;
-  data?: {
-    token: string;
-    user: User;
-  };
-}
+type AuthActionResult =
+  | {
+      ok: true;
+      message: string;
+    }
+  | {
+      ok: false;
+      message: string;
+      errors?: Record<string, string[]>;
+      status?: number;
+    };
 
-type authStore = {
+interface AuthStore {
   user: User | null;
   token: string | null;
-  registerHold: z.infer<typeof registerSchema> | null;
-  setToken: (token: string | null) => void;
-  login: (data: z.infer<typeof loginSchema>) => Promise<AuthResponse>;
-  register: (data: z.infer<typeof registerSchema>) => Promise<AuthResponse>;
-  setRegisterHold: (data: z.infer<typeof registerSchema>) => void;
-  logout: () => Promise<AuthResponse>;
-  sendOTP: (email: string) => Promise<AuthResponse>;
-  verifyOTP: (email: string, pin: string) => Promise<AuthResponse>;
-  forgotPassword: (email: string) => Promise<AuthResponse>;
+  isLoggedIn: boolean;
+  login: (payload: z.infer<typeof loginSchema>) => Promise<AuthActionResult>;
+  register: (
+    payload: z.infer<typeof registerSchema>,
+  ) => Promise<AuthActionResult>;
+  logout: () => Promise<AuthActionResult>;
+  sendOTP: (email: string) => Promise<AuthActionResult>;
+  verifyOTP: (email: string, pin: string) => Promise<AuthActionResult>;
+  forgotPassword: (email: string) => Promise<AuthActionResult>;
   resetPassword: (
-    data: z.infer<typeof resetPasswordSchema>,
-  ) => Promise<AuthResponse>;
-};
+    payload: z.infer<typeof resetPasswordSchema>,
+  ) => Promise<AuthActionResult>;
+}
 
 const cookiesOptions: Cookies.CookieAttributes = {
   path: "/",
@@ -41,70 +44,85 @@ const cookiesOptions: Cookies.CookieAttributes = {
   sameSite: "lax",
 };
 
-export const useAuthStore = create<authStore>()(
+export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
-      registerHold: null,
-      setToken: (token) => set({ token }),
-      login: async (data) => {
-        const res = await authService.login(data);
-        const { token, user, message } = res;
+      isLoggedIn: false,
+      login: async (payload) => {
+        try {
+          const res = await authService.login(payload);
+          const { token, user_data } = res;
 
-        if (!res.ok)
+          if (payload.rememberMe) {
+            Object.assign(cookiesOptions, { expires: 7 });
+          }
+
+          Cookies.set("token", token, cookiesOptions);
+
+          set({ user: user_data, token, isLoggedIn: true });
+
+          return {
+            ok: true,
+            message: "Berhasil Masuk!",
+          };
+        } catch (err) {
+          const error = err as APIError;
+
           return {
             ok: false,
-            message,
+            message: error?.message ?? "Gagal Masuk!",
+            errors: error?.errors,
+            status: error?.status,
           };
-
-        if (data.rememberMe) {
-          Object.assign(cookiesOptions, { expires: 7 });
         }
-
-        Cookies.set("token", token, cookiesOptions);
-        if (data.role) {
-          Cookies.set("userRole", data.role, cookiesOptions);
-        }
-
-        set({ user, token });
-
-        return {
-          ok: true,
-          message,
-          data: {
-            token,
-            user,
-          },
-        };
       },
-      register: async (data) => {
-        const res = await authService.register(data);
-        const { message } = res;
+      register: async (payload) => {
+        try {
+          const res = await authService.register(payload);
+          const { customer_data, token } = res;
 
-        if (!res.ok)
+          Cookies.set("verificationStep", "email-sent", cookiesOptions);
+          set({ user: customer_data, token, isLoggedIn: true });
+
+          return {
+            ok: true,
+            message: "Berhasil Daftar!",
+          };
+        } catch (err) {
+          const error = err as APIError;
+
           return {
             ok: false,
-            message,
+            message: error.message,
+            errors: error.errors,
+            status: error.status,
           };
-
-        return {
-          ok: true,
-          message,
-        };
-      },
-      setRegisterHold: (data) => {
-        Cookies.set("verificationStep", "email-sent", cookiesOptions);
-        sessionStorage.setItem("emailForOTP", data.email);
-        set({ registerHold: data });
+        }
       },
       logout: async () => {
-        Cookies.remove("token", { path: "/" });
-        Cookies.remove("userRole", { path: "/" });
+        try {
+          await authService.logout(get().token || "");
 
-        set({ user: null, token: null });
+          Cookies.remove("token", cookiesOptions);
 
-        return { ok: true, message: "Logout Berhasil!" };
+          set({ user: null, token: null, isLoggedIn: false });
+
+          return {
+            ok: true,
+            message: "Berhasil Logout!",
+          };
+        } catch (err) {
+          const error = err as APIError;
+
+          return {
+            ok: false,
+            message: error.message,
+            errors: error.errors,
+            status: error.status,
+          };
+        }
       },
       sendOTP: async (email) => {
         const res = await authService.sendOTP({ email });
@@ -157,7 +175,6 @@ export const useAuthStore = create<authStore>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        registerHold: state.registerHold,
       }),
     },
   ),
