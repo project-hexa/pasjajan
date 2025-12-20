@@ -14,7 +14,7 @@ import { Badge } from "@workspace/ui/components/badge";
 import { Icon } from "@workspace/ui/components/icon";
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
-import AddressDialog from "@/components/AddressDialog";
+import AddressDialog, { Address } from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -68,25 +68,30 @@ function CheckoutPageContent() {
   const [orderData, setOrderData] = React.useState<any>(null);
   const [branchName, setBranchName] = React.useState<string>("");
 
+  // ALAMAT - Dynamic from user profile
+  const [addresses, setAddresses] = React.useState<Address[]>([]);
+  const [addressLoading, setAddressLoading] = React.useState(true);
+  const [address, setAddress] = React.useState({
+    name: "",
+    address: "",
+    phone: "",
+  });
+
   // Get logged-in user from auth store
   const { user } = useAuthStore();
 
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
-        // Fetch branch name from API (always fetch, regardless of order)
+        // Fallback fetch branch name from public API (jika order tidak punya store)
         const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
         const branchesResult = await branchesResponse.json();
 
-        console.log("Branch API Response:", branchesResult);
-
+        let fallbackBranchName = "";
         if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
-          // Get first active branch or specific branch
-          console.log("Setting branch name:", branchesResult.data.branches[0].name);
-          setBranchName(branchesResult.data.branches[0].name);
-        } else {
-          console.log("No branches found or API error");
+          fallbackBranchName = branchesResult.data.branches[0].name;
         }
+
 
         if (!orderCode) {
           // Allow page to display without order code
@@ -120,6 +125,14 @@ function CheckoutPageContent() {
 
         const order = result.data.order;
         setOrderData(order);
+
+        // Set branch name dari order store_name, fallback ke branches list
+        if (order.store_name) {
+          setBranchName(order.store_name);
+        } else if (fallbackBranchName) {
+          setBranchName(fallbackBranchName);
+        }
+
 
         // Fetch all products to get names and images
         const productsResponse = await fetch("http://localhost:8000/api/products", {
@@ -185,13 +198,56 @@ function CheckoutPageContent() {
   const adminFee = orderData?.admin_fee || 1000;
   const grandTotal = orderData?.grand_total || productTotal + shipping + adminFee;
 
-  // ALAMAT
-  const [address, setAddress] = React.useState({
-    name: "Rumah – John Doe",
-    address:
-      "Jln. Setiabudhi No. 67K, Kec. Sukasari, Kota Bandung, Jawa Barat, 40636",
-    phone: "0888888888",
-  });
+  // Fetch user addresses
+  React.useEffect(() => {
+    const loadAddresses = async () => {
+      if (!user?.email) {
+        setAddressLoading(false);
+        return;
+      }
+
+      try {
+        const token = Cookies.get('token');
+        const res = await fetch(`http://localhost:8000/api/user/profile?email=${user.email}`, {
+          headers: {
+            "Accept": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          },
+        });
+        const result = await res.json();
+
+        if (result.success && result.data?.user?.customer?.addresses) {
+          const userAddresses = result.data.user.customer.addresses;
+          // Transform to Address format
+          const formattedAddresses: Address[] = userAddresses.map((addr: any) => ({
+            id: addr.id,
+            label: addr.label || 'Alamat',
+            name: `${addr.label || 'Alamat'} – ${addr.recipient_name}`,
+            address: addr.detail_address,
+            phone: addr.phone_number,
+          }));
+
+          setAddresses(formattedAddresses);
+
+          // Set default address (first one or is_default)
+          const defaultAddr = userAddresses.find((a: any) => a.is_default) || userAddresses[0];
+          if (defaultAddr) {
+            setAddress({
+              name: `${defaultAddr.label || 'Alamat'} – ${defaultAddr.recipient_name}`,
+              address: defaultAddr.detail_address,
+              phone: defaultAddr.phone_number,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading addresses:", error);
+      } finally {
+        setAddressLoading(false);
+      }
+    };
+
+    loadAddresses();
+  }, [user?.email]);
 
   // PAYMENT
   const [payChoice, setPayChoice] = React.useState<{
@@ -237,6 +293,9 @@ function CheckoutPageContent() {
         body: JSON.stringify({
           order_code: orderCode,
           payment_method_code: payChoice.option,
+          shipping_address: address.address,
+          shipping_recipient_name: address.name?.split(' – ')[1] || address.name,
+          shipping_recipient_phone: address.phone,
         }),
       });
 
@@ -333,6 +392,8 @@ function CheckoutPageContent() {
                       Ubah
                     </button>
                   }
+                  addresses={addresses}
+                  loading={addressLoading}
                   onSelect={(data) =>
                     setAddress({
                       name: data.name,

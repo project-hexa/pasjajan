@@ -66,8 +66,12 @@ const storeCatalogue: StoreView[] = storeSeeds.map((seed) => ({
 
 const storeIndex: Record<string, StoreView> = Object.fromEntries(storeCatalogue.map((store) => [store.slug, store]));
 
-export default async function StorePage(props: unknown) {
-  const { params, searchParams } = props as { params: { storeSlug: string }; searchParams?: { search?: string } };
+export default async function StorePage(props: {
+  params: Promise<{ storeSlug: string }>;
+  searchParams?: Promise<{ search?: string }>;
+}) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
   const slug = params.storeSlug;
 
   // helper to normalize API responses
@@ -86,7 +90,7 @@ export default async function StorePage(props: unknown) {
 
   // fetch stores and products in parallel, but do not fail the page on errors
   const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-  const [storesResp, productsResp] = await Promise.all([
+  const [storesResp, productsResp, branchesResult] = await Promise.all([
     (async () => {
       try {
         const r = await fetch(`${apiBase}/stores`, { cache: "no-store" });
@@ -103,7 +107,16 @@ export default async function StorePage(props: unknown) {
         return null;
       }
     })(),
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/branches/public`, { cache: "no-store" });
+        return await r.json();
+      } catch {
+        return null;
+      }
+    })(),
   ]);
+
 
   type RawStore = {
     id?: string | number;
@@ -175,17 +188,24 @@ export default async function StorePage(props: unknown) {
       heroImage: found.image_url || found.logo_url || "/img/logo2.png",
       popularProducts: Array.isArray(found.products)
         ? found.products.map((p: RawProduct) => ({
-            id: String(p.id || p.product_id || p.sku || Math.random()),
-            name: p.name || p.title || "Produk",
-            description: p.description || p.short_description || "",
-            price: Number(p.price || p.final_price || p.sale_price || 0),
-            image: p.image_url || p.image || "/images/Screenshot 2025-10-25 173437.png",
-            details: p.details || p.long_description || undefined,
-          }))
+          id: String(p.id || p.product_id || p.sku || Math.random()),
+          name: p.name || p.title || "Produk",
+          description: p.description || p.short_description || "",
+          price: Number(p.price || p.final_price || p.sale_price || 0),
+          image: p.image_url || p.image || "/images/Screenshot 2025-10-25 173437.png",
+          details: p.details || p.long_description || undefined,
+        }))
         : [],
     };
 
-    // enrich popularProducts from global products if available
+    // Find real store ID from branches API
+    const branches = branchesResult?.data?.branches || [];
+    const realBranch = branches.find((b: { code: string; slug: string; name: string; id: number }) =>
+      String(b.code).toLowerCase() === String(slug).toLowerCase() ||
+      String(b.slug).toLowerCase() === String(slug).toLowerCase() ||
+      String(b.name).toLowerCase() === String(slug).toLowerCase()
+    );
+
     if (products.length > 0) {
       const storeIdentifiers = [found.id, found.code, found.slug, found.name]
         .filter(Boolean)
@@ -196,14 +216,18 @@ export default async function StorePage(props: unknown) {
         return fields.some((f) => storeIdentifiers.includes(String(f).toLowerCase()));
       });
 
-      if (matched.length > 0) {
-        store.popularProducts = matched.map((p: RawProduct) => ({
+      // If matched products found, use them; otherwise use all products as fallback
+      const productsToShow = matched.length > 0 ? matched : products;
+
+      if (productsToShow.length > 0) {
+        store.popularProducts = productsToShow.slice(0, 12).map((p: RawProduct) => ({
           id: String(p.id || p.product_id || p.sku || Math.random()),
           name: p.name || p.title || "Produk",
           description: p.description || p.short_description || "",
           price: Number(p.price || p.final_price || p.sale_price || 0),
           image: p.image_url || p.image || "/images/Screenshot 2025-10-25 173437.png",
           details: p.details || p.long_description || undefined,
+          store_id: realBranch?.id || found.id || found.code, // Prefer real ID from API
         }));
       }
     }
@@ -218,9 +242,9 @@ export default async function StorePage(props: unknown) {
 
   const searchResults: StoreProduct[] = hasQuery
     ? store.popularProducts.filter((product: StoreProduct) => {
-        const haystack = `${product.name} ${product.description}`.toLowerCase();
-        return haystack.includes(normalizedQuery);
-      })
+      const haystack = `${product.name} ${product.description}`.toLowerCase();
+      return haystack.includes(normalizedQuery);
+    })
     : [];
 
   const hasSearchResults = searchResults.length > 0;
@@ -233,11 +257,10 @@ export default async function StorePage(props: unknown) {
       </Suspense>
       <div className="mx-auto flex-1 w-full max-w-[90rem] px-4 pb-10 sm:px-6 lg:px-8 xl:px-10">
         <div
-          className={`overflow-hidden transition-all duration-500 ease-in-out ${
-            heroHidden
-              ? "mt-0 max-h-0 -translate-y-6 opacity-0 pointer-events-none"
-              : "mt-6 max-h-[520px] translate-y-0 opacity-100"
-          }`}
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${heroHidden
+            ? "mt-0 max-h-0 -translate-y-6 opacity-0 pointer-events-none"
+            : "mt-6 max-h-[520px] translate-y-0 opacity-100"
+            }`}
         >
           <section className="rounded-2xl bg-black px-6 py-10 text-white shadow-lg sm:px-10 lg:px-16">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">

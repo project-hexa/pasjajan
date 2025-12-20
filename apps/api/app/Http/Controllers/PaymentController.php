@@ -131,14 +131,28 @@ class PaymentController extends Controller
             }
 
             // Update order with payment details
-            $order->update([
+            $updateData = [
                 'payment_method_id' => $paymentMethod->id,
                 'midtrans_transaction_id' => $result->transaction_id,
                 'midtrans_order_id' => $result->order_id,
                 'payment_instructions' => $result->payment_instructions,
                 'payment_status' => 'pending',
                 'expired_at' => now()->addMinutes(1), // Set expire time saat payment process
-            ]);
+            ];
+            
+            // Update shipping address jika dikirim
+            if ($request->shipping_address) {
+                $updateData['shipping_address'] = $request->shipping_address;
+            }
+            if ($request->shipping_recipient_name) {
+                $updateData['shipping_recipient_name'] = $request->shipping_recipient_name;
+            }
+            if ($request->shipping_recipient_phone) {
+                $updateData['shipping_recipient_phone'] = $request->shipping_recipient_phone;
+            }
+            
+            $order->update($updateData);
+
 
             // Kirim notifikasi pending payment ke customer
             $this->sendPaymentPendingNotification($order);
