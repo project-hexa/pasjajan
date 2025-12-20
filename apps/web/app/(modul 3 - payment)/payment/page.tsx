@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Card,
@@ -18,6 +19,8 @@ import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie";
+
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -54,14 +57,17 @@ interface PaymentItem {
 function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderCode = searchParams.get("order");
-  
+  // Sanitize order code - hapus suffix :1 atau :digit jika ada
+  const rawOrderCode = searchParams.get("order");
+  const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
+
+
   // ====== FETCH ORDER DATA FROM API ======
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [orderData, setOrderData] = React.useState<any>(null);
   const [branchName, setBranchName] = React.useState<string>("");
-  
+
   // Get logged-in user from auth store
   const { user } = useAuthStore();
 
@@ -71,9 +77,9 @@ function CheckoutPageContent() {
         // Fetch branch name from API (always fetch, regardless of order)
         const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
         const branchesResult = await branchesResponse.json();
-        
+
         console.log("Branch API Response:", branchesResult);
-        
+
         if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
           // Get first active branch or specific branch
           console.log("Setting branch name:", branchesResult.data.branches[0].name);
@@ -88,11 +94,24 @@ function CheckoutPageContent() {
           return;
         }
 
-        // Fetch order detail from API
-        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
-        const result = await response.json();
+        // Get auth token
+        const token = Cookies.get('token');
 
-        if (!result.success || !result.data.order) {
+        // Fetch order detail from API
+        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
+          headers: token ? {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          } : {
+            'Accept': 'application/json',
+          }
+        });
+
+        console.log("Order API Response Status:", response.status);
+        const result = await response.json();
+        console.log("Order API Response:", result);
+
+        if (!result.success || !result.data?.order) {
           // Allow page to display even if order not found
           console.log("Order not found, displaying empty page");
           setLoading(false);
@@ -103,18 +122,33 @@ function CheckoutPageContent() {
         setOrderData(order);
 
         // Fetch all products to get names and images
-        const productsResponse = await fetch("http://localhost:8000/api/products");
+        const productsResponse = await fetch("http://localhost:8000/api/products", {
+          headers: token ? {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          } : {
+            'Accept': 'application/json',
+          }
+        });
         const productsResult = await productsResponse.json();
 
-        if (productsResult.success && productsResult.data.products) {
-          const products: Product[] = productsResult.data.products;
-          
+        // Normalize products data (bisa di data.data atau data)
+        let products: Product[] = [];
+        if (productsResult.data?.data) {
+          products = productsResult.data.data;
+        } else if (Array.isArray(productsResult.data)) {
+          products = productsResult.data;
+        } else if (productsResult.data?.products) {
+          products = productsResult.data.products;
+        }
+
+        if (productsResult.success && products) {
           // Map order items with product details
           const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => {
             const product = products.find((p) => p.id === orderItem.product_id);
             return {
               id: orderItem.product_id.toString(),
-              name: product?.name || "Unknown Product",
+              name: product?.name || `Produk ${orderItem.product_id}`,
               variant: "Varian",
               price: orderItem.price,
               qty: orderItem.quantity,
@@ -122,6 +156,17 @@ function CheckoutPageContent() {
             };
           });
 
+          setItems(paymentItems);
+        } else if (order.items && order.items.length > 0) {
+          // Fallback: tampilkan items dari order langsung tanpa product details
+          const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => ({
+            id: orderItem.product_id.toString(),
+            name: `Produk ${orderItem.product_id}`,
+            variant: "Varian",
+            price: orderItem.price,
+            qty: orderItem.quantity,
+            image_url: "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+          }));
           setItems(paymentItems);
         }
       } catch (error) {
@@ -159,14 +204,14 @@ function CheckoutPageContent() {
 
   // VOUCHER
   const [voucher, setVoucher] = React.useState<VoucherChoice | null>(null);
-  
+
   // LOADING STATE FOR PAYMENT BUTTON
   const [isProcessing, setIsProcessing] = React.useState(false);
 
   // Handle Payment Process
   const handlePayment = async () => {
     if (isProcessing) return; // Prevent double clicks
-    
+
     if (!payChoice.option) {
       alert("Silakan pilih metode pembayaran terlebih dahulu!");
       return;
@@ -178,11 +223,17 @@ function CheckoutPageContent() {
     }
 
     setIsProcessing(true); // Start loading
-    
+
     try {
+      // Get auth token
+      const token = Cookies.get('token');
+
       const response = await fetch("http://localhost:8000/api/payment/process", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           order_code: orderCode,
           payment_method_code: payChoice.option,
@@ -190,6 +241,8 @@ function CheckoutPageContent() {
       });
 
       const result = await response.json();
+
+      console.log("Payment process response:", result);
 
       if (!result.success) {
         alert(result.message || "Gagal memproses pembayaran!");
@@ -204,8 +257,11 @@ function CheckoutPageContent() {
       router.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
-      alert("Gagal menghubungi server!");
+
+      // Cek apakah ini masalah user tidak punya customer profile
+      alert("Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.");
       setIsProcessing(false); // Stop loading on error
+
     }
   };
 
@@ -221,8 +277,8 @@ function CheckoutPageContent() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* HEADER */}
-      <Header 
-        logoSrc="/images/pasjajan2.png" 
+      <Header
+        logoSrc="/images/pasjajan2.png"
         logoAlt="PasJajan Logo"
         userName={user?.full_name}
         userInitials={user?.full_name
@@ -425,7 +481,7 @@ function CheckoutPageContent() {
                       <span>{currency(grandTotal)}</span>
                     </div>
 
-                    <button 
+                    <button
                       onClick={handlePayment}
                       disabled={isProcessing}
                       className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -448,13 +504,13 @@ function CheckoutPageContent() {
 }
 
 export default function CheckoutPage() {
-    return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-                <p className="text-lg">Memuat...</p>
-            </div>
-        }>
-            <CheckoutPageContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
+        <p className="text-lg">Memuat...</p>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
+  );
 }

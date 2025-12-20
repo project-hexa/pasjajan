@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie";
 
 interface OrderData {
     order_code: string;
@@ -30,52 +31,55 @@ const currency = (n: number | string) => {
 };
 
 // Detail Row Component
-const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; isStatus?: boolean }> = 
+const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; isStatus?: boolean }> =
     ({ label, value, isCopyable, isStatus }) => {
-    const [copied, setCopied] = useState(false);
-    
-    const handleCopy = () => {
-        navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+        const [copied, setCopied] = useState(false);
 
-    return (
-        <div className="flex justify-between items-center py-2">
-            <span className="text-gray-500 text-sm">{label}</span>
-            <div className="flex items-center gap-2">
-                {isStatus ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                        <Icon icon="lucide:check-circle" width={14} height={14} />
-                        Lunas
-                    </span>
-                ) : (
-                    <>
-                        {isCopyable && (
-                            <button 
-                                title={copied ? "Tersalin!" : "Salin"} 
-                                onClick={handleCopy}
-                                className="text-gray-400 hover:text-emerald-700 p-1"
-                            >
-                                <Icon icon="lucide:copy" width={14} height={14} />
-                            </button>
-                        )}
-                        <span className="text-gray-800 font-medium text-sm">{value}</span>
-                    </>
-                )}
+        const handleCopy = () => {
+            navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        return (
+            <div className="flex justify-between items-center py-2">
+                <span className="text-gray-500 text-sm">{label}</span>
+                <div className="flex items-center gap-2">
+                    {isStatus ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            <Icon icon="lucide:check-circle" width={14} height={14} />
+                            Lunas
+                        </span>
+                    ) : (
+                        <>
+                            {isCopyable && (
+                                <button
+                                    title={copied ? "Tersalin!" : "Salin"}
+                                    onClick={handleCopy}
+                                    className="text-gray-400 hover:text-emerald-700 p-1"
+                                >
+                                    <Icon icon="lucide:copy" width={14} height={14} />
+                                </button>
+                            )}
+                            <span className="text-gray-800 font-medium text-sm">{value}</span>
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
 function SuccessPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const orderCode = searchParams.get("order");
+    // Sanitize order code - hapus suffix :1 atau :digit jika ada
+    const rawOrderCode = searchParams.get("order");
+    const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
+
     const [orderData, setOrderData] = useState<OrderData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRedirecting, setIsRedirecting] = useState(false);
-    
+
     // Get logged-in user from auth store
     const { user } = useAuthStore();
 
@@ -87,9 +91,17 @@ function SuccessPageContent() {
             }
 
             try {
-                const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+                // Get auth token
+                const token = Cookies.get('token');
+
+                const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
+                    headers: {
+                        "Accept": "application/json",
+                        ...(token && { "Authorization": `Bearer ${token}` }),
+                    },
+                });
                 const result = await res.json();
-                
+
                 if (!result.success || !result.data.order) {
                     alert("Order tidak ditemukan!");
                     router.push("/");
@@ -104,7 +116,7 @@ function SuccessPageContent() {
                     // Check if expired
                     const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
                     const now = Date.now();
-                    
+
                     if (expiredAt && now > expiredAt) {
                         // Expired, redirect to failed
                         setIsRedirecting(true);
@@ -128,7 +140,7 @@ function SuccessPageContent() {
                 // Status is paid/settlement/capture - show success page
                 const paymentDataStr = localStorage.getItem("payment_data");
                 const paymentData = paymentDataStr ? JSON.parse(paymentDataStr) : null;
-                
+
                 const mergedData = {
                     ...order,
                     order_code: order.order_code || orderCode,
@@ -164,8 +176,8 @@ function SuccessPageContent() {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <Header 
-                logoSrc="/images/pasjajan2.png" 
+            <Header
+                logoSrc="/images/pasjajan2.png"
                 logoAlt="PasJajan Logo"
                 userName={user?.full_name}
                 userInitials={user?.full_name
@@ -233,14 +245,14 @@ function SuccessPageContent() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
-                        <button 
+                        <button
                             onClick={() => router.push('/cart')}
                             className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                         >
                             <Icon icon="lucide:shopping-cart" width={18} height={18} />
                             Belanja Lagi
                         </button>
-                        <button 
+                        <button
                             onClick={() => router.push('/orders')}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >

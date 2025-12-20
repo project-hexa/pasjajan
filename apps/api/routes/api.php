@@ -88,9 +88,6 @@ Route::prefix('admin')->group(function () {
 // Midtrans notification webhook (no auth, verified by signature)
 Route::post('/payment/webhook', [WebhookController::class, 'handleMidtransNotification']);
 
-// Manual check status from Midtrans (untuk sync ulang jika ada masalah)
-Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
-
 if (config('app.env') !== 'production') {
 	Route::post('/payment/webhook/test', [WebhookController::class, 'testWebhook']);
 }
