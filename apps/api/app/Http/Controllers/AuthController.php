@@ -66,7 +66,6 @@ class AuthController extends BaseController
 		// Cari user yang sesuai dengan email/phone_number hasil inputan user
 		$user = User::where($userIdentityIs, $credentials['user_identity'])->first();
 
-		// Mengecek apakah inputan user sesuai atau tidak dengan data dari database
 		if (!$user || !Hash::check($credentials['password'], $user['password'])) {
 			// Jika tidak sesuai
 			//return response()->json(["ok" => false, "status" => 400]);
@@ -88,7 +87,7 @@ class AuthController extends BaseController
 		}
 
 		// Membuat token auth untuk user
-		$result['token'] = $user->createToken('auth_token')->plainTextToken;
+        $result['token'] = $user->createToken('auth_token')->plainTextToken;
 		$result['user_data'] = $user;
 
 		// Log activity
@@ -124,10 +123,12 @@ class AuthController extends BaseController
 		$validator = $this->makeValidator($request->all(), $rules);
 
 		// Jika validasi gagal, maka
-		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+		if (User::where("email", $request->email)->exists()) {
+			return $this->sendFailResponse("Email Sudah digunakan!", code: 422);
+		}
 
-			return $this->sendFailResponse("Validasi register gagal.", $errors, 422);
+		if (User::where("phone_number", $request->phone_number)->exists()) {
+			return $this->sendFailResponse("No telepon Sudah digunakan!", code: 422);
 		}
 
 		// Jika validasi berhasil maka
@@ -137,26 +138,7 @@ class AuthController extends BaseController
 		// Lalu masukkan data inputan user ke database
 		$customer = $this->createCustomer($data);
 
-		// Hapus otp milik user terkait
-		// Cari user beserta otpnya dengan email dari data yang baru dibuat
-		$userOtp = User::where('email', $customer->user['email'])->first()->load('otps');
-		$otp = $userOtp->otps;
-
-		// Jika otp ditemukan namun berupa Collection kosong, maka
-		if ($otp->isEmpty()) {
-			// Ambil data otp dari entitas otp
-			$otp = Otp::where('email', $customer->user['email'])->first();
-		} else {
-			// Jika otp ditemukan $ ada isinya, maka ambil data otp tsb
-			$otp = $userOtp->otps()->first();
-		}
-
-		// Method utk menghapus otp yg telah terverifikasi
-		$this->deleteVerifiedOtp($otp);
-
-		// Membuat token auth untuk user
-		$result['token'] = $customer->user->createToken('auth_token')->plainTextToken;
-		$result['customer_data'] = $customer;
+		$result['email'] = $customer->email;
 
 		return $this->sendSuccessResponse("User berhasil register.", $result);
 	}
@@ -294,50 +276,30 @@ class AuthController extends BaseController
 
 		// Mencari user dengan email yang sama dengan email inputan user
 		$user = User::where($input_type, $data[$input_type])->first();
+
+        if (!$user) {
+            return $this->sendFailResponse("User dengan $input_type tersebut tidak terdaftar.", code: 404);
+        }
+
 		$otp = $user ? Otp::where('user_id', $user['id'])->first() : Otp::where($input_type, $data[$input_type])->first();
 		$emailAddress = null;
 		$expiringTime = 1; // Dalam hitungan menit
 
 		// Jika otp tidak ditemukan, maka
-		if (!$otp) {
-			// Jika user tidak ditemukan, maka
-			if (!$user) {
-				// Buat & masukkan otp baru milik user ke database
-				$otp = $this->createOtp($expiringTime, email: $data[$input_type]);
-				$emailAddress = $otp['email'];
+        if (!$otp) {
+            $otp = $this->createOtp($expiringTime, user: $user);
+            $emailAddress = $user['email'];
+        } else {
+            // Jika otp ditemukan, cek attempt count
+            if ($otp['attempt_count'] >= 3) {
+                return $this->sendFailResponse("OTP telah dikirim lebih dari tiga kali. Harap hubungi admin. Jika masih ada kendala.");
+            }
 
-				//return $this->sendFailResponse("User dengan $input_type $data[$input_type] tidak ditemukan. Gagal mengirim OTP.", code:401);
-			} else {
-				// Jika user ditemukan, maka
-				// Buat & masukkan otp baru milik user ke database
-				$otp = $this->createOtp($expiringTime, user: $user);
-				$emailAddress = $user['email'];
-			}
-		} else {
-			// Jika otp ditemukan, maka
-			// Cek jika jumlah total pengiriman otp untuk user telah lebih dari 3 kali
-			if ($otp['attempt_count'] >= 3) {
-				return $this->sendFailResponse("Otp telah dikirim lebih dari tiga kali. Harap hubungi admin untuk memulihkan akun Anda.");
-			} else {
-				// Jika total pengiriman otp masih kurang dari 3 kali, maka
-				// Hitung total waktu sebelum kode otp expired
-				$expiringTime = (($otp['attempt_count'] * 2) + 1);
-
-				// Jika user tidak ditemukan, maka
-				if (!$user) {
-					// Buat & masukkan otp baru milik user ke database
-					$otp = $this->updateOtp($expiringTime, email: $data[$input_type]);
-					$emailAddress = $otp['email'];
-
-					//return $this->sendFailResponse("User dengan $input_type $data[$input_type] tidak ditemukan. Gagal mengirim OTP.", code:401);
-				} else {
-					// Jika user ditemukan, maka
-					// Buat & masukkan otp baru milik user ke database
-					$otp = $this->updateOtp($expiringTime, user: $user);
-					$emailAddress = $user['email'];
-				}
-			}
-		}
+            // Update OTP dengan expiring time yang lebih lama
+            $expiringTime = (($otp['attempt_count'] * 2) + 1);
+            $otp = $this->updateOtp($expiringTime, user: $user);
+            $emailAddress = $user['email'];
+        }
 
 		// Tetapkan isi konten pada badan email/chat/sms
 		$content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam " . $expiringTime . " menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
@@ -348,12 +310,29 @@ class AuthController extends BaseController
 				$message->to($emailAddress)->subject('Your OTP Code');
 			});
 		} else if ($input_type == 'phone_number') {
-			//
+			$curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => "https://api.fonnte.com/send",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POST => true,
+                CURLOPT_POSTFIELDS => [
+                    'target' => $user->phone_number,
+                    'message' => $content,
+                ],
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: " . env('FONNTE_TOKEN')
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            curl_close($curl);
 		}
 
 		//$result['user_id'] = $user['id'];
+        $result['attempt_count'] = $otp->attempt_count;
+        $result['expired_at'] = $otp->expires_at;
 
-		return $this->sendSuccessResponse("Berhasil mengirim OTP. Silahkan cek $input_type Anda.");
+		return $this->sendSuccessResponse("Berhasil mengirim OTP. Silahkan cek $input_type Anda.", $result);
 	}
 
 	public function verifyOtp(Request $request): JsonResponse
@@ -403,14 +382,14 @@ class AuthController extends BaseController
 			return $this->sendFailResponse("OTP salah atau sudah expired. Verifikasi OTP gagal.", code: 401);
 		}
 
-		// Jika otp sesuai & tidak kadaluarsa, maka
-		// Hapus otp milik user terkait
-		//$otp->delete();
-		// Update otp menjadi verified
-		$otp['is_verified'] = true;
-		$otp->save();
+        $user->update([
+            'email_verified_at' => now(),
+        ]);
 
-		$result['otp'] = $otp;
+        $result['token'] = $user->createToken('auth_token')->plainTextToken;
+        $result['user_data'] = $user;
+
+        $otp->delete();
 
 		return $this->sendSuccessResponse("Verifikasi OTP berhasil.", $result);
 	}
