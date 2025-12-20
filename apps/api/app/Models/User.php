@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 
+#[UsePolicy(UserPolicy::class)]
 class User extends Authenticatable
 {
 	use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
