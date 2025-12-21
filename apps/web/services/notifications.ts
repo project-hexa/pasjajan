@@ -13,25 +13,13 @@ export const sendEmailNotification = async ({
   title,
   body,
 }: EmailNotificationBody) => {
-  const response = await api.post(
-    "/notifications/send",
-    { title, body },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-      },
-    },
-  );
+  const response = await api.post("/notifications/send", { title, body });
 
   console.log(response);
 };
 
 export const getNotificationsMetrics = async () => {
-  const response = await api.get("/notifications/metrics", {
-    headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-    },
-  });
+  const response = await api.get("/notifications/metrics");
 
   const parsedData = notificationsMetricsSchema.safeParse(response.data);
 
@@ -49,9 +37,6 @@ export const getNotificationsMetrics = async () => {
 export const getNotifications = async (page?: number) => {
   const response = await api.get("/notifications", {
     params: { page: page ?? 1 },
-    headers: {
-      Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-    },
   });
 
   const parsedData = notificationsSchema.safeParse(response.data);
