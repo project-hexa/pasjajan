@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
 export const api = axios.create({
@@ -10,7 +10,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
+  (config): InternalAxiosRequestConfig => {
     const token = Cookies.get("token");
 
     if (token) {
