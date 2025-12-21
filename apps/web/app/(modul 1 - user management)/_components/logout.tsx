@@ -16,10 +16,12 @@ import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import Cookies from "js-cookie";
 
 export const Logout = () => {
-  const { logout, token } = useAuthStore();
+  const { logout } = useAuthStore();
   const router = useRouter();
+  const token = Cookies.get("token");
 
   const logoutForm = useForm({
     defaultValues: {
