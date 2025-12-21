@@ -43,48 +43,11 @@ export default function PromoPage() {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchPromos = async () => {
-        setLoading(true);
         try {
-            // Mock Data to bypass 403
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const mockPromos: Promo[] = [
-                {
-                    id: 1,
-                    name: "Diskon Tahun Baru",
-                    description: "Diskon spesial awal tahun untuk semua produk.",
-                    discount_percentage: "20.00",
-                    min_order_value: "50000.00",
-                    start_date: "2025-01-01T00:00:00.000000Z",
-                    end_date: "2025-01-07T23:59:59.000000Z",
-                    status: "Active",
-                    applies_to: "All",
-                    applies_to_product: "All"
-                },
-                {
-                    id: 2,
-                    name: "Gratis Ongkir",
-                    description: "Gratis ongkir minimum belanja 100rb.",
-                    discount_percentage: "0.00",
-                    min_order_value: "100000.00",
-                    start_date: "2025-01-01T00:00:00.000000Z",
-                    end_date: "2025-01-31T23:59:59.000000Z",
-                    status: "Active",
-                    applies_to: "All",
-                    applies_to_product: "All"
-                }
-            ];
-            setPromos(mockPromos);
-
-            /*
-            // Mock Data
-            const mockPromos: Promo[] = [
-               ...
-            ];
-
-            // Simulate delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setPromos(mockPromos);
-             */
+            const response = await api.get("/admin/promos");
+            // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+            const responseData = response.data.data;
+            setPromos(responseData.data || []);
         } catch (error) {
             console.error("Failed to fetch promos", error);
             toast.error("Gagal memuat daftar promo", { toasterId: "global" });

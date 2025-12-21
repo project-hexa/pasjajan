@@ -24,62 +24,9 @@ export const getReportSales = async ({
   if (to) params.to = to;
   if (storeId) params.storeId = storeId;
 
-  // Override with Mock Data (Client Side)
-  const mockResponse = {
-    data: {
-      success: true,
-      message: "Data fetched successfully (Mock Client)",
-      data: {
-        parameters: {
-          period: period,
-          store_id: null,
-          top_n: 5,
-          date_range: {
-            from: from || new Date().toISOString(),
-            to: to || new Date().toISOString()
-          }
-        },
-        summary: {
-          total_customers: {
-            value: 850,
-            trend: "up",
-            description: "+12% vs last period"
-          },
-          total_transactions: {
-            value: "Rp 250.000.000",
-            trend: "up",
-            description: "+8% vs last period"
-          },
-          avg_transaction: {
-            value: "Rp 100.000",
-            trend: "stable",
-            description: "0% vs last period"
-          }
-        },
-        salesTrend: Array.from({ length: 12 }, (_, i) => ({
-          label: i + 1,
-          date: `2025-${(i + 1).toString().padStart(2, '0')}-01`,
-          value: Math.floor(Math.random() * 500),
-          revenue: "Rp " + (Math.floor(Math.random() * 50000000)).toLocaleString('id-ID')
-        })),
-        topProducts: [
-          { id: 1, name: "Kopi Susu Gula Aren", unitSold: 1200, revenue: "Rp 24.000.000" },
-          { id: 2, name: "Roti Bakar Coklat", unitSold: 800, revenue: "Rp 12.000.000" },
-          { id: 3, name: "Mie Goreng Spesial", unitSold: 650, revenue: "Rp 16.250.000" },
-          { id: 4, name: "Es Teh Manis", unitSold: 1500, revenue: "Rp 7.500.000" },
-          { id: 5, name: "Nasi Goreng Ayam", unitSold: 500, revenue: "Rp 15.000.000" }
-        ]
-      }
-    }
-  };
-
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const response = mockResponse;
-  /*
   const response = await api.get("/reports/sales", {
     params,
   });
-  */
 
   console.log(response);
 
@@ -107,63 +54,9 @@ export const getReportSalesServer = async ({
   if (to) params.to = to;
   if (storeId) params.storeId = storeId;
 
-  // Override with Mock Data to avoid 403 error
-  const mockResponse = {
-    data: {
-      success: true,
-      message: "Data fetched successfully (Mock)",
-      data: {
-        parameters: {
-          period: period,
-          store_id: null, // As required by schema z.null()
-          top_n: 5,
-          date_range: {
-            from: from || new Date().toISOString(),
-            to: to || new Date().toISOString()
-          }
-        },
-        summary: {
-          total_customers: {
-            value: 850,
-            trend: "up",
-            description: "+12% vs last period"
-          },
-          total_transactions: {
-            value: "Rp 250.000.000",
-            trend: "up",
-            description: "+8% vs last period"
-          },
-          avg_transaction: {
-            value: "Rp 100.000",
-            trend: "stable",
-            description: "0% vs last period"
-          }
-        },
-        salesTrend: Array.from({ length: 12 }, (_, i) => ({
-          label: i + 1,
-          date: `2025-${(i + 1).toString().padStart(2, '0')}-01`,
-          value: Math.floor(Math.random() * 500),
-          revenue: "Rp " + (Math.floor(Math.random() * 50000000)).toLocaleString('id-ID')
-        })),
-        topProducts: [
-          { id: 1, name: "Kopi Susu Gula Aren", unitSold: 1200, revenue: "Rp 24.000.000" },
-          { id: 2, name: "Roti Bakar Coklat", unitSold: 800, revenue: "Rp 12.000.000" },
-          { id: 3, name: "Mie Goreng Spesial", unitSold: 650, revenue: "Rp 16.250.000" },
-          { id: 4, name: "Es Teh Manis", unitSold: 1500, revenue: "Rp 7.500.000" },
-          { id: 5, name: "Nasi Goreng Ayam", unitSold: 500, revenue: "Rp 15.000.000" }
-        ]
-      }
-    }
-  };
-
-  // Simulate delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  const response = mockResponse;
-  /*
   const response = await serverApi.get("/reports/sales", {
     params,
   });
-  */
 
   console.log(response);
 

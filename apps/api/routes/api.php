@@ -146,20 +146,19 @@ Route::controller(TestController::class)->group(function () {
 });
 
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
-// Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) - PUBLIC ACCESS (Temporary Fix for 403 HTML Error)
-Route::controller(DeliveryController::class)->group(function () {
-    // --- List Kurir & Cek Ongkir ---
-    Route::get('/delivery/methods', 'getDeliveryMethods');
-    Route::post('/delivery/check-cost', 'checkShippingCost');
-
-    // --- Get Status Pengiriman ---
-    Route::get('/delivery/{order_id}/tracking', 'getTracking');
-
-    // --- Kirim Ulasan ---
-    Route::post('/delivery/{order_id}/review', 'submitReview');
-});
-
 Route::middleware('auth:sanctum')->group(function () {
+
+	Route::controller(DeliveryController::class)->group(function () {
+		// --- List Kurir & Cek Ongkir ---
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
+
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
+	});
 
 
 
