@@ -86,7 +86,7 @@ class NotificationController extends Controller
 
             $timestamp = now();
             $notificationsData = [];
-            $emailsQueued = 0;
+            $recipients = [];
 
             foreach ($customers as $customer) {
                 $notificationsData[] = [
@@ -98,30 +98,40 @@ class NotificationController extends Controller
                     'updated_at' => $timestamp,
                 ];
 
-                // Dispatch job ke queue untuk pengiriman email
-                SendNotificationEmail::dispatch(
-                    $data['title'],
-                    $data['body'],
-                    $user->full_name,
-                    $customer->user->email,
-                    $customer->user->full_name
-                );
-                $emailsQueued++;
+                $recipients[] = [
+                    'email' => $customer->user->email,
+                    'name' => $customer->user->full_name
+                ];
             }
 
             if (!empty($notificationsData)) {
                 Notification::insert($notificationsData);
             }
 
+            // Batch recipients jadi 10 per job
+            $batchSize = 10;
+            $batches = array_chunk($recipients, $batchSize);
+            $totalBatches = count($batches);
+
+            foreach ($batches as $batch) {
+                SendNotificationEmail::dispatch(
+                    $data['title'],
+                    $data['body'],
+                    $user->full_name,
+                    $batch
+                );
+            }
+
             $this->logActivity(
                 'SEND_NOTIFICATION',
-                "Notifikasi '{$data['title']}' berhasil dijadwalkan untuk {$emailsQueued} penerima"
+                "Notifikasi '{$data['title']}' berhasil dijadwalkan untuk {$customers->count()} penerima dalam {$totalBatches} batch"
             );
 
             return ApiResponse::success(
                 [
                     'total_recipients' => $customers->count(),
-                    'total_queued' => $emailsQueued,
+                    'total_batches' => $totalBatches,
+                    'batch_size' => $batchSize,
                     'status' => 'queued',
                 ],
                 'Notifikasi berhasil dijadwalkan untuk dikirim via email'
