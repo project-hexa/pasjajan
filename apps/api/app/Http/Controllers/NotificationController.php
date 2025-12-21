@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
+use App\Jobs\SendNotificationEmail;
 use App\Mail\NotificationMail;
 use App\Models\Customer;
 use App\Models\Notification;
@@ -85,9 +86,7 @@ class NotificationController extends Controller
 
             $timestamp = now();
             $notificationsData = [];
-            $emailsSent = 0;
-            $emailsFailed = 0;
-            $recipientEmails = [];
+            $emailsQueued = 0;
 
             foreach ($customers as $customer) {
                 $notificationsData[] = [
@@ -99,42 +98,33 @@ class NotificationController extends Controller
                     'updated_at' => $timestamp,
                 ];
 
-                try {
-                    Mail::to($customer->user->email)->send(
-                        new NotificationMail($data['title'], $data['body'], $user->full_name)
-                    );
-                    $emailsSent++;
-                    $recipientEmails[] = $customer->user->email;
-                } catch (\Exception $mailError) {
-                    $emailsFailed++;
-                    Log::error('Gagal mengirim email notifikasi', [
-                        'to' => $customer->user->email,
-                        'customer_name' => $customer->user->full_name,
-                        'error' => $mailError->getMessage()
-                    ]);
-                }
+                // Dispatch job ke queue untuk pengiriman email
+                SendNotificationEmail::dispatch(
+                    $data['title'],
+                    $data['body'],
+                    $user->full_name,
+                    $customer->user->email,
+                    $customer->user->full_name
+                );
+                $emailsQueued++;
             }
 
             if (!empty($notificationsData)) {
                 Notification::insert($notificationsData);
             }
 
-            $statusText = $emailsSent > 0 ? 'berhasil' : 'gagal';
-            $recipientPreview = $this->formatRecipientPreview($recipientEmails, $customers->count());
-
             $this->logActivity(
                 'SEND_NOTIFICATION',
-                "Pengiriman notifikasi '{$data['title']}' {$statusText}. Terkirim: {$emailsSent}/{$customers->count()} email. Recipients: {$recipientPreview}"
+                "Notifikasi '{$data['title']}' berhasil dijadwalkan untuk {$emailsQueued} penerima"
             );
 
             return ApiResponse::success(
                 [
                     'total_recipients' => $customers->count(),
-                    'total_sent' => $emailsSent,
-                    'total_failed' => $emailsFailed,
-                    'status' => $emailsSent > 0 ? 'success' : 'failed',
+                    'total_queued' => $emailsQueued,
+                    'status' => 'queued',
                 ],
-                'Notifikasi berhasil dikirim via email'
+                'Notifikasi berhasil dijadwalkan untuk dikirim via email'
             );
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error saat mengirim notifikasi', [
