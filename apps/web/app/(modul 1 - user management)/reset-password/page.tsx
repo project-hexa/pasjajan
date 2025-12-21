@@ -8,14 +8,14 @@ import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { toast } from "@workspace/ui/components/sonner";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { resetPassword } = useAuthStore();
 
   const resetPassForm = useForm<z.infer<typeof resetPasswordSchema>>({
@@ -30,11 +30,11 @@ export default function ForgotPasswordPage() {
     const email = sessionStorage.getItem("emailForResetPassword");
 
     if (!email) {
-      router.push("/forgot-password");
+      navigate.push("/forgot-password");
     } else {
       resetPassForm.setValue("email", email);
     }
-  }, [resetPassForm, router]);
+  }, [resetPassForm, navigate]);
 
   const handleSubmit = async (data: z.infer<typeof resetPasswordSchema>) => {
     const result = await resetPassword(data);
@@ -44,7 +44,7 @@ export default function ForgotPasswordPage() {
         toasterId: "global",
       });
 
-      router.replace("/login");
+      navigate.replace("/login");
     } else {
       toast.error(result.message, {
         toasterId: "global",

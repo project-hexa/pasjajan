@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/componen
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useState } from "react";
 import { PromoForm } from "../_components/promo-form";
 import { api } from "@/lib/utils/axios";
 
 export default function CreatePromoPage() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
     const onSubmit = async (values: any) => {
@@ -48,8 +48,8 @@ export default function CreatePromoPage() {
             });
 
             toast.success("Promo berhasil dibuat!", { toasterId: "global" });
-            router.push("/dashboard/promo");
-            router.refresh();
+            navigate.push("/dashboard/promo");
+            navigate.refresh();
         } catch (error: any) {
             console.error(error);
             const message = error.response?.data?.message || "Terjadi kesalahan";

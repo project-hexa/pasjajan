@@ -2,9 +2,10 @@
 
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
+import { useNavigate } from "@/hooks/useNavigate";
 import { api } from "@/lib/utils/axios";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 // Status notification messages
@@ -63,7 +64,7 @@ function StatusToast({
 }
 
 export default function TrackingPage() {
-  const router = useRouter();
+  const navigate = useNavigate()
   const params = useParams();
   const orderId = params.deliveryId as string;
 
@@ -128,7 +129,7 @@ export default function TrackingPage() {
   };
 
   const handlePesananSelesai = () => {
-    router.push(`/delivery/${orderId}/rating`);
+    navigate.push(`/delivery/${orderId}/rating`);
   };
 
   // Determine step status based on current status and failed step

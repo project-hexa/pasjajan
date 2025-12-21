@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Button } from "@workspace/ui/components/button";
 import Link from "next/link";
 
@@ -22,6 +22,8 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { Icon } from "@workspace/ui/components/icon";
+import { getBranches as getBranchesService } from "@/services/branches";
+import { AxiosError } from "axios";
 
 interface Branch {
   id: string;
@@ -35,8 +37,21 @@ interface Branch {
   longitude?: number;
 }
 
+type ApiBranch = Partial<{
+  id: string | number;
+  name: string;
+  address: string;
+  penghasilan: string | number;
+  phone_number: string;
+  is_active: boolean;
+  code?: string;
+  latitude?: number;
+  longitude?: number;
+  created_at?: string;
+}>;
+
 export default function BranchManagementPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,33 +63,28 @@ export default function BranchManagementPage() {
     const fetchBranches = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/branches`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mengambil data cabang");
-        }
-
-        const responseData = await response.json();
+        const responseData = await getBranchesService();
         console.log("API Response:", responseData);
 
         // Get branches from the nested data.branches
-        const branchesData = responseData.data?.branches || [];
-
+        let branchesData: ApiBranch[] = (responseData.data?.branches as ApiBranch[]) || [];
+        
+        // Sort branches by created_at (newest first) or by ID if created_at is not available
+        branchesData = [...branchesData].sort((a, b) => {
+          // Try to sort by created_at if available
+          if (a.created_at && b.created_at) {
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          }
+          // Fallback to ID if created_at is not available
+          return parseInt(String(b.id || "0")) - parseInt(String(a.id || "0"));
+        });
+        
         // Transform the API response to match our Branch interface
-        const formattedBranches = branchesData.map((branch: any) => ({
-          id: branch.id?.toString() || "",
+        const formattedBranches: Branch[] = branchesData.map((branch) => ({
+          id: (branch.id !== undefined && branch.id !== null) ? String(branch.id) : "",
           name: branch.name || "Nama tidak tersedia",
           address: branch.address || "Alamat tidak tersedia",
-          income: branch.penghasilan || "Rp 0",
+          income: branch.penghasilan ?? "Rp 0",
           contact: branch.phone_number || "-",
           status: branch.is_active ? "active" : "inactive",
           code: branch.code || "",
@@ -84,8 +94,10 @@ export default function BranchManagementPage() {
 
         setBranches(formattedBranches);
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+      } catch (err: unknown) {
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : "An error occurred");
+        setError(message);
         console.error("Error fetching branches:", err);
       } finally {
         setLoading(false);
@@ -105,45 +117,6 @@ export default function BranchManagementPage() {
     setCurrentPage(page);
   };
 
-  const handleStatusChange = async (
-    branchId: string,
-    action: "activate" | "deactivate",
-  ) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/branches/${branchId}/${action}`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} branch`);
-      }
-
-      // Update the local state to reflect the change
-      setBranches(
-        branches.map((branch) =>
-          branch.id === branchId
-            ? {
-                ...branch,
-                status: action === "activate" ? "active" : "inactive",
-              }
-            : branch,
-        ),
-      );
-    } catch (err) {
-      console.error(`Error ${action}ing branch:`, err);
-      alert(
-        `Gagal ${action === "activate" ? "mengaktifkan" : "menonaktifkan"} cabang. Silakan coba lagi.`,
-      );
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div className="mb-4 flex items-center justify-between">
@@ -153,7 +126,7 @@ export default function BranchManagementPage() {
           </h2>
         </div>
         <Button
-          onClick={() => router.push("/dashboard/branch-data/create")}
+          onClick={() => navigate.push("/dashboard/branch-data/create")}
           className="bg-[#1E8F59] text-white hover:bg-[#166E45]"
         >
           Tambah Cabang
@@ -181,6 +154,7 @@ export default function BranchManagementPage() {
                 <TableHead className="w-2/5 text-left">Alamat</TableHead>
                 <TableHead className="w-1/6 text-center">Penghasilan</TableHead>
                 <TableHead className="w-1/6 text-center">Kontak</TableHead>
+                <TableHead className="w-1/6 text-center">Status</TableHead>
                 <TableHead className="w-1/6 pr-8 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -188,17 +162,14 @@ export default function BranchManagementPage() {
               {currentBranches.length > 0 ? (
                 currentBranches.map((branch) => (
                   <TableRow key={branch.id} className="h-16">
-                    <TableCell className="pl-8 text-left font-medium">
-                      {branch.name}
-                    </TableCell>
-                    <TableCell className="text-left">
-                      {branch.address}
-                    </TableCell>
+                    <TableCell className="pl-8 font-medium text-left">{branch.name}</TableCell>
+                    <TableCell className="text-left">{branch.address}</TableCell>
+                    <TableCell className="text-center">{branch.income}</TableCell>
+                    <TableCell className="text-center">{branch.contact}</TableCell>
                     <TableCell className="text-center">
-                      {branch.income}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {branch.contact}
+                      <span className={branch.status === 'active' ? 'text-green-600' : 'text-red-600'}>
+                        {branch.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      </span>
                     </TableCell>
                     <TableCell className="pr-8">
                       <div className="flex justify-end">
@@ -220,10 +191,7 @@ export default function BranchManagementPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="py-8 text-center text-gray-500"
-                  >
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     Tidak ada data cabang yang tersedia.
                   </TableCell>
                 </TableRow>

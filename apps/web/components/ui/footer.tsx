@@ -40,7 +40,7 @@ export const Footer = () => {
         <div className="bg-primary text-primary-foreground relative flex w-full items-center justify-between gap-4 rounded-br-full px-4 py-5 shadow-[20px_0_0_-10px_var(--secondary)] md:h-60 md:w-max md:gap-10 md:px-10 md:shadow-[50px_-10px_0_-10px_var(--secondary)]">
           <div className="flex flex-col items-center justify-center gap-2">
             <div className="relative h-32 w-38">
-              <Image src="/logo-footer.png" alt="logo" fill />
+              <Image src="/logo-footer.png" alt="logo" fill sizes="(max-width: 768px) 100vw, 200px" />
             </div>
             <span className="text-lg font-bold md:text-4xl">PasJajan</span>
           </div>

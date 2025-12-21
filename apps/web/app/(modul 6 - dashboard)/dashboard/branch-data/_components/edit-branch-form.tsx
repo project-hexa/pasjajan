@@ -17,9 +17,10 @@ import {
 } from "@workspace/ui/components/select";
 
 const branchSchema = z.object({
+  code: z.string().min(3, "Kode cabang minimal 3 karakter"),
   name: z.string().min(2, "Nama cabang minimal 2 karakter"),
   address: z.string().min(10, "Alamat minimal 10 karakter"),
-  contact: z.string().min(10, "Kontak minimal 10 karakter"),
+  phone_number: z.string().min(10, "Nomor telepon minimal 10 karakter"),
   status: z.enum(["Active", "Inactive"], {
     required_error: "Status harus dipilih",
     invalid_type_error: "Status harus berupa 'Active' atau 'Inactive'"
@@ -27,9 +28,10 @@ const branchSchema = z.object({
 });
 
 type BranchFormValues = {
+  code: string;
   name: string;
   address: string;
-  contact: string;
+  phone_number: string;
   status: "Active" | "Inactive";
 };
 
@@ -37,9 +39,10 @@ interface EditBranchFormProps {
   initialData?: Partial<BranchFormValues>;
   onSubmit: (data: BranchFormValues) => void;
   isLoading: boolean;
+  onStatusChange?: (newStatus: "Active" | "Inactive") => Promise<boolean> | boolean;
 }
 
-export function EditBranchForm({ initialData, onSubmit, isLoading }: EditBranchFormProps) {
+export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChange }: EditBranchFormProps) {
   const {
     register,
     handleSubmit,
@@ -50,9 +53,10 @@ export function EditBranchForm({ initialData, onSubmit, isLoading }: EditBranchF
   } = useForm<BranchFormValues>({
     resolver: zodResolver(branchSchema),
     defaultValues: {
+      code: "",
       name: "",
       address: "",
-      contact: "",
+      phone_number: "",
       status: "Active",
     },
   });
@@ -62,9 +66,10 @@ export function EditBranchForm({ initialData, onSubmit, isLoading }: EditBranchF
   useEffect(() => {
     if (initialData) {
       reset({
+        code: initialData.code || "",
         name: initialData.name || "",
         address: initialData.address || "",
-        contact: initialData.contact || "",
+        phone_number: initialData.phone_number || "",
         status: initialData.status || "Active",
       });
     }
@@ -74,23 +79,52 @@ export function EditBranchForm({ initialData, onSubmit, isLoading }: EditBranchF
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-4">
         {/* Status */}
+        <input type="hidden" {...register('status')} />
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="status" className="text-right pl-6">Status Cabang</Label>
+          <Label className="text-right pl-6">Status</Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Select
               value={status}
-              onValueChange={(value) => setValue("status", value as "Active" | "Inactive")}
+              onValueChange={async (val) => {
+                const newStatus = val as "Active" | "Inactive";
+                try {
+                  if (typeof onStatusChange === 'function') {
+                    const ok = await onStatusChange(newStatus);
+                    if (!ok) return;
+                  }
+                  setValue('status', newStatus, { shouldDirty: true, shouldTouch: true });
+                } catch {
+                  // ignore
+                }
+              }}
+              disabled={isLoading}
             >
-              <SelectTrigger id="status" className="w-full">
-                <SelectValue placeholder="Pilih status cabang" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Active">Aktif</SelectItem>
-                <SelectItem value="Inactive">Non-aktif</SelectItem>
+                <SelectItem value="Inactive">Nonaktif</SelectItem>
               </SelectContent>
             </Select>
             {errors.status && (
               <p className="text-sm text-red-500 mt-1">{errors.status.message}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Kode Cabang */}
+        <div className="grid grid-cols-4 items-center gap-4">
+          <Label htmlFor="code" className="text-right pl-6">Kode Cabang</Label>
+          <div className="col-span-3 -ml-2 pr-6">
+            <Input
+              id="code"
+              placeholder="Contoh: JKT001"
+              className={errors.code ? 'border-red-500' : ''}
+              {...register('code')}
+            />
+            {errors.code && (
+              <p className="text-sm text-red-500 mt-1">{errors.code.message}</p>
             )}
           </div>
         </div>
@@ -128,21 +162,22 @@ export function EditBranchForm({ initialData, onSubmit, isLoading }: EditBranchF
           </div>
         </div>
 
-        {/* Detail Kontak */}
+        {/* Nomor Telepon */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="contact" className="text-right pl-6">Detail Kontak</Label>
+          <Label htmlFor="phone_number" className="text-right pl-6">Nomor Telepon</Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Input
-              id="contact"
-              placeholder="Contoh: 081234567890"
-              {...register("contact")}
-              className={errors.contact ? 'border-red-500' : ''}
+              id="phone_number"
+              placeholder="Contoh: 0211234567"
+              className={errors.phone_number ? 'border-red-500' : ''}
+              {...register('phone_number')}
             />
-            {errors.contact && (
-              <p className="text-sm text-red-500 mt-1">{errors.contact.message}</p>
+            {errors.phone_number && (
+              <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>
             )}
           </div>
         </div>
+
       </div>
 
       <div className="flex justify-end space-x-4 pt-4 -ml-2 pr-6">

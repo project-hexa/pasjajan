@@ -1,7 +1,9 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   Card,
   CardContent,
@@ -13,9 +15,13 @@ import { Badge } from "@workspace/ui/components/badge";
 import { Icon } from "@workspace/ui/components/icon";
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
-import AddressDialog from "@/components/AddressDialog";
+import AddressDialog, { Address } from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
-import Image from "next/image";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie";
+
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -50,50 +56,112 @@ interface PaymentItem {
 }
 
 function CheckoutPageContent() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
-  const orderCode = searchParams.get("order");
-  
+  // Sanitize order code - hapus suffix :1 atau :digit jika ada
+  const rawOrderCode = searchParams.get("order");
+  const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
+
+
   // ====== FETCH ORDER DATA FROM API ======
   const [items, setItems] = React.useState<PaymentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [orderData, setOrderData] = React.useState<any>(null);
+  const [branchName, setBranchName] = React.useState<string>("");
+
+  // ALAMAT - Dynamic from user profile
+  const [addresses, setAddresses] = React.useState<Address[]>([]);
+  const [addressLoading, setAddressLoading] = React.useState(true);
+  const [address, setAddress] = React.useState({
+    name: "",
+    address: "",
+    phone: "",
+  });
+
+  // Get logged-in user from auth store
+  const { user } = useAuthStore();
 
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
+        // Fallback fetch branch name from public API (jika order tidak punya store)
+        const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
+        const branchesResult = await branchesResponse.json();
+
+        let fallbackBranchName = "";
+        if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
+          fallbackBranchName = branchesResult.data.branches[0].name;
+        }
+
+
         if (!orderCode) {
           alert("Order code tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
+        // Get auth token
+        const token = Cookies.get('token');
+
         // Fetch order detail from API
-        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
+          headers: token ? {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          } : {
+            'Accept': 'application/json',
+          }
+        });
+
+        console.log("Order API Response Status:", response.status);
         const result = await response.json();
+        console.log("Order API Response:", result);
 
         if (!result.success || !result.data.order) {
           alert("Order tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
         const order = result.data.order;
         setOrderData(order);
 
+        // Set branch name dari order store_name, fallback ke branches list
+        if (order.store_name) {
+          setBranchName(order.store_name);
+        } else if (fallbackBranchName) {
+          setBranchName(fallbackBranchName);
+        }
+
+
         // Fetch all products to get names and images
-        const productsResponse = await fetch("http://localhost:8000/api/products");
+        const productsResponse = await fetch("http://localhost:8000/api/products", {
+          headers: token ? {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          } : {
+            'Accept': 'application/json',
+          }
+        });
         const productsResult = await productsResponse.json();
 
-        if (productsResult.success && productsResult.data.products) {
-          const products: Product[] = productsResult.data.products;
-          
+        // Normalize products data (bisa di data.data atau data)
+        let products: Product[] = [];
+        if (productsResult.data?.data) {
+          products = productsResult.data.data;
+        } else if (Array.isArray(productsResult.data)) {
+          products = productsResult.data;
+        } else if (productsResult.data?.products) {
+          products = productsResult.data.products;
+        }
+
+        if (productsResult.success && products) {
           // Map order items with product details
           const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => {
             const product = products.find((p) => p.id === orderItem.product_id);
             return {
               id: orderItem.product_id.toString(),
-              name: product?.name || "Unknown Product",
+              name: product?.name || `Produk ${orderItem.product_id}`,
               variant: "Varian",
               price: orderItem.price,
               qty: orderItem.quantity,
@@ -102,31 +170,85 @@ function CheckoutPageContent() {
           });
 
           setItems(paymentItems);
+        } else if (order.items && order.items.length > 0) {
+          // Fallback: tampilkan items dari order langsung tanpa product details
+          const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => ({
+            id: orderItem.product_id.toString(),
+            name: `Produk ${orderItem.product_id}`,
+            variant: "Varian",
+            price: orderItem.price,
+            qty: orderItem.quantity,
+            image_url: "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+          }));
+          setItems(paymentItems);
         }
       } catch (error) {
         console.error("Error loading order data:", error);
         alert("Gagal memuat data order!");
-        router.push("/cart");
+        navigate.push("/cart");
       } finally {
         setLoading(false);
       }
     };
 
     loadOrderData();
-  }, [orderCode, router]);
+  }, [orderCode, navigate]);
 
   const productTotal = orderData?.sub_total || 0;
   const shipping = orderData?.shipping_fee || 10000;
   const adminFee = orderData?.admin_fee || 1000;
   const grandTotal = orderData?.grand_total || productTotal + shipping + adminFee;
 
-  // ALAMAT
-  const [address, setAddress] = React.useState({
-    name: "Rumah – John Doe",
-    address:
-      "Jln. Setiabudhi No. 67K, Kec. Sukasari, Kota Bandung, Jawa Barat, 40636",
-    phone: "0888888888",
-  });
+  // Fetch user addresses
+  React.useEffect(() => {
+    const loadAddresses = async () => {
+      if (!user?.email) {
+        setAddressLoading(false);
+        return;
+      }
+
+      try {
+        const token = Cookies.get('token');
+        const res = await fetch(`http://localhost:8000/api/user/profile?email=${user.email}`, {
+          headers: {
+            "Accept": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          },
+        });
+        const result = await res.json();
+
+        if (result.success && result.data?.user?.customer?.addresses) {
+          const userAddresses = result.data.user.customer.addresses;
+          // Transform to Address format
+          const formattedAddresses: Address[] = userAddresses.map((addr: any) => ({
+            id: addr.id,
+            label: addr.label || 'Alamat',
+            name: `${addr.label || 'Alamat'} – ${addr.recipient_name}`,
+            address: addr.detail_address,
+            phone: addr.phone_number,
+          }));
+
+          setAddresses(formattedAddresses);
+
+          // Set default address (first one or is_default)
+          const defaultAddr = userAddresses.find((a: any) => a.is_default) || userAddresses[0];
+          if (defaultAddr) {
+            setAddress({
+              name: `${defaultAddr.label || 'Alamat'} – ${defaultAddr.recipient_name}`,
+              address: defaultAddr.detail_address,
+              phone: defaultAddr.phone_number,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error loading addresses:", error);
+      } finally {
+        setAddressLoading(false);
+      }
+    };
+
+    loadAddresses();
+  }, [user?.email]);
 
   // PAYMENT
   const [payChoice, setPayChoice] = React.useState<{
@@ -139,14 +261,14 @@ function CheckoutPageContent() {
 
   // VOUCHER
   const [voucher, setVoucher] = React.useState<VoucherChoice | null>(null);
-  
+
   // LOADING STATE FOR PAYMENT BUTTON
   const [isProcessing, setIsProcessing] = React.useState(false);
 
   // Handle Payment Process
   const handlePayment = async () => {
     if (isProcessing) return; // Prevent double clicks
-    
+
     if (!payChoice.option) {
       alert("Silakan pilih metode pembayaran terlebih dahulu!");
       return;
@@ -158,18 +280,29 @@ function CheckoutPageContent() {
     }
 
     setIsProcessing(true); // Start loading
-    
+
     try {
+      // Get auth token
+      const token = Cookies.get('token');
+
       const response = await fetch("http://localhost:8000/api/payment/process", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify({
           order_code: orderCode,
           payment_method_code: payChoice.option,
+          shipping_address: address.address,
+          shipping_recipient_name: address.name?.split(' – ')[1] || address.name,
+          shipping_recipient_phone: address.phone,
         }),
       });
 
       const result = await response.json();
+
+      console.log("Payment process response:", result);
 
       if (!result.success) {
         alert(result.message || "Gagal memproses pembayaran!");
@@ -181,11 +314,14 @@ function CheckoutPageContent() {
       localStorage.setItem("payment_data", JSON.stringify(result.data));
 
       // Redirect to waiting page
-      router.push(`/payment/waiting?order=${orderCode}`);
+      navigate.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
-      alert("Gagal menghubungi server!");
+
+      // Cek apakah ini masalah user tidak punya customer profile
+      alert("Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.");
       setIsProcessing(false); // Stop loading on error
+
     }
   };
 
@@ -200,28 +336,26 @@ function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* NAVBAR */}
-      <div className="w-full border-b bg-emerald-700 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold">
-            <span className="rounded bg-white/10 px-2 py-1">PasJajan</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <div className="h-8 w-8 rounded-full bg-white/10 grid place-items-center">
-              JD
-            </div>
-            <span>John Doe</span>
-          </div>
-        </div>
-      </div>
+      {/* HEADER */}
+      <Header
+        logoSrc="/images/pasjajan2.png"
+        logoAlt="PasJajan Logo"
+        userName={user?.full_name}
+        userInitials={user?.full_name
+          ?.split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)}
+        userAvatar={user?.avatar}
+      />
 
       {/* MAIN CONTENT */}
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => router.back()}
+            onClick={() => navigate.back()}
             className="h-10 w-10 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center"
           >
             <Icon icon="lucide:arrow-left" width={20} height={20} />
@@ -259,6 +393,8 @@ function CheckoutPageContent() {
                       Ubah
                     </button>
                   }
+                  addresses={addresses}
+                  loading={addressLoading}
                   onSelect={(data) =>
                     setAddress({
                       name: data.name,
@@ -274,10 +410,15 @@ function CheckoutPageContent() {
             <div className="space-y-3">
               {/* Header Card */}
               <Card className="bg-white shadow-sm py-2">
-                <CardContent className="px-4 py-2">
+                <CardContent className="px-4 py-2 flex items-center justify-between">
                   <h2 className="text-emerald-700 text-sm font-semibold">
                     Pesanan
                   </h2>
+                  {branchName && (
+                    <p className="text-emerald-700 text-sm font-semibold">
+                      Cabang {branchName}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
@@ -402,7 +543,7 @@ function CheckoutPageContent() {
                       <span>{currency(grandTotal)}</span>
                     </div>
 
-                    <button 
+                    <button
                       onClick={handlePayment}
                       disabled={isProcessing}
                       className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2">
@@ -418,22 +559,20 @@ function CheckoutPageContent() {
           </div>
         </div>
 
-        <footer className="mt-8 text-center text-xs text-slate-500">
-          © 2025 PasJajan — All Right Reserved
-        </footer>
+        <Footer />
       </main>
     </div>
   );
 }
 
 export default function CheckoutPage() {
-    return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-                <p className="text-lg">Memuat...</p>
-            </div>
-        }>
-            <CheckoutPageContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
+        <p className="text-lg">Memuat...</p>
+      </div>
+    }>
+      <CheckoutPageContent />
+    </Suspense>
+  );
 }

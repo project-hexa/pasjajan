@@ -1,11 +1,12 @@
 "use client";
 export const dynamic = 'force-dynamic';
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useNavigate } from "@/hooks/useNavigate";
 import { Suspense, useEffect } from 'react';
 
 function ShopeepayCallbackContent() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const searchParams = useSearchParams();
     useEffect(() => {
         const handleCallback = async () => {
@@ -19,7 +20,7 @@ function ShopeepayCallbackContent() {
                     try {
                         const data = JSON.parse(paymentData);
                         if (data.order_code) {
-                            router.push(`/payment/waiting?order=${data.order_code}`);
+                            navigate.push(`/payment/waiting?order=${data.order_code}`);
                         }
                     } catch (e) {
                         console.error('Failed to parse payment_data:', e);
@@ -29,7 +30,7 @@ function ShopeepayCallbackContent() {
         };
 
         handleCallback();
-    }, [router, searchParams]);
+    }, [navigate, searchParams]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50">

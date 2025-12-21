@@ -14,7 +14,8 @@ import {
 } from "@workspace/ui/components/collapsible";
 import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { ReactNode, useEffect, useState } from "react";
 
 export default function UserSettingLayout({
@@ -24,7 +25,7 @@ export default function UserSettingLayout({
 }) {
   const { user } = useAuthStore();
   const pathname = usePathname();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [accountTrigger, setAccountTrigger] = useState<boolean>(false);
   const accountPage = pathname === "/profile" || pathname === "/address";
 
@@ -77,7 +78,7 @@ export default function UserSettingLayout({
                   "w-full justify-start rounded-full px-2",
                   pathname === "/profile" && "border-primary bg-card",
                 )}
-                onClick={() => router.push("/profile")}
+                onClick={() => navigate.push("/profile")}
               >
                 Profile
               </Button>
@@ -87,7 +88,7 @@ export default function UserSettingLayout({
                   "w-full justify-start rounded-full px-2",
                   pathname === "/address" && "border-primary bg-card",
                 )}
-                onClick={() => router.push("/address")}
+                onClick={() => navigate.push("/address")}
               >
                 Alamat
               </Button>
@@ -115,7 +116,7 @@ export default function UserSettingLayout({
                   ? "border-primary bg-card text-primary"
                   : "from-background/20 bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60%",
               )}
-              onClick={() => router.push(btnMenu.link)}
+              onClick={() => navigate.push(btnMenu.link)}
             >
               <Icon icon={btnMenu.icon} className="text-3xl" />
               <span>{btnMenu.label}</span>
