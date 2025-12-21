@@ -226,6 +226,13 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::get('/customer/vouchers', [VoucherController::class, 'getCustomerVouchers']);
 	Route::get('/vouchers/available', [VoucherController::class, 'getAvailableVouchers']);
 	Route::post('/customer/vouchers/redeem', [VoucherController::class, 'redeemVoucher']);
+
+	// Admin Voucher CRUD
+	Route::get('/admin/vouchers', [VoucherController::class, 'index']);
+	Route::get('/admin/vouchers/{id}', [VoucherController::class, 'show']);
+	Route::post('/admin/vouchers', [VoucherController::class, 'store']);
+	Route::put('/admin/vouchers/{id}', [VoucherController::class, 'update']);
+	Route::delete('/admin/vouchers/{id}', [VoucherController::class, 'destroy']);
 });
 
 // ================= PRODUCT ROUTES =================
