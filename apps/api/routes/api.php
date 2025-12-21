@@ -101,10 +101,8 @@ Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/verify-otp', 'verifyOtp');
 
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
-	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
-		Route::post('/auth/register', 'registerPost');
-		Route::post('/auth/forgot-password', 'forgotPassword');
-	});
+    Route::post('/auth/register', 'registerPost');
+    Route::post('/auth/forgot-password', 'forgotPassword');
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
@@ -146,20 +144,19 @@ Route::controller(TestController::class)->group(function () {
 });
 
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
-// Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) - PUBLIC ACCESS (Temporary Fix for 403 HTML Error)
-Route::controller(DeliveryController::class)->group(function () {
-    // --- List Kurir & Cek Ongkir ---
-    Route::get('/delivery/methods', 'getDeliveryMethods');
-    Route::post('/delivery/check-cost', 'checkShippingCost');
-
-    // --- Get Status Pengiriman ---
-    Route::get('/delivery/{order_id}/tracking', 'getTracking');
-
-    // --- Kirim Ulasan ---
-    Route::post('/delivery/{order_id}/review', 'submitReview');
-});
-
 Route::middleware('auth:sanctum')->group(function () {
+
+	Route::controller(DeliveryController::class)->group(function () {
+		// --- List Kurir & Cek Ongkir ---
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
+
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
+	});
 
 
 
@@ -227,6 +224,13 @@ Route::middleware('auth:sanctum')->group(function () {
 	Route::get('/customer/vouchers', [VoucherController::class, 'getCustomerVouchers']);
 	Route::get('/vouchers/available', [VoucherController::class, 'getAvailableVouchers']);
 	Route::post('/customer/vouchers/redeem', [VoucherController::class, 'redeemVoucher']);
+
+	// Admin Voucher CRUD
+	Route::get('/admin/vouchers', [VoucherController::class, 'index']);
+	Route::get('/admin/vouchers/{id}', [VoucherController::class, 'show']);
+	Route::post('/admin/vouchers', [VoucherController::class, 'store']);
+	Route::put('/admin/vouchers/{id}', [VoucherController::class, 'update']);
+	Route::delete('/admin/vouchers/{id}', [VoucherController::class, 'destroy']);
 });
 
 // ================= PRODUCT ROUTES =================

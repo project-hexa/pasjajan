@@ -59,10 +59,10 @@ export default function CustomerPointHistoryPage() {
         } catch (error: any) {
             console.error("Failed to fetch customer history", error);
             if (error.response?.status === 404) {
-                toast.error("Pelanggan tidak ditemukan");
+                toast.error("Pelanggan tidak ditemukan", { toasterId: "global" });
                 router.push("/dashboard/customer-points");
             } else {
-                toast.error("Gagal memuat data pelanggan");
+                toast.error("Gagal memuat data pelanggan", { toasterId: "global" });
             }
         } finally {
             setLoading(false);

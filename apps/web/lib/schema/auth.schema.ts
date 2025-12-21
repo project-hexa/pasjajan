@@ -3,7 +3,11 @@ import { passwordStrength } from "check-password-strength";
 
 const emailSchema = z.string().email("Email tidak Valid");
 
-const phoneSchema = z.string();
+const phoneSchema = z
+  .string()
+  .min(10, "Nomor telepon minimal 10 digit")
+  .max(15, "Nomor telepon maksimal 15 digit")
+  .regex(/^[0-9+]+$/, "Nomor telepon hanya boleh berisi angka");
 
 const passwordSchema = z.string().superRefine((val, ctx) => {
   const strength = passwordStrength(val);
@@ -39,7 +43,6 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
 
 export const registerSchema = z
   .object({
-    token: z.string({ message: "Credentials dibutuhkan" }),
     full_name: z
       .string()
       .min(3, "Nama lengkap minimal harus 3 karakter")
@@ -72,7 +75,7 @@ export const loginSchema = z.object({
 
 export const verifyOTPSchema = z.object({
   email: emailSchema,
-  pin: z.string().min(6, {
+  otp: z.string().min(6, {
     message: "OTP anda harus terdiri dari 6 karakter.",
   }),
 });
@@ -87,6 +90,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
+    email: emailSchema,
     password: passwordSchema,
     password_confirmation: z.string(),
   })

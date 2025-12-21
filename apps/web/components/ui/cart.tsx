@@ -17,10 +17,10 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@workspace/ui/components/item";
+import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { useAuthStore } from "@/stores/useAuthStore";
 
 export const Cart = () => {
   type CartItem = {
@@ -33,7 +33,7 @@ export const Cart = () => {
   };
 
   const [items, setItems] = React.useState<CartItem[]>([]);
-  const { token } = useAuthStore();
+  const token = Cookies.get("token");
 
   const readCart = React.useCallback(() => {
     try {
@@ -60,19 +60,23 @@ export const Cart = () => {
     readCart();
     const handler = () => readCart();
     window.addEventListener("cart_updated", handler as EventListener);
-    return () => window.removeEventListener("cart_updated", handler as EventListener);
+    return () =>
+      window.removeEventListener("cart_updated", handler as EventListener);
   }, [readCart, token]);
 
-  const totalCount = items.reduce((acc, it) => acc + (Number(it.quantity) || 0), 0);
+  const totalCount = items.reduce(
+    (acc, it) => acc + (Number(it.quantity) || 0),
+    0,
+  );
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size={"icon"} className="p-0 text-white" variant={"ghost"} suppressHydrationWarning>
+        <Button size={"icon"} className="p-0 text-white" variant={"ghost"}>
           <div className="relative">
             <Icon icon="lucide:shopping-basket" />
             {totalCount > 0 && (
-              <span className="absolute -right-1 -top-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs text-white">
+              <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs text-white">
                 {totalCount}
               </span>
             )}
@@ -86,7 +90,9 @@ export const Cart = () => {
         <DropdownMenuSeparator />
         <div className="h-80 w-96 overflow-y-auto p-2">
           {items.length === 0 && (
-            <div className="p-4 text-sm text-muted-foreground">Keranjang kosong</div>
+            <div className="text-muted-foreground p-4 text-sm">
+              Keranjang kosong
+            </div>
           )}
 
           {items.map((it, index) => (
@@ -103,9 +109,15 @@ export const Cart = () => {
                     />
                   </ItemMedia>
                   <ItemContent className="w-52">
-                    <ItemTitle className="line-clamp-2 w-40">{it.name}</ItemTitle>
-                    <ItemDescription className="text-sm">{it.variant}</ItemDescription>
-                    <ItemFooter className="text-muted-foreground">Rp {Number(it.price).toLocaleString()}</ItemFooter>
+                    <ItemTitle className="line-clamp-2 w-40">
+                      {it.name}
+                    </ItemTitle>
+                    <ItemDescription className="text-sm">
+                      {it.variant}
+                    </ItemDescription>
+                    <ItemFooter className="text-muted-foreground">
+                      Rp {Number(it.price).toLocaleString()}
+                    </ItemFooter>
                   </ItemContent>
                   <ItemContent>
                     <ItemDescription>Qty: {it.quantity}</ItemDescription>

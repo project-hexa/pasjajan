@@ -2,205 +2,295 @@
 
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
+import { api } from "@/lib/utils/axios";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
-import { TrackingNotificationListener } from "../../../_components/tracking-notification-listener";
-import { useState, useEffect } from "react";
-import { getTrackingDataAction } from "@/app/actions/order.actions";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+
+// Status notification messages
+const statusNotifications: Record<string, string> = {
+  PESANAN_DIBUAT: "Pesanan Sedang Dikemas",
+  SEDANG_DIKIRIM: "Pesanan Anda Sedang Dikirim",
+  KURIR_MENERIMA: "Pesanan Telah Diterima",
+  SAMPAI_TUJUAN: "Pesanan Selesai, Beri Penilaian",
+  REVIEWED: "Terimakasih Telah Mengulas",
+  GAGAL: "Pesanan Gagal",
+};
+
+// Toast notification component
+function StatusToast({
+  message,
+  isVisible,
+  onClose
+}: {
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000); // Auto close after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed top-24 right-8 z-50 animate-slide-in">
+      <div className="flex items-center gap-3 bg-[#1E1E1E] text-white px-6 py-4 rounded-full shadow-lg min-w-[300px]">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#F7FFFB] flex items-center justify-center">
+          <Image
+            src="/img/icon_notif.png"
+            alt="Notification"
+            width={24}
+            height={24}
+            className="object-contain"
+          />
+        </div>
+        <span className="font-medium text-sm">{message}</span>
+        <button
+          onClick={onClose}
+          className="ml-auto text-gray-400 hover:text-white"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function TrackingPage() {
   const router = useRouter();
   const params = useParams();
-  const deliveryId = Number(params.deliveryId);
+  const orderId = params.deliveryId as string;
 
-  const [trackingData, setTrackingData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [currentStatus, setCurrentStatus] = useState("PESANAN_DIBUAT");
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [failedAtStep, setFailedAtStep] = useState<number | null>(null);
+  const [hasReceivedOrder, setHasReceivedOrder] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const previousStatusRef = useRef<string | null>(null);
 
-  const [accessState, setAccessState] = useState<'granted' | 'auth_required' | 'payment_required'>('granted');
+  // Fetch tracking status from API
+  const fetchTrackingStatus = async () => {
+    try {
+      const response = await api.get(`/delivery/${orderId}/tracking`);
+      const data = response.data?.data;
+      const newStatus = data?.status || "PESANAN_DIBUAT";
 
-  useEffect(() => {
-    if (!deliveryId) return;
+      // Show notification only when status changes (not on first load)
+      if (previousStatusRef.current !== null && previousStatusRef.current !== newStatus) {
+        setNotificationMessage(statusNotifications[newStatus] || "Status diperbarui");
+        setShowNotification(true);
 
-    // Fetch initial data
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const data = await getTrackingDataAction(deliveryId);
-
-        // Handle Redirects (Auth / Payment checks)
-        if (data && 'redirect' in data) {
-          const redirectUrl = (data as any).redirect;
-          if (redirectUrl === '/login') setAccessState('auth_required');
-          else if (redirectUrl === '/catalogue') setAccessState('payment_required');
-          setLoading(false);
-          return;
+        // Handle failed status
+        if (newStatus === "GAGAL") {
+          const failStep = data?.failed_at_step;
+          setFailedAtStep(failStep !== undefined ? failStep : 2);
+        } else {
+          setFailedAtStep(null);
         }
-
-        setTrackingData(data);
-        setAccessState('granted');
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    // Poll for updates every 5 seconds to keep UI live
-    const interval = setInterval(async () => {
-      if (accessState !== 'granted') return; // Don't poll if no access
-
-      const data = await getTrackingDataAction(deliveryId);
-
-      if (data && 'redirect' in data) {
-        // If status changes to invalid mid-session (e.g. token expired)
-        const redirectUrl = (data as any).redirect;
-        if (redirectUrl === '/login') setAccessState('auth_required');
-        else if (redirectUrl === '/catalogue') setAccessState('payment_required');
-        return;
       }
 
-      if (data) setTrackingData(data);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [deliveryId, accessState]); // Depend on accessState to stop polling loop logic if needed
-
-  const handlePesananSelesai = () => {
-    router.push("/delivery/1/rating");
+      setCurrentStatus(newStatus);
+      previousStatusRef.current = newStatus;
+      setIsLoading(false);
+    } catch (error: any) {
+      // Silent fail for 404 - API endpoint not ready yet
+      if (error?.response?.status === 404) {
+        // Use default status when API not available
+        if (previousStatusRef.current === null) {
+          previousStatusRef.current = currentStatus;
+        }
+      }
+      setIsLoading(false);
+    }
   };
 
-  const currentStatus = trackingData?.status_utama || "";
+  // Polling: Fetch status every 5 seconds
+  useEffect(() => {
+    fetchTrackingStatus(); // Initial fetch
 
-  // Logic Status:
-  // 0: Pesanan dibuat (Always active)
-  // 1: Sedang dikirim (DIKIRIM)
-  // 2: Kurir menerima (MENCARI_DRIVER / MENUNGGU_KURIR passed?)
-  // 3: Tiba di tujuan (SAMPAI_TUJUAN / SELESAI)
+    const interval = setInterval(() => {
+      fetchTrackingStatus();
+    }, 5000); // Poll every 5 seconds
 
-  // Mapping Status ke Progress Bar
-  let activeStepIndex = 0;
-  if (["MENCARI_DRIVER", "MENUNGGU_KURIR", "DIKIRIM", "SAMPAI_TUJUAN", "SELESAI"].includes(currentStatus)) activeStepIndex = 0; // Created
-  if (["DIKIRIM", "SAMPAI_TUJUAN", "SELESAI"].includes(currentStatus)) activeStepIndex = 1; // Shipped
-  if (["SAMPAI_TUJUAN", "SELESAI"].includes(currentStatus)) activeStepIndex = 2; // Courier Received? (Logic slightly ambiguous in mockup vs real world, assuming flow)
-  // Note: Based on mockup icons:
-  // 1. Box check (Dibuat)
-  // 2. Truck (Sedang Dikirim)
-  // 3. Hand receiving (Kurir Menerima / Sampai?) -> "Kurir Menerima" usually means "Courier picked up", which happens BEFORE "Sedang Dikirim" or same time.
-  //    Let's adjust standard flow: Dibuat -> Menunggu Kurir -> Dikirim -> Sampai.
+    return () => clearInterval(interval);
+  }, [orderId]);
 
-  // Re-mapping for standard flow:
-  // 1. Pesanan Dibuat (Default)
-  // 2. Sedang Dikirim (DIKIRIM)
-  // 3. Kurir Menerima (This label is confusing, usually "Diterima Pembeli"). If it means "Buyer Received", then SAMPAI_TUJUAN.
-  // 4. Tiba di Tujuan / Selesai (SELESAI)
+  const handleTerimaPesanan = () => {
+    setHasReceivedOrder(true);
+    // TODO: Call API to confirm order received
+  };
 
-  // Let's stick to the mockup labels but map logically:
-  if (currentStatus === "DIKIRIM") activeStepIndex = 1;
-  if (currentStatus === "SAMPAI_TUJUAN") activeStepIndex = 2; // Assuming "Kurir Menerima" means "Arrived/Handover"
-  if (currentStatus === "SELESAI") activeStepIndex = 3;
+  const handlePesananSelesai = () => {
+    router.push(`/delivery/${orderId}/rating`);
+  };
+
+  // Determine step status based on current status and failed step
+  const getStepStatus = (index: number): "completed" | "active" | "failed" | "pending" | "after-failed" => {
+    if (failedAtStep !== null) {
+      if (index < failedAtStep) return "completed";
+      if (index === failedAtStep) return "failed";
+      return "after-failed"; // Steps after the failed step
+    }
+
+    const activeSteps = {
+      PESANAN_DIBUAT: [0],
+      SEDANG_DIKIRIM: [0, 1],
+      KURIR_MENERIMA: [0, 1, 2],
+      SAMPAI_TUJUAN: [0, 1, 2, 3],
+      REVIEWED: [0, 1, 2, 3],
+    };
+
+    const activeIndexes = activeSteps[currentStatus as keyof typeof activeSteps] || [0];
+    if (activeIndexes.includes(index)) return "completed";
+    return "pending";
+  };
 
   const steps = [
     {
-      icon: <Image src="/img/icon-proses-1.png" alt="Pesanan dibuat" width={32} height={32} className="h-8 w-8" />,
+      icon: "/img/icon-proses-1.png",
       label: "Pesanan dibuat",
-      active: true,
     },
     {
-      icon: <Image src="/img/icon-proses-2.png" alt="Sedang dikirim" width={32} height={32} className="h-8 w-8" />,
+      icon: "/img/icon-proses-2.png",
       label: "Sedang dikirim",
-      active: activeStepIndex >= 1,
     },
     {
-      icon: <Image src="/img/icon-proses-3.png" alt="Kurir menerima" width={32} height={32} className="h-8 w-8" />,
+      icon: "/img/icon-proses-3.png",
       label: "Kurir menerima",
-      active: activeStepIndex >= 2,
     },
     {
-      icon: <Image src="/img/icon-proses-4.png" alt="Tiba di tujuan" width={32} height={32} className="h-8 w-8" />,
+      icon: "/img/icon-proses-4.png",
       label: "Tiba di tujuan",
-      active: activeStepIndex >= 3,
     },
   ];
 
-  const lastActiveIndex = steps.findLastIndex((step) => step.active);
-  const totalSegments = steps.length - 1;
+  // Get colors based on step status
+  const getStepColors = (status: string) => {
+    switch (status) {
+      case "completed":
+        return { bg: "bg-[#0A6B3C]", text: "text-[#0A6B3C]", line: "bg-[#0A6B3C]" };
+      case "failed":
+        return { bg: "bg-red-500", text: "text-red-500", line: "bg-red-500" };
+      case "after-failed":
+        return { bg: "bg-red-300", text: "text-red-300", line: "bg-red-300" };
+      default:
+        return { bg: "bg-[#8AC79E]", text: "text-[#8AC79E]", line: "bg-[#8AC79E]" };
+    }
+  };
 
-  // Progress Bar Width Calculation
-  const progressPercentage = (lastActiveIndex / totalSegments) * 100;
-
-  if (accessState === 'auth_required') {
-    return (
-      <div className="min-h-screen bg-white font-sans flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-          <div className="mb-6 flex items-center justify-center rounded-full bg-[#1E6A46] p-8 shadow-lg">
-            <Image src="/logo-footer.png" alt="Login Required" width={150} height={100} className="object-contain" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Anda Belum Login</h2>
-          <p className="text-gray-600 mb-6 max-w-md">Silahkan login terlebih dahulu untuk melacak status pesanan Anda.</p>
-          <button onClick={() => router.push('/login')} className="px-8 py-3 bg-[#1E6A46] text-white rounded-xl font-semibold hover:bg-[#155436] transition-all">
-            Masuk Sekarang
-          </button>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (accessState === 'payment_required') {
-    return (
-      <div className="min-h-screen bg-white font-sans flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-          <div className="mb-6 flex items-center justify-center rounded-full bg-[#1E6A46] p-8 shadow-lg">
-            <Image src="/logo-footer.png" alt="Payment Required" width={150} height={100} className="object-contain" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Menunggu Pembayaran</h2>
-          <p className="text-gray-600 mb-6 max-w-md">Pesanan ini menunggu pembayaran. Silahkan selesaikan Checkout Anda di katalog.</p>
-          <button onClick={() => router.push('/catalogue')} className="px-8 py-3 bg-[#1E6A46] text-white rounded-xl font-semibold hover:bg-[#155436] transition-all">
-            Checkout Sekarang
-          </button>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const statusUpdates = [
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+    {
+      active: true,
+      title: "PasJajan – Senin, 7 November 2025",
+      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
-      <TrackingNotificationListener orderId={Number(deliveryId)} />
       <Navbar />
+
+      {/* Status Notification Toast */}
+      <StatusToast
+        message={notificationMessage}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+      />
+
 
       <section className="mx-12 mt-8 rounded-2xl border border-[#CDE6D5] bg-[#EEF7F0] p-10 pb-16">
         <div className="relative flex justify-between items-start">
-          {/* Background Line */}
+          {/* Background line */}
           <div className="absolute top-12 right-[10%] left-[10%] z-10 h-[4px] bg-[#8AC79E]"></div>
 
-          {/* Active Progress Line */}
-          <div className="absolute left-[10%] right-[10%] top-12 h-[4px] z-11 flex">
-            <div
-              className="h-full bg-[#0A6B3C] transition-all duration-700 ease-out"
-              style={{ width: `${(lastActiveIndex / 3) * 100}%` }}
-            ></div>
-          </div>
+          {/* Progress line segments */}
+          {steps.map((_, index) => {
+            if (index === steps.length - 1) return null;
+            const status = getStepStatus(index);
+            const nextStatus = getStepStatus(index + 1);
+            const colors = getStepColors(status === "completed" || status === "failed" ? status : "pending");
+            const segmentWidth = 80 / (steps.length - 1);
+            const leftOffset = 10 + (index * segmentWidth);
 
-          {steps.map((step, index) => (
-            <div key={index} className="relative flex flex-col items-center w-1/4 text-center z-20">
-              {step.icon}
+            return (
               <div
-                className={`absolute h-5 w-5 rounded-full transition-colors duration-500 ${step.active ? "bg-[#0A6B3C]" : "bg-[#8AC79E]"} `}
-                style={{ top: "48px", transform: "translateY(-50%)" }}
+                key={`line-${index}`}
+                className={`absolute top-12 h-[4px] z-11 ${status === "completed" ? colors.line : status === "failed" ? "bg-red-500" : "bg-[#8AC79E]"}`}
+                style={{
+                  left: `${leftOffset}%`,
+                  width: `${segmentWidth}%`,
+                  background: nextStatus === "after-failed" ? "linear-gradient(to right, #ef4444, #fca5a5)" : undefined
+                }}
               ></div>
-              <p className={`text-sm font-semibold mt-16 transition-colors duration-500 ${step.active ? "text-[#0A6B3C]" : "text-[#8AC79E]"}`}>
-                {step.label}
-              </p>
-            </div>
-          ))}
+            );
+          })}
+
+          {steps.map((step, index) => {
+            const stepStatus = getStepStatus(index);
+            const colors = getStepColors(stepStatus);
+
+            return (
+              <div key={index} className="relative flex flex-col items-center w-1/4 text-center">
+                <Image
+                  src={step.icon}
+                  alt={step.label}
+                  width={32}
+                  height={32}
+                  className={`h-8 w-8 ${stepStatus === "failed" || stepStatus === "after-failed" ? "opacity-50" : ""}`}
+                  style={stepStatus === "failed" || stepStatus === "after-failed" ? { filter: "hue-rotate(140deg) saturate(1.5)" } : {}}
+                />
+                <div
+                  className={`absolute z-20 h-5 w-5 rounded-full ${colors.bg} flex items-center justify-center`}
+                  style={{ top: "48px", transform: "translateY(-50%)" }}
+                >
+                  {stepStatus === "failed" && (
+                    <span className="text-white text-xs font-bold">×</span>
+                  )}
+                  {stepStatus === "completed" && (
+                    <span className="text-white text-xs">✓</span>
+                  )}
+                </div>
+                <p className={`text-sm font-semibold mt-16 ${colors.text}`}>
+                  {step.label}
+                </p>
+              </div>
+            );
+          })}
         </div>
-        <p className="mt-8 text-center text-xl font-bold text-[#0A6B3C]">
-          {currentStatus === "SAMPAI_TUJUAN" || currentStatus === "SELESAI" ? "Pesanan Selesai" : ""}
+        <p className={`mt-8 text-center text-xl font-bold ${failedAtStep !== null ? "text-red-500" : "text-[#0A6B3C]"}`}>
+          {statusNotifications[currentStatus] || "Pesanan Selesai"}
         </p>
       </section>
 
@@ -208,58 +298,42 @@ export default function TrackingPage() {
         <h2 className="text-xl font-bold text-black">Status Pengiriman Barang</h2>
         <hr className="my-4 border-t-2 border-gray-400" />
         <div className="flex flex-col gap-4">
-          {loading ? (
-            <div className="space-y-4 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          ) : (
-            trackingData?.timeline?.map((log: any, index: number) => (
-              <div key={index} className="flex items-start">
-                <div className="mr-4 flex flex-col items-center">
-                  <div className={`w-5 h-5 rounded-full flex-shrink-0 bg-[#1E6A46]`}></div>
-                  {index < trackingData.timeline.length - 1 && (
-                    <div className="mt-1 h-16 w-0.5 bg-[#8AC79E]"></div>
-                  )}
-                </div>
-                <div className="flex-1 -mt-1">
-                  <p className="font-semibold text-[#1E6A46]">
-                    {log.status} – {log.tanggal}
-                  </p>
-                  <p className="mt-1 leading-relaxed text-gray-700">
-                    {log.keterangan} <span className="text-gray-500 text-sm block">{log.jam}</span>
-                  </p>
-                </div>
+          {statusUpdates.map((status, index) => (
+            <div key={index} className="flex items-start">
+              <div className="mr-4 flex flex-col items-center">
+                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${status.active ? "bg-[#1E6A46]" : "bg-[#CDE6D5]"}`}></div>
+                {index < statusUpdates.length - 1 && (
+                  <div className="mt-1 h-16 w-0.5 bg-[#8AC79E]"></div>
+                )}
               </div>
-            ))
-          )}
-          {!loading && (!trackingData?.timeline || trackingData.timeline.length === 0) && (
-            <p className="text-gray-500 italic">Belum ada riwayat pengiriman.</p>
-          )}
+              <div className="flex-1 -mt-1">
+                <p className={`font-semibold ${status.active ? "text-[#1E6A46]" : "text-[#B0CFC0]"}`}>
+                  {status.title}
+                </p>
+                <p className={`mt-1 leading-relaxed ${status.active ? "text-gray-700" : "text-gray-400"}`}>
+                  {status.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
       <section className="mx-12 mt-8 flex items-center justify-end gap-4">
-        {/* Button Terima Pesanan: Visible ONLY if order is finished/Arrived */}
-        {(currentStatus === "SAMPAI_TUJUAN" || currentStatus === "SELESAI") && (
+        {!hasReceivedOrder ? (
+          // Step 1: Show "Terima Pesanan" button first
           <button
             type="button"
-            onClick={() => router.push(`/delivery/${deliveryId}/rating`)}
+            onClick={handleTerimaPesanan}
             className="rounded-lg border-2 border-[#1E6A46] bg-white px-8 py-3 font-semibold text-[#1E6A46] transition-all hover:bg-[#F0F7F3]"
           >
             Terima Pesanan
           </button>
-        )}
-
-        {/* Button Pesanan Selesai: Visible if NOT finished yet */}
-        {currentStatus !== "SAMPAI_TUJUAN" && currentStatus !== "SELESAI" && (
+        ) : (
+          // Step 2: After clicking "Terima Pesanan", show "Pesanan Selesai" button
           <button
             type="button"
-            onClick={() => {
-              // Optimistically update status to show the other button
-              // In a real app, this should call an API to mark as delivered/received
-              setTrackingData((prev: any) => ({ ...prev, status_utama: 'SAMPAI_TUJUAN' }));
-            }}
+            onClick={handlePesananSelesai}
             className="hover:bg-opacity-90 rounded-lg bg-[#1E6A46] px-8 py-3 font-semibold text-white transition-all"
           >
             Pesanan Selesai
@@ -268,6 +342,23 @@ export default function TrackingPage() {
       </section>
 
       <Footer />
+
+      {/* CSS for slide-in animation */}
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

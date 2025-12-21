@@ -15,7 +15,7 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
 import { useNotificationsStore } from "@/stores/useNotificationsStore";
 
@@ -35,12 +35,17 @@ export default function NotificationsForm() {
         title: values.title,
         body: values.body,
       });
-      toast.success("Notifikasi berhasil dikirim!");
+      toast.success("Notifikasi berhasil dikirim!", {
+        toasterId: "global",
+      });
       form.reset();
       triggerRefresh();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Gagal mengirim notifikasi",
+        {
+          toasterId: "global",
+        },
       );
     }
   }

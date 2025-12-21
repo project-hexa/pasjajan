@@ -19,7 +19,7 @@ import { Search } from "./search";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const router = useRouter();
-  const { user, token } = useAuthStore();
+  const { user, isLoggedIn } = useAuthStore();
 
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
@@ -53,7 +53,7 @@ export const Navbar = ({ className }: { className?: string }) => {
 
           <Separator orientation="vertical" />
 
-          {!token ? (
+          {!isLoggedIn ? (
             <div className="ml-2 flex items-center gap-5">
               <Button
                 variant={"link"}

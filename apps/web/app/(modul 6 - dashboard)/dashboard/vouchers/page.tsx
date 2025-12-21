@@ -16,70 +16,67 @@ import {
 import { toast } from "@workspace/ui/components/sonner";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/utils/axios";
 
-interface Promo {
+interface Voucher {
     id: number;
+    code: string;
     name: string;
-    description: string;
-    banner_url?: string;
-    discount_percentage: string;
-    min_order_value: string;
+    description: string | null;
+    discount_value: string;
+    required_points: number;
     start_date: string;
     end_date: string;
-    status: "Active" | "Non-active";
-    applies_to: "All" | "Specific";
-    applies_to_product: "All" | "Specific";
+    is_active: boolean;
 }
 
-export default function PromoPage() {
-    const [promos, setPromos] = useState<Promo[]>([]);
+export default function VoucherPage() {
+    const [vouchers, setVouchers] = useState<Voucher[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [promoToDelete, setPromoToDelete] = useState<Promo | null>(null);
+    const [voucherToDelete, setVoucherToDelete] = useState<Voucher | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const fetchPromos = async () => {
+    const fetchVouchers = async () => {
         try {
-            const response = await api.get("/admin/promos");
-            // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+            const response = await api.get("/admin/vouchers");
             const responseData = response.data.data;
-            setPromos(responseData.data || []);
+            setVouchers(responseData.data || []);
         } catch (error) {
-            console.error("Failed to fetch promos", error);
-            toast.error("Gagal memuat daftar promo", { toasterId: "global" });
+            console.error("Failed to fetch vouchers", error);
+            toast.error("Gagal memuat daftar voucher", { toasterId: "global" });
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchPromos();
+        fetchVouchers();
     }, []);
 
-    const handleDeleteClick = (promo: Promo) => {
-        setPromoToDelete(promo);
+    const handleDeleteClick = (voucher: Voucher) => {
+        setVoucherToDelete(voucher);
         setDeleteDialogOpen(true);
     };
 
     const handleDeleteConfirm = async () => {
-        if (!promoToDelete) return;
+        if (!voucherToDelete) return;
 
         setIsDeleting(true);
         try {
-            await api.delete(`/admin/promos/${promoToDelete.id}`);
-            toast.success("Promo berhasil dihapus!", { toasterId: "global" });
-            fetchPromos();
-        } catch (error) {
-            console.error("Failed to delete promo", error);
-            toast.error("Gagal menghapus promo", { toasterId: "global" });
+            await api.delete(`/admin/vouchers/${voucherToDelete.id}`);
+            toast.success("Voucher berhasil dihapus!", { toasterId: "global" });
+            fetchVouchers();
+        } catch (error: any) {
+            console.error("Failed to delete voucher", error);
+            const message = error.response?.data?.message || "Gagal menghapus voucher";
+            toast.error(message, { toasterId: "global" });
         } finally {
             setIsDeleting(false);
             setDeleteDialogOpen(false);
-            setPromoToDelete(null);
+            setVoucherToDelete(null);
         }
     };
 
@@ -100,89 +97,85 @@ export default function PromoPage() {
         <div className="container mx-auto p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Promo Management</h1>
-                    <p className="text-muted-foreground mt-1">Manage discounts and promotions for your store.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Voucher Management</h1>
+                    <p className="text-muted-foreground mt-1">Manage vouchers for point redemption.</p>
                 </div>
-                <Link href="/dashboard/promo/create">
+                <Link href="/dashboard/vouchers/create">
                     <Button className="bg-[#1E8F59] hover:bg-[#166E45] text-white">
-                        <Icon icon={"ic:outline-plus"} className="mr-2 h-4 w-4" /> Add Promo
+                        <Icon icon={"ic:outline-plus"} className="mr-2 h-4 w-4" /> Add Voucher
                     </Button>
                 </Link>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>All Promos</CardTitle>
+                    <CardTitle>All Vouchers</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <div className="text-center py-10">Loading promos...</div>
-                    ) : promos.length === 0 ? (
+                        <div className="text-center py-10">Loading vouchers...</div>
+                    ) : vouchers.length === 0 ? (
                         <div className="text-center py-10 text-muted-foreground">
-                            No promos found. Create a new one to get started.
+                            No vouchers found. Create a new one to get started.
                         </div>
                     ) : (
                         <div className="relative w-full overflow-auto">
                             <table className="w-full caption-bottom text-sm">
                                 <thead className="[&_tr]:border-b">
                                     <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Promo</th>
+                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Code</th>
+                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Voucher</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Discount</th>
+                                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Points</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Period</th>
                                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
                                         <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="[&_tr:last-child]:border-0">
-                                    {promos.map((promo) => (
-                                        <tr key={promo.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                    {vouchers.map((voucher) => (
+                                        <tr key={voucher.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                             <td className="p-4 align-middle">
-                                                <div className="flex items-center gap-3">
-                                                    {promo.banner_url ? (
-                                                        <div className="h-12 w-20 relative rounded overflow-hidden flex-shrink-0">
-                                                            <Image src={promo.banner_url} alt={promo.name} fill className="object-cover" />
-                                                        </div>
-                                                    ) : (
-                                                        <div className="h-12 w-20 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                                                            <Icon icon={"lucide:tag"} className="h-4 w-4 text-muted-foreground" />
-                                                        </div>
-                                                    )}
-                                                    <div className="flex flex-col">
-                                                        <span className="text-base font-medium">{promo.name}</span>
-                                                        <span className="text-xs text-muted-foreground line-clamp-1">{promo.description}</span>
-                                                    </div>
+                                                <span className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-sm font-mono font-semibold">
+                                                    {voucher.code}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 align-middle">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-medium">{voucher.name}</span>
+                                                    <span className="text-xs text-muted-foreground line-clamp-1">{voucher.description || "-"}</span>
                                                 </div>
                                             </td>
                                             <td className="p-4 align-middle">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 gap-1">
-                                                        <Icon icon={"lucide:percent"} className="h-3 w-3" />
-                                                        {Math.round(Number(promo.discount_percentage))}%
-                                                    </span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        Min. {formatCurrency(promo.min_order_value)}
-                                                    </span>
-                                                </div>
+                                                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground gap-1">
+                                                    {formatCurrency(voucher.discount_value)}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 align-middle">
+                                                <span className="inline-flex items-center gap-1 text-sm">
+                                                    <Icon icon={"lucide:coins"} className="h-4 w-4 text-amber-500" />
+                                                    {voucher.required_points.toLocaleString("id-ID")}
+                                                </span>
                                             </td>
                                             <td className="p-4 align-middle">
                                                 <div className="flex flex-col text-sm">
                                                     <span className="flex items-center gap-1">
                                                         <Icon icon={"lucide:calendar"} className="h-3 w-3 text-muted-foreground" />
-                                                        {formatDate(promo.start_date)}
+                                                        {formatDate(voucher.start_date)}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground pl-4">
-                                                        to {formatDate(promo.end_date)}
+                                                        to {formatDate(voucher.end_date)}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="p-4 align-middle">
-                                                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent ${promo.status === 'Active' ? 'bg-[#1E8F59] text-white hover:bg-[#166E45]' : 'bg-secondary text-secondary-foreground'}`}>
-                                                    {promo.status}
+                                                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors border-transparent ${voucher.is_active ? 'bg-[#1E8F59] text-white' : 'bg-secondary text-secondary-foreground'}`}>
+                                                    {voucher.is_active ? "Active" : "Inactive"}
                                                 </span>
                                             </td>
                                             <td className="p-4 align-middle text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Link href={`/dashboard/promo/${promo.id}/edit`}>
+                                                    <Link href={`/dashboard/vouchers/${voucher.id}/edit`}>
                                                         <Button variant="ghost" size="icon">
                                                             <Icon icon={"lucide:pencil"} className="h-4 w-4" />
                                                         </Button>
@@ -191,7 +184,7 @@ export default function PromoPage() {
                                                         variant="ghost"
                                                         size="icon"
                                                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                        onClick={() => handleDeleteClick(promo)}
+                                                        onClick={() => handleDeleteClick(voucher)}
                                                     >
                                                         <Icon icon={"lucide:trash"} className="h-4 w-4" />
                                                     </Button>
@@ -210,9 +203,9 @@ export default function PromoPage() {
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Promo</AlertDialogTitle>
+                        <AlertDialogTitle>Hapus Voucher</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus promo <strong>&quot;{promoToDelete?.name}&quot;</strong>?
+                            Apakah Anda yakin ingin menghapus voucher <strong>&quot;{voucherToDelete?.name}&quot;</strong>?
                             Tindakan ini tidak dapat dibatalkan.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -238,4 +231,3 @@ export default function PromoPage() {
         </div>
     );
 }
-
