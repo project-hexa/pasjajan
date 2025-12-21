@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { toast } from "sonner";
+import { toast } from "@workspace/ui/components/sonner";
 import { Icon } from "@workspace/ui/components/icon";
 import { EditBranchForm } from "../../_components/edit-branch-form";
 
