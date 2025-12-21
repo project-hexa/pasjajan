@@ -18,6 +18,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\VoucherController;
 
+use App\Http\Controllers\TestController;
+
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
@@ -254,3 +256,4 @@ Route::prefix('cart')->group(function () {
 	Route::delete('/{cartId}', [CartController::class, 'remove']);
 	Route::post('/clear', [CartController::class, 'clear']);
 });
+
