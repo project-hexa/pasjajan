@@ -145,7 +145,7 @@ class OrderController extends Controller
             $user = request()->user();
             $customer = $user->customer;
 
-            $order = Order::with(['items', 'paymentMethod'])
+            $order = Order::with(['items', 'paymentMethod', 'store'])
                 ->where('code', $code)
                 ->where('customer_id', $customer->id) // Ownership check
                 ->firstOrFail();
@@ -177,6 +177,8 @@ class OrderController extends Controller
                     'payment_status' => $order->payment_status,
                     'paid_at' => $order->paid_at?->toIso8601String(),
                     'expired_at' => $order->expired_at?->toIso8601String(),
+                    'store_id' => $order->store_id,
+                    'store_name' => $order->store?->name,
                     'notes' => $order->notes,
                     'created_at' => $order->created_at->toIso8601String(),
                     'items' => $order->items->map(function ($item) {

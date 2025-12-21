@@ -13,6 +13,7 @@ interface CartItem {
   price: number;
   quantity: number;
   image: string;
+  store_id?: string | number;
 }
 
 const initialCart: CartItem[] = [];
@@ -40,6 +41,7 @@ export default function CartPage() {
           price: Number(it.price ?? it.product_price ?? 0),
           quantity: Number(it.quantity ?? it.qty ?? 1),
           image: String(it.image ?? it.image_url ?? "/images/Screenshot 2025-10-25 173437.png"),
+          store_id: it.store_id ?? undefined,
         } as CartItem;
       });
 
@@ -144,6 +146,72 @@ export default function CartPage() {
     };
   }, [items.length, subtotal]);
 
+  const handleCheckout = React.useCallback(async () => {
+    if (items.length === 0) return;
+
+    try {
+      // Get token from Cookies (sesuai dengan authStore)
+      const token = Cookies.get('token');
+      if (!token) {
+        alert('Silakan login terlebih dahulu!');
+        router.push('/login');
+        return;
+      }
+
+      // Prepare order data
+      const orderData = {
+        items: items.map(item => ({
+          product_id: parseInt(item.id),
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        shipping_fee: SHIPPING_COST,
+        admin_fee: ADMIN_FEE,
+        sub_total: subtotal,
+        grand_total: totals.total,
+        // Default shipping address (bisa diubah nanti di payment page)
+        shipping_recipient_name: 'Customer',
+        shipping_recipient_phone: '0888888888',
+        shipping_address: 'Alamat akan diisi di halaman pembayaran',
+        // Ambil store_id dari item pertama (asumsi single store checkout)
+        store_id: items[0]?.store_id,
+      };
+
+      // Create order via API
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      const response = await fetch(`${apiBase}/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Gagal membuat order');
+      }
+
+      // Get order code from response
+      const orderCode = result.data?.order?.code || result.data?.code;
+
+      if (!orderCode) {
+        throw new Error('Order code tidak ditemukan');
+      }
+
+      // Clear cart after successful order
+      localStorage.removeItem('pasjajan_cart');
+
+      // Redirect to payment page with order code
+      router.push(`/payment?order=${orderCode}`);
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert(error instanceof Error ? error.message : 'Gagal melakukan checkout. Silakan coba lagi.');
+    }
+  }, [items, subtotal, totals.total, router]);
+
   return (
     <>
       <Suspense fallback={<div />}>
@@ -177,7 +245,7 @@ export default function CartPage() {
 
           <div className="mt-10 grid gap-8 lg:grid-cols-12">
             <div className="space-y-6 lg:col-span-8">
-              
+
 
               <section className="rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between">
@@ -280,7 +348,7 @@ export default function CartPage() {
             </div>
 
             <aside className="space-y-6 lg:col-span-4">
-              
+
 
               <section className="space-y-4 rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-[#111827]">
@@ -313,6 +381,7 @@ export default function CartPage() {
                 </div>
                 <button
                   type="button"
+                  onClick={handleCheckout}
                   disabled={items.length === 0}
                   className="w-full rounded-full bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition hover:bg-[#07502C] disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
                 >

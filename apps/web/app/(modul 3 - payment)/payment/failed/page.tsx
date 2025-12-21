@@ -1,8 +1,11 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
-import { useSearchParams } from 'next/navigation';
-import { useNavigate } from "@/hooks/useNavigate";
+import { useRouter, useSearchParams } from 'next/navigation';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie";
 
 interface PaymentData {
     order_code: string;
@@ -26,52 +29,58 @@ const currency = (n: number | string) => {
 };
 
 // Detail Row Component
-const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; isStatus?: boolean }> = 
+const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; isStatus?: boolean }> =
     ({ label, value, isCopyable, isStatus }) => {
-    const [copied, setCopied] = useState(false);
-    
-    const handleCopy = () => {
-        navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+        const [copied, setCopied] = useState(false);
 
-    return (
-        <div className="flex justify-between items-center py-2">
-            <span className="text-gray-500 text-sm">{label}</span>
-            <div className="flex items-center gap-2">
-                {isStatus ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                        <Icon icon="lucide:x-circle" width={14} height={14} />
-                        Gagal
-                    </span>
-                ) : (
-                    <>
-                        {isCopyable && (
-                            <button 
-                                title={copied ? "Tersalin!" : "Salin"} 
-                                onClick={handleCopy}
-                                className="text-gray-400 hover:text-emerald-700 p-1"
-                            >
-                                <Icon icon="lucide:copy" width={14} height={14} />
-                            </button>
-                        )}
-                        <span className="text-gray-800 font-medium text-sm">{value}</span>
-                    </>
-                )}
+        const handleCopy = () => {
+            navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        return (
+            <div className="flex justify-between items-center py-2">
+                <span className="text-gray-500 text-sm">{label}</span>
+                <div className="flex items-center gap-2">
+                    {isStatus ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            <Icon icon="lucide:x-circle" width={14} height={14} />
+                            Gagal
+                        </span>
+                    ) : (
+                        <>
+                            {isCopyable && (
+                                <button
+                                    title={copied ? "Tersalin!" : "Salin"}
+                                    onClick={handleCopy}
+                                    className="text-gray-400 hover:text-emerald-700 p-1"
+                                >
+                                    <Icon icon="lucide:copy" width={14} height={14} />
+                                </button>
+                            )}
+                            <span className="text-gray-800 font-medium text-sm">{value}</span>
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
 function FailedPageContent() {
     const navigate = useNavigate();
     const searchParams = useSearchParams();
-    const orderCode = searchParams.get("order");
+    // Sanitize order code - hapus suffix :1 atau :digit jika ada
+    const rawOrderCode = searchParams.get("order");
+    const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
+
     const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [orderNotFound, setOrderNotFound] = useState(false);
+
+    // Get logged-in user from auth store
+    const { user } = useAuthStore();
 
     useEffect(() => {
         const validateAndLoadData = async () => {
@@ -81,10 +90,18 @@ function FailedPageContent() {
             }
 
             try {
+                // Get auth token
+                const token = Cookies.get('token');
+
                 // Always fetch from API to validate current status
-                const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+                const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
+                    headers: {
+                        "Accept": "application/json",
+                        ...(token && { "Authorization": `Bearer ${token}` }),
+                    },
+                });
                 const result = await res.json();
-                
+
                 if (!result.success || !result.data.order) {
                     // Order not found
                     setOrderNotFound(true);
@@ -107,7 +124,7 @@ function FailedPageContent() {
                     // Check if order has actually expired based on expired_at timestamp
                     const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
                     const now = Date.now();
-                    
+
                     // If expired_at has passed, treat as expired (show failed page)
                     if (expiredAt && now > expiredAt) {
                         // Order is technically expired even if status hasn't updated
@@ -153,8 +170,8 @@ function FailedPageContent() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50 p-4">
                 <p className="text-gray-600 mb-4">Order tidak ditemukan</p>
-                <button 
-                    onClick={() => navigate.push('/cart')}
+                <button
+                    onClick={() => router.push('/cart')}
                     className="bg-emerald-700 text-white py-2 px-4 rounded-lg hover:bg-emerald-800"
                 >
                     Kembali ke Keranjang
@@ -170,8 +187,20 @@ function FailedPageContent() {
     const { payment_method, grand_total, order_code } = paymentData;
 
     return (
-        <div className="min-h-screen flex flex-col bg-emerald-50/50">
-            <main className="flex-grow flex items-center justify-center py-10 px-4">
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Header
+                logoSrc="/images/pasjajan2.png"
+                logoAlt="PasJajan Logo"
+                userName={user?.full_name}
+                userInitials={user?.full_name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                userAvatar={user?.avatar}
+            />
+            <main className="flex-grow flex items-center justify-center py-10 px-4 bg-emerald-50/50">
                 <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
                     {/* Icon */}
                     <div className="flex justify-center mb-6">
@@ -214,15 +243,15 @@ function FailedPageContent() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
-                        <button 
-                            onClick={() => navigate.push('/cart')}
+                        <button
+                            onClick={() => router.push('/cart')}
                             className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                         >
                             <Icon icon="lucide:shopping-cart" width={18} height={18} />
                             Belanja Lagi
                         </button>
-                        <button 
-                            onClick={() => navigate.push('/orders')}
+                        <button
+                            onClick={() => router.push(`/payment/detail?order_code=${order_code}`)}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >
                             <Icon icon="lucide:package" width={18} height={18} />
@@ -231,6 +260,7 @@ function FailedPageContent() {
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

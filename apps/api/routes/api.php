@@ -30,7 +30,11 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 */
 
-// Payment Methods (public - tidak perlu login)
+// ================= PUBLIC ROUTES (NO AUTH) =================
+// Public Branches/Stores endpoint (untuk customer pilih cabang)
+Route::get('/branches/public', [BranchController::class, 'publicIndex']);
+
+// Payment Methods
 Route::get('/payment-methods', [PaymentController::class, 'getPaymentMethods']);
 
 // ============= CUSTOMER CHECKOUT & ORDER ROUTES =============
@@ -84,9 +88,6 @@ Route::prefix('admin')->group(function () {
 // ============= WEBHOOK ROUTES =============
 // Midtrans notification webhook (no auth, verified by signature)
 Route::post('/payment/webhook', [WebhookController::class, 'handleMidtransNotification']);
-
-// Manual check status from Midtrans (untuk sync ulang jika ada masalah)
-Route::post('/payment/check-status', [PaymentController::class, 'checkPaymentStatus']);
 
 if (config('app.env') !== 'production') {
 	Route::post('/payment/webhook/test', [WebhookController::class, 'testWebhook']);
@@ -150,10 +151,16 @@ Route::middleware('auth:sanctum')->group(function () {
 		// --- List Kurir & Cek Ongkir ---
 		Route::get('/delivery/methods', 'getDeliveryMethods');
 		Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::get('/delivery/methods', 'getDeliveryMethods');
+		Route::post('/delivery/check-cost', 'checkShippingCost');
 
 		// --- Get Status Pengiriman ---
 		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		// --- Get Status Pengiriman ---
+		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 
+		// --- Kirim Ulasan ---
+		Route::post('/delivery/{order_id}/review', 'submitReview');
 		// --- Kirim Ulasan ---
 		Route::post('/delivery/{order_id}/review', 'submitReview');
 	});
