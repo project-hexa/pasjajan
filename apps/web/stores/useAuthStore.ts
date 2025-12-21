@@ -2,38 +2,30 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  sendOTPSchema,
+  verifyOTPSchema,
 } from "@/lib/schema/auth.schema";
+import { handleStore } from "@/lib/utils/handle-store";
 import { authService } from "@/services/auth.service";
 import Cookies from "js-cookie";
 import z from "zod";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-interface AuthResponse {
-  ok: boolean;
-  message: string;
-  data?: {
-    token: string;
-    user: User;
-  };
-}
-
-type authStore = {
+interface AuthStore {
   user: User | null;
-  token: string | null;
-  registerHold: z.infer<typeof registerSchema> | null;
-  setToken: (token: string | null) => void;
-  login: (data: z.infer<typeof loginSchema>) => Promise<AuthResponse>;
-  register: (data: z.infer<typeof registerSchema>) => Promise<AuthResponse>;
-  setRegisterHold: (data: z.infer<typeof registerSchema>) => void;
-  logout: () => Promise<AuthResponse>;
-  sendOTP: (email: string) => Promise<AuthResponse>;
-  verifyOTP: (email: string, pin: string) => Promise<AuthResponse>;
-  forgotPassword: (email: string) => Promise<AuthResponse>;
+  isLoggedIn: boolean;
+  login: (payload: z.infer<typeof loginSchema>) => Promise<ActionResult>;
+  register: (payload: z.infer<typeof registerSchema>) => Promise<ActionResult>;
+  logout: (token: string) => Promise<ActionResult>;
+  sendOTP: (payload: z.infer<typeof sendOTPSchema>) => Promise<ActionResult>;
+  verifyOTP: (
+    payload: z.infer<typeof verifyOTPSchema>,
+  ) => Promise<ActionResult>;
   resetPassword: (
-    data: z.infer<typeof resetPasswordSchema>,
-  ) => Promise<AuthResponse>;
-};
+    payload: z.infer<typeof resetPasswordSchema>,
+  ) => Promise<ActionResult>;
+}
 
 const cookiesOptions: Cookies.CookieAttributes = {
   path: "/",
@@ -41,123 +33,75 @@ const cookiesOptions: Cookies.CookieAttributes = {
   sameSite: "lax",
 };
 
-export const useAuthStore = create<authStore>()(
+export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
-      registerHold: null,
-      setToken: (token) => set({ token }),
-      login: async (data) => {
-        const res = await authService.login(data);
-        const { token, user, message } = res;
+      isLoggedIn: false,
+      login: async (payload) =>
+        await handleStore(async () => {
+          const res = await authService.login(payload);
+          const { token, user_data } = res;
 
-        if (!res.ok)
-          return {
-            ok: false,
-            message,
-          };
+          if (payload.rememberMe) {
+            Object.assign(cookiesOptions, { expires: 7 });
+          }
 
-        if (data.rememberMe) {
-          Object.assign(cookiesOptions, { expires: 7 });
-        }
+          Cookies.set("token", token, cookiesOptions);
 
-        Cookies.set("token", token, cookiesOptions);
-        if (data.role) {
-          Cookies.set("userRole", data.role, cookiesOptions);
-        }
+          set({ user: user_data, isLoggedIn: true });
+        }, "Berhasil Masuk!"),
+      register: async (payload) =>
+        await handleStore(async () => {
+          await authService.register(payload);
+          Cookies.set("verificationStep", "email-sent", cookiesOptions);
+          Cookies.set("pendingEmail", payload.email, cookiesOptions);
+        }, "Berhasil Daftar!"),
+      logout: async (token) =>
+        await handleStore(async () => {
+          await authService.logout(token);
 
-        set({ user, token });
+          Cookies.remove("token", cookiesOptions);
 
-        return {
-          ok: true,
-          message,
-          data: {
-            token,
-            user,
-          },
-        };
-      },
-      register: async (data) => {
-        const res = await authService.register(data);
-        const { message } = res;
+          set({ user: null, isLoggedIn: false });
+        }, "Berhasil Logout"),
+      sendOTP: async (payload) =>
+        await handleStore(async () => {
+          const { attempt_count, expired_at } =
+            await authService.sendOTP(payload);
+          Cookies.set("verificationStep", "otp-sent", cookiesOptions);
+          Cookies.set(
+            "OTP_attempt_count",
+            String(attempt_count),
+            cookiesOptions,
+          );
+          Cookies.set(
+            "OTP_expires_at",
+            new Date(expired_at).toISOString(),
+            cookiesOptions,
+          );
+        }, "Kode OTP Berhasil Dikirim!"),
+      verifyOTP: async (payload) =>
+        await handleStore(async () => {
+          const { token, user_data } = await authService.verifyOTP(payload);
+          Cookies.remove("verificationStep", cookiesOptions);
+          Cookies.remove("pendingEmail", cookiesOptions);
+          Cookies.set("token", token, cookiesOptions);
+          set({ user: user_data, isLoggedIn: true });
+        }, "OTP diverifikasi!"),
+      resetPassword: async (payload) =>
+        await handleStore(async () => {
+          await authService.resetPassword(payload);
 
-        if (!res.ok)
-          return {
-            ok: false,
-            message,
-          };
-
-        return {
-          ok: true,
-          message,
-        };
-      },
-      setRegisterHold: (data) => {
-        Cookies.set("verificationStep", "email-sent", cookiesOptions);
-        sessionStorage.setItem("emailForOTP", data.email);
-        set({ registerHold: data });
-      },
-      logout: async () => {
-        Cookies.remove("token", { path: "/" });
-        Cookies.remove("userRole", { path: "/" });
-
-        set({ user: null, token: null });
-
-        return { ok: true, message: "Logout Berhasil!" };
-      },
-      sendOTP: async (email) => {
-        const res = await authService.sendOTP({ email });
-        const { message } = res;
-
-        if (!res.ok)
-          return {
-            ok: false,
-            message,
-          };
-
-        Cookies.set("verificationStep", "otp-sent", cookiesOptions);
-
-        return {
-          ok: true,
-          message,
-        };
-      },
-      verifyOTP: async (email, pin) => {
-        const res = await authService.verifyOTP({
-          email,
-          pin,
-        });
-        const { message } = res;
-
-        if (!res.ok)
-          return {
-            ok: false,
-            message,
-          };
-
-        Cookies.remove("verificationStep", cookiesOptions);
-
-        return {
-          ok: true,
-          message,
-        };
-      },
-      forgotPassword: async () => {
-        // TODO: Implementation of forgotPassword
-        return { ok: false, message: "Not implemented" };
-      },
-      resetPassword: async () => {
-        // TODO: Implementation of resetPassword
-        return { ok: false, message: "Not implemented" };
-      },
+          sessionStorage.removeItem("emailForResetPassword");
+        }, "Password Berhasil diubah!"),
     }),
     {
       name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        registerHold: state.registerHold,
+        isLoggedIn: state.isLoggedIn,
       }),
     },
   ),
