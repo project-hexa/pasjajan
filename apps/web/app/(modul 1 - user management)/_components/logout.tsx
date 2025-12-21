@@ -15,16 +15,25 @@ import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import Cookies from "js-cookie";
 
 export const Logout = () => {
   const { logout } = useAuthStore();
   const router = useRouter();
+  const token = Cookies.get("token");
 
-  const handleClick = async () => {
-    const result = await logout();
+  const logoutForm = useForm({
+    defaultValues: {
+      token: token || "",
+    },
+  });
+
+  const handleClick = async (data: { token: string }) => {
+    const result = await logout(data.token);
 
     if (result.ok) {
-      toast.success(result.message || "Logout Berhasil!", {
+      toast.success(result.message, {
         toasterId: "global",
       });
       router.push("/login");
@@ -50,9 +59,23 @@ export const Logout = () => {
         </AlertDialogHeader>
         <AlertDialogFooter className="!justify-center gap-20">
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <Button variant={"destructive"} onClick={handleClick}>
-            Keluar
-          </Button>
+          <form id="logout" onSubmit={logoutForm.handleSubmit(handleClick)}>
+            <Button
+              variant={"destructive"}
+              form="logout"
+              disabled={logoutForm.formState.isSubmitting}
+            >
+              {logoutForm.formState.isSubmitting ? (
+                <Icon
+                  icon={"lucide:loader-circle"}
+                  width={24}
+                  className="animate-spin"
+                />
+              ) : (
+                "Keluar"
+              )}
+            </Button>
+          </form>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

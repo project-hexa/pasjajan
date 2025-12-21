@@ -51,7 +51,7 @@ export default function CustomerPointsPage() {
             setPagination(data.pagination || null);
         } catch (error) {
             console.error("Failed to fetch customers", error);
-            toast.error("Gagal memuat daftar pelanggan");
+            toast.error("Gagal memuat daftar pelanggan", { toasterId: "global" });
         } finally {
             setLoading(false);
         }

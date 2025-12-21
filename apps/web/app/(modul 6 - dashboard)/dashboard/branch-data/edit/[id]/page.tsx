@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@workspace/ui/components/card";
-import { toast } from "sonner";
+import { toast } from "@workspace/ui/components/sonner";
 import { Icon } from "@workspace/ui/components/icon";
 import { EditBranchForm } from "../../_components/edit-branch-form";
 import { getBranch as getBranchService, updateBranch as updateBranchService, toggleBranch as toggleBranchService } from "@/services/branches";
@@ -78,7 +78,9 @@ export default function EditBranchPage() {
         });
       } catch (error) {
         console.error("Error fetching branch:", error);
-        toast.error("Gagal memuat data cabang");
+        toast.error("Gagal memuat data cabang", {
+          toasterId: "global",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -124,13 +126,18 @@ export default function EditBranchPage() {
         }
       }
 
-      toast.success('Data cabang berhasil diperbarui');
-      router.push('/dashboard/branch-data');
-    } catch (error: unknown) {
+      toast.success("Data cabang berhasil diperbarui", {
+        toasterId: "global",
+      });
+      router.push("/dashboard/branch-data");
+    } catch (error: any) {
       console.error("Error updating branch:", error);
-      const axiosErr = error as AxiosError<{ message?: string }>;
-      const message = axiosErr?.response?.data?.message || (error instanceof Error ? error.message : "Terjadi kesalahan saat memperbarui cabang");
-      toast.error(message);
+      toast.error(
+        error.message || "Terjadi kesalahan saat memperbarui cabang",
+        {
+          toasterId: "global",
+        },
+      );
     } finally {
       setIsLoading(false);
     }

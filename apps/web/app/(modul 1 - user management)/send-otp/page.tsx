@@ -18,6 +18,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import Cookies from "js-cookie";
 import z from "zod";
 
 export default function VerificationCodePage() {
@@ -31,12 +32,12 @@ export default function VerificationCodePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const email = sessionStorage.getItem("emailForOTP") || "";
+    const email = Cookies.get("pendingEmail") || "";
     verifCodeForm.setValue("email", email);
   }, [verifCodeForm]);
 
   const handleSubmit = async (data: z.infer<typeof sendOTPSchema>) => {
-    const result = await sendOTP(data.email);
+    const result = await sendOTP({ email: data.email });
 
     if (result.ok) {
       toast.success(result.message, {

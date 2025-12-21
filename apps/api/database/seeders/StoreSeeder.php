@@ -11,6 +11,15 @@ class StoreSeeder extends Seeder
   {
     $stores = [
       [
+        'code' => 'BDG02',
+        'name' => 'Setiabudhi',
+        'address' => 'Jln. Setiabudhi No. 67K, Kec. Sukasari, Kota Bandung, Jawa Barat, 40164',
+        'phone_number' => '022-2011234',
+        'latitude' => -6.867642,
+        'longitude' => 107.594276,
+        'is_active' => true,
+      ],
+      [
         'code' => 'JKT01',
         'name' => 'Jakarta Pusat',
         'address' => 'Jl. Sudirman No. 123, Jakarta Pusat',

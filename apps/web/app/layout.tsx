@@ -27,6 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
         {children}

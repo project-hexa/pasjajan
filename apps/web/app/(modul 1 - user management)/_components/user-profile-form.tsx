@@ -1,6 +1,8 @@
 "use client";
 
+import { editProfileSchema } from "@/lib/schema/user-profile.schema";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useUserStore } from "@/stores/useUserStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Avatar,
@@ -27,44 +29,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
+import { toast } from "@workspace/ui/components/sonner";
+import { eachMonthOfInterval, endOfYear, format, startOfYear } from "date-fns";
+import { id } from "date-fns/locale";
+import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
-const profileSchema = z.object({
-  full_name: z
-    .string()
-    .min(3, "Nama lengkap minimal harus 3 karakter")
-    .max(30, "Nama lengkap maksimal 30 karakter"),
-  email: z.string().email("Email tidak Valid"),
-  phone_number: z.string(),
-  gender: z.enum(["Laki-Laki", "Perempuan"]),
-  birthday: z
-    .object({
-      day: z.number().int().min(1).max(31).optional(),
-      month: z.number().int().min(1).max(12).optional(),
-      year: z.number().int().min(1900).optional(),
-    })
-    .refine((v) => v.day && v.month && v.year, {
-      message: "Tanggal lahir wajib lengkap",
-    }),
-});
-
 export const UserProfileForm = () => {
   const [editingFields, setEditingFields] = useState<
-    Set<keyof z.infer<typeof profileSchema>>
+    Set<keyof z.infer<typeof editProfileSchema>>
   >(new Set());
 
   const { user } = useAuthStore();
+  const { editProfile } = useUserStore();
 
-  const profileForm = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
+  const profileForm = useForm<Partial<z.infer<typeof editProfileSchema>>>({
+    resolver: zodResolver(editProfileSchema.partial()),
+    mode: "onChange",
     defaultValues: {
+      email_before: "",
+      token: "",
       full_name: "",
       email: "",
       phone_number: "",
-      gender: undefined,
-      birthday: undefined,
+      gender: null,
+      birth_date: null,
     },
   });
 
@@ -75,21 +66,25 @@ export const UserProfileForm = () => {
       full_name: user.full_name,
       email: user.email,
       phone_number: user.phone_number,
-      gender: user.gender,
-      birthday: {
-        day: user.birth_date && new Date(user.birth_date).getDate(),
-        month: user.birth_date && new Date(user.birth_date).getMonth(),
-        year: user.birth_date && new Date(user.birth_date).getFullYear(),
-      },
+      gender: user.gender ? user.gender : null,
+      birth_date: user.birth_date
+        ? {
+            day: user.birth_date && new Date(user.birth_date).getDate(),
+            month: user.birth_date && new Date(user.birth_date).getMonth() + 1,
+            year: user.birth_date && new Date(user.birth_date).getFullYear(),
+          }
+        : null,
     });
   }, [user, profileForm]);
 
-  const handleBtnEdit = (field: keyof z.infer<typeof profileSchema>) => {
+  const handleBtnEdit = (field: keyof z.infer<typeof editProfileSchema>) => {
     setEditingFields((prev) => new Set(prev).add(field));
     profileForm.setFocus(field);
   };
 
-  const handleBtnCancelEdit = (field: keyof z.infer<typeof profileSchema>) => {
+  const handleBtnCancelEdit = (
+    field: keyof z.infer<typeof editProfileSchema>,
+  ) => {
     setEditingFields((prev) => {
       const next = new Set(prev);
       next.delete(field);
@@ -98,8 +93,58 @@ export const UserProfileForm = () => {
     profileForm.resetField(field);
   };
 
-  const handleSubmit = (data: z.infer<typeof profileSchema>) => {
-    console.log(data);
+  const handleSubmit = async (
+    data: Partial<z.infer<typeof editProfileSchema>>,
+  ) => {
+    const dirtyFields = profileForm.formState.dirtyFields;
+    const payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
+      birth_date?: string;
+    } = {
+      email_before: user?.email ?? "",
+      token: Cookies.get("token") ?? "",
+    };
+
+    if (Object.keys(dirtyFields).length === 0) {
+      toast.info("Tidak ada perubahan untuk disimpan", {
+        toasterId: "global",
+      });
+      return;
+    }
+
+    Object.keys(dirtyFields).forEach((key) => {
+      if (key === "birth_date" && data.birth_date) {
+        payload.birth_date = new Date(
+          data.birth_date.year!,
+          data.birth_date.month! - 1,
+          data.birth_date.day!,
+        )
+          .toISOString()
+          .split("T")[0];
+      } else if (key === "gender" && data.gender) {
+        payload.gender = data.gender;
+      } else {
+        payload[
+          key as keyof Omit<
+            z.infer<typeof editProfileSchema>,
+            "birth_date" | "gender"
+          >
+        ] = data[key as keyof typeof data] as string;
+      }
+    });
+
+    const result = await editProfile(payload);
+
+    if (result.ok) {
+      toast.success(result.message, {
+        toasterId: "global",
+      });
+
+      setEditingFields(new Set());
+    } else {
+      toast.error(result.message, {
+        toasterId: "global",
+      });
+    }
   };
 
   return (
@@ -122,7 +167,6 @@ export const UserProfileForm = () => {
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                    aria-invalid={fieldState.invalid}
                     readOnly={!editingFields.has("full_name")}
                     {...field}
                   />
@@ -162,7 +206,6 @@ export const UserProfileForm = () => {
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                    aria-invalid={fieldState.invalid}
                     readOnly={!editingFields.has("email")}
                     {...field}
                   />
@@ -202,7 +245,6 @@ export const UserProfileForm = () => {
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                    aria-invalid={fieldState.invalid}
                     readOnly={!editingFields.has("phone_number")}
                     {...field}
                   />
@@ -250,7 +292,7 @@ export const UserProfileForm = () => {
                     )
                   ) : (
                     <RadioGroup
-                      value={field.value}
+                      value={field.value ?? ""}
                       onValueChange={field.onChange}
                     >
                       <div className="flex items-center gap-5">
@@ -290,107 +332,133 @@ export const UserProfileForm = () => {
             )}
           />
           <Controller
-            name="birthday"
+            name="birth_date"
             control={profileForm.control}
-            render={({ field, fieldState }) => (
+            render={({ field: { value, ...field }, fieldState }) => (
               <Field
-                data-invalid={fieldState.invalid}
                 className="grid grid-cols-[200px_1fr_100px]"
+                data-invalid={fieldState.invalid}
               >
                 <FieldLabel>Tanggal Lahir</FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
-                  {!editingFields.has(field.name) ? (
-                    !(
-                      field.value &&
-                      field.value.day &&
-                      field.value.month &&
-                      field.value.year
-                    ) ? (
-                      <FieldLabel className="text-muted-foreground">
-                        Tanggal Lahir belum di atur
-                      </FieldLabel>
+                <div className="flex flex-col">
+                  <FieldContent className="flex-row items-center gap-4">
+                    {!editingFields.has(field.name) ? (
+                      !(value && value.day && value.month && value.year) ? (
+                        <FieldLabel className="text-muted-foreground">
+                          Tanggal Lahir belum di atur
+                        </FieldLabel>
+                      ) : (
+                        <div className="grid grid-cols-[repeat(3,128px)] gap-4">
+                          <Input
+                            className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
+                            readOnly={true}
+                            value={value.day}
+                          />
+                          <Input
+                            className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
+                            readOnly={true}
+                            value={value.month}
+                          />
+                          <Input
+                            className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
+                            readOnly={true}
+                            value={value.year}
+                          />
+                        </div>
+                      )
                     ) : (
                       <div className="grid grid-cols-[repeat(3,128px)] gap-4">
-                        <Input
-                          className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                          readOnly={true}
-                          value={field.value.day}
-                        />
-                        <Input
-                          className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                          readOnly={true}
-                          value={field.value.month}
-                        />
-                        <Input
-                          className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
-                          readOnly={true}
-                          value={field.value.year}
-                        />
-                      </div>
-                    )
-                  ) : (
-                    <div className="grid grid-cols-[repeat(3,128px)] gap-4">
-                      <Select
-                        value={field.value?.day?.toString()}
-                        onValueChange={(v) =>
-                          field.onChange({ ...field.value, day: Number(v) })
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Tanggal" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map(
-                            (d) => (
-                              <SelectItem key={d} value={String(d)}>
-                                {d}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={field.value?.month?.toString()}
-                        onValueChange={(v) =>
-                          field.onChange({ ...field.value, month: Number(v) })
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Bulan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                            (m) => (
-                              <SelectItem key={m} value={String(m)}>
-                                {m}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={field.value?.year?.toString()}
-                        onValueChange={(v) =>
-                          field.onChange({ ...field.value, year: Number(v) })
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Tahun" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Array.from({ length: 100 }, (_, i) => {
-                            const y = new Date().getFullYear() - i;
-                            return (
-                              <SelectItem key={y} value={String(y)}>
-                                {y}
-                              </SelectItem>
+                        <Select
+                          value={value?.day?.toString() ?? ""}
+                          onValueChange={(v) => {
+                            field.onChange({ ...value, day: Number(v) });
+                            setTimeout(
+                              () => profileForm.trigger("birth_date"),
+                              0,
                             );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                          }}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Tanggal" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map(
+                              (d) => (
+                                <SelectItem key={d} value={String(d)}>
+                                  {d}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={value?.month?.toString() ?? ""}
+                          onValueChange={(v) => {
+                            field.onChange({ ...value, month: Number(v) });
+                            setTimeout(
+                              () => profileForm.trigger("birth_date"),
+                              0,
+                            );
+                          }}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Bulan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {eachMonthOfInterval({
+                              start: startOfYear(new Date()),
+                              end: endOfYear(new Date()),
+                            })
+                              .map((date) => ({
+                                label: format(date, "MMMM", { locale: id }),
+                              }))
+                              .map((m, i) => (
+                                <SelectItem key={i} value={String(i + 1)}>
+                                  {m.label}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={value?.year?.toString() ?? ""}
+                          onValueChange={(v) => {
+                            field.onChange({ ...value, year: Number(v) });
+                            setTimeout(
+                              () => profileForm.trigger("birth_date"),
+                              0,
+                            );
+                          }}
+                        >
+                          <SelectTrigger
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue placeholder="Tahun" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 100 }, (_, i) => {
+                              const y = new Date().getFullYear() - i;
+                              return (
+                                <SelectItem key={y} value={String(y)}>
+                                  {y}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </FieldContent>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
                   )}
-                </FieldContent>
+                </div>
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
