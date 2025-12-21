@@ -43,6 +43,11 @@ const navigation = [
     icon: "lucide:tag",
   },
   {
+    name: "Voucher",
+    href: "/dashboard/vouchers",
+    icon: "lucide:ticket",
+  },
+  {
     name: "Produk",
     href: "/dashboard/products",
     icon: "icon-park-outline:ad-product",
