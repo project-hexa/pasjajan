@@ -96,7 +96,7 @@ function CheckoutPageContent() {
 
         if (!orderCode) {
           alert("Order code tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
@@ -119,7 +119,7 @@ function CheckoutPageContent() {
 
         if (!result.success || !result.data.order) {
           alert("Order tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
@@ -185,7 +185,7 @@ function CheckoutPageContent() {
       } catch (error) {
         console.error("Error loading order data:", error);
         alert("Gagal memuat data order!");
-        router.push("/cart");
+        navigate.push("/cart");
       } finally {
         setLoading(false);
       }

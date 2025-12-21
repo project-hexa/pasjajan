@@ -172,7 +172,7 @@ function FailedPageContent() {
             <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50 p-4">
                 <p className="text-gray-600 mb-4">Order tidak ditemukan</p>
                 <button 
-                    onClick={() => router.push('/cart')}
+                    onClick={() => navigate.push('/cart')}
                     className="bg-emerald-700 text-white py-2 px-4 rounded-lg hover:bg-emerald-800"
                 >
                     Kembali ke Keranjang
@@ -245,14 +245,14 @@ function FailedPageContent() {
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                         <button 
-                            onClick={() => router.push('/cart')}
+                            onClick={() => navigate.push('/cart')}
                             className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                         >
                             <Icon icon="lucide:shopping-cart" width={18} height={18} />
                             Belanja Lagi
                         </button>
                         <button 
-                            onClick={() => router.push('/orders')}
+                            onClick={() => navigate.push('/orders')}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >
                             <Icon icon="lucide:package" width={18} height={18} />

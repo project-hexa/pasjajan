@@ -155,7 +155,7 @@ export default function CartPage() {
       const token = Cookies.get('token');
       if (!token) {
         alert('Silakan login terlebih dahulu!');
-        router.push('/login');
+        navigate.push('/login');
         return;
       }
 
@@ -206,12 +206,12 @@ export default function CartPage() {
       localStorage.removeItem('pasjajan_cart');
 
       // Redirect to payment page with order code
-      router.push(`/payment?order=${orderCode}`);
+      navigate.push(`/payment?order=${orderCode}`);
     } catch (error) {
       console.error('Checkout error:', error);
       alert(error instanceof Error ? error.message : 'Gagal melakukan checkout. Silakan coba lagi.');
     }
-  }, [items, subtotal, totals.total, router]);
+  }, [items, subtotal, totals.total, navigate]);
 
   return (
     <>

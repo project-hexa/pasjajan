@@ -142,7 +142,7 @@ function WaitingPageContent() {
                 if (parsed.payment_status === 'paid' || parsed.payment_status === 'settlement') {
                     setIsRedirecting(true);
                     localStorage.removeItem("payment_data");
-                    router.replace(`/payment/success?order=${parsed.order_code}`);
+                    navigate.replace(`/payment/success?order=${parsed.order_code}`);
                     return;
                 }
 
@@ -279,7 +279,7 @@ function WaitingPageContent() {
         return () => {
             clearInterval(interval);
         };
-    }, [orderCode, router, isExpired, isRedirecting]);
+    }, [orderCode, navigate, isExpired, isRedirecting]);
 
     // Redirect to failed page when expired
     useEffect(() => {
@@ -421,14 +421,14 @@ function WaitingPageContent() {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button 
-                                    onClick={() => router.push('/cart')}
+                                    onClick={() => navigate.push('/cart')}
                                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                 >
                                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                     Belanja Lagi
                                 </button>
                                 <button 
-                                    onClick={() => router.push('/orders')}
+                                    onClick={() => navigate.push('/orders')}
                                     className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                 >
                                     <Icon icon="lucide:package" width={16} height={16} />
@@ -479,14 +479,14 @@ function WaitingPageContent() {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button 
-                                    onClick={() => router.push('/cart')}
+                                    onClick={() => navigate.push('/cart')}
                                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                 >
                                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                     Belanja Lagi
                                 </button>
                                 <button 
-                                    onClick={() => router.push('/orders')}
+                                    onClick={() => navigate.push('/orders')}
                                     className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                 >
                                     <Icon icon="lucide:package" width={16} height={16} />
@@ -524,14 +524,14 @@ function WaitingPageContent() {
                             <div className="flex justify-center mt-6">
                                 <div className="flex gap-3 w-full max-w-md">
                                     <button 
-                                        onClick={() => router.push('/cart')}
+                                        onClick={() => navigate.push('/cart')}
                                         className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                     >
                                         <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                         Belanja Lagi
                                     </button>
                                     <button 
-                                        onClick={() => router.push('/orders')}
+                                        onClick={() => navigate.push('/orders')}
                                         className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                     >
                                         <Icon icon="lucide:package" width={16} height={16} />
