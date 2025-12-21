@@ -22,6 +22,9 @@ class ProcessPaymentRequest extends FormRequest
         return [
             'order_code' => 'required|string|exists:orders,code',
             'payment_method_code' => 'required|string|exists:payment_methods,code',
+            'shipping_address' => 'nullable|string|max:500',
+            'shipping_recipient_name' => 'nullable|string|max:100',
+            'shipping_recipient_phone' => 'nullable|string|max:20',
         ];
     }
 

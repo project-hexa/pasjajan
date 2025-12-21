@@ -63,6 +63,12 @@ class Order extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
+
     // Helper Methods - Order Status
     public function isPending()
     {

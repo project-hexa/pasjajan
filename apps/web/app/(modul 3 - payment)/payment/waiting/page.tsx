@@ -1,10 +1,14 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from 'next/navigation';
 import { useNavigate } from "@/hooks/useNavigate";
 import { PaymentInstructionsModal } from '@/components/PaymentInstructionsModal';
-import Image from 'next/image';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie";
 
 interface PaymentData {
     order_code: string;
@@ -73,39 +77,42 @@ const CountdownTimer: React.FC<{ expiredAt: string; onExpired: () => void }> = (
 };
 
 // Detail Row Component
-const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean }> = 
+const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean }> =
     ({ label, value, isCopyable }) => {
-    const [copied, setCopied] = useState(false);
-    
-    const handleCopy = () => {
-        navigator.clipboard.writeText(value);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+        const [copied, setCopied] = useState(false);
 
-    return (
-        <div className="flex justify-between items-center py-2">
-            <span className="text-gray-500 text-sm">{label}</span>
-            <div className="flex items-center gap-2">
-                {isCopyable && (
-                    <button 
-                        title={copied ? "Tersalin!" : "Salin"} 
-                        onClick={handleCopy}
-                        className="text-gray-400 hover:text-emerald-700 p-1"
-                    >
-                        <Icon icon="lucide:copy" width={14} height={14} />
-                    </button>
-                )}
-                <span className="text-gray-800 font-medium text-sm">{value}</span>
+        const handleCopy = () => {
+            navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        return (
+            <div className="flex justify-between items-center py-2">
+                <span className="text-gray-500 text-sm">{label}</span>
+                <div className="flex items-center gap-2">
+                    {isCopyable && (
+                        <button
+                            title={copied ? "Tersalin!" : "Salin"}
+                            onClick={handleCopy}
+                            className="text-gray-400 hover:text-emerald-700 p-1"
+                        >
+                            <Icon icon="lucide:copy" width={14} height={14} />
+                        </button>
+                    )}
+                    <span className="text-gray-800 font-medium text-sm">{value}</span>
+                </div>
             </div>
-        </div>
-    );
-};
+        );
+    };
 
 function WaitingPageContent() {
     const navigate = useNavigate();
     const searchParams = useSearchParams();
-    const orderCode = searchParams.get("order");
+    // Sanitize order code - hapus suffix :1 atau :digit jika ada
+    const rawOrderCode = searchParams.get("order");
+    const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
+
     const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
     const [loading, setLoading] = useState(true);
     const [paymentStatus, setPaymentStatus] = useState<string>('pending');
@@ -114,53 +121,76 @@ function WaitingPageContent() {
     const [showQrPreview, setShowQrPreview] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
+    // Get logged-in user from auth store
+    const { user } = useAuthStore();
+
     // Load payment data from localStorage or API
     useEffect(() => {
         const loadPaymentData = async () => {
             const data = localStorage.getItem("payment_data");
             if (data) {
                 const parsed = JSON.parse(data);
+                console.log("Loaded payment_data from localStorage:", parsed);
                 setPaymentData(parsed);
-                
+
                 if (parsed.payment_status === 'expired') {
                     setIsExpired(true);
                     setPaymentStatus('expired');
                 }
+
+                // Check jika sudah paid, langsung redirect
+                if (parsed.payment_status === 'paid' || parsed.payment_status === 'settlement') {
+                    setIsRedirecting(true);
+                    localStorage.removeItem("payment_data");
+                    router.replace(`/payment/success?order=${parsed.order_code}`);
+                    return;
+                }
+
                 setLoading(false);
+
             } else if (orderCode) {
                 // No localStorage data, try to fetch from API
                 try {
-                    const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`);
+                    // Get auth token
+                    const token = Cookies.get('token');
+
+                    const res = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
+                        headers: {
+                            "Accept": "application/json",
+                            ...(token && { "Authorization": `Bearer ${token}` }),
+                        },
+                    });
                     const result = await res.json();
-                    
+
+
                     if (result.success && result.data.order) {
                         const order = result.data.order;
                         const status = order.payment_status;
-                        
+
                         // Check payment status FIRST before checking expired_at
                         if (status === 'paid' || status === 'settlement' || status === 'capture') {
                             setIsRedirecting(true);
                             navigate.replace(`/payment/success?order=${orderCode}`);
                             return;
                         }
-                        
+
                         if (status === 'expired' || status === 'failed' || status === 'cancelled') {
                             setIsRedirecting(true);
                             navigate.replace(`/payment/failed?order=${orderCode}`);
                             return;
                         }
-                        
+
                         // Check if order is expired based on timestamp (for pending orders)
                         const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
                         const now = Date.now();
-                        
+
                         if (expiredAt && now > expiredAt) {
                             // Order is expired, redirect to failed
                             setIsRedirecting(true);
                             navigate.replace(`/payment/failed?order=${orderCode}`);
                             return;
                         }
-                        
+
                         // Order is still pending, set minimal payment data for display
                         setPaymentData({
                             order_code: order.order_code,
@@ -195,28 +225,42 @@ function WaitingPageContent() {
 
     // Auto-check payment status
     useEffect(() => {
-        if (!orderCode || isExpired || isRedirecting) return;
+        // Gunakan order code dari paymentData (localStorage) jika ada, fallback ke URL
+        const effectiveOrderCode = paymentData?.order_code || orderCode;
+
+        if (!effectiveOrderCode || isExpired || isRedirecting) return;
+
+        console.log("Checking payment status for order:", effectiveOrderCode);
 
         const checkStatus = async () => {
             try {
+                // Get auth token
+                const token = Cookies.get('token');
+
                 const res = await fetch("http://localhost:8000/api/payment/check-status", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ order_code: orderCode }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token && { "Authorization": `Bearer ${token}` }),
+                    },
+                    body: JSON.stringify({ order_code: effectiveOrderCode }),
                 });
                 const result = await res.json();
-                
+
+                console.log("Check status response:", result);
+
+
                 if (result.success && result.data) {
                     const status = result.data.payment_status || result.data.transaction_status;
                     setPaymentStatus(status);
-                    
+
                     if (status === 'paid' || status === 'settlement' || status === 'capture') {
                         setIsRedirecting(true);
                         localStorage.removeItem("payment_data");
-                        navigate.replace(`/payment/success?order=${orderCode}`);
+                        navigate.replace(`/payment/success?order=${effectiveOrderCode}`);
                         return;
                     }
-                    
+
                     if (status === 'expired') {
                         setIsExpired(true);
                         setIsRedirecting(true);
@@ -231,11 +275,11 @@ function WaitingPageContent() {
 
         checkStatus();
         const interval = setInterval(checkStatus, 5000);
-        
+
         return () => {
             clearInterval(interval);
         };
-    }, [orderCode, navigate, isExpired, isRedirecting]);
+    }, [orderCode, router, isExpired, isRedirecting]);
 
     // Redirect to failed page when expired
     useEffect(() => {
@@ -280,11 +324,22 @@ function WaitingPageContent() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-emerald-50/50">
-            <main className="flex-grow flex flex-col items-center justify-center py-10 px-4">
-                <div className={`w-full bg-white rounded-2xl shadow-xl p-8 ${
-                    payment_method.category === 'bank_transfer' ? 'max-w-xl' : 'max-w-md'
-                }`}>
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Header
+                logoSrc="/images/pasjajan2.png"
+                logoAlt="PasJajan Logo"
+                userName={user?.full_name}
+                userInitials={user?.full_name
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                userAvatar={user?.avatar}
+            />
+            <main className="flex-grow flex flex-col items-center justify-center py-10 px-4 bg-emerald-50/50">
+                <div className={`w-full bg-white rounded-2xl shadow-xl p-8 ${payment_method.category === 'bank_transfer' ? 'max-w-xl' : 'max-w-md'
+                    }`}>
                     {/* Icon */}
                     <div className="flex justify-center mb-6">
                         <div className="w-20 h-20 rounded-full border-4 border-emerald-600 flex items-center justify-center bg-emerald-600">
@@ -323,9 +378,9 @@ function WaitingPageContent() {
                             {/* Open App Button */}
                             {deeplink && (
                                 <div className="flex justify-center mb-6">
-                                    <a 
-                                        href={deeplink} 
-                                        target="_blank" 
+                                    <a
+                                        href={deeplink}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-6 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                                     >
@@ -339,13 +394,13 @@ function WaitingPageContent() {
                             {qr_code_url && (
                                 <div className="text-center mb-6">
                                     <p className="text-sm text-gray-500 mb-3">Atau Scan QR Code:</p>
-                                    <div 
+                                    <div
                                         className="inline-block border-2 border-gray-200 rounded-xl p-2 bg-white cursor-pointer hover:border-emerald-500 transition-colors"
                                         onClick={() => setShowQrPreview(true)}
                                     >
                                         <Image src={qr_code_url} alt="QR Code" className="w-48 h-48 object-contain" width={192} height={192} />
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={handleDownloadQr}
                                         className="flex items-center justify-center gap-2 mx-auto mt-3 border border-emerald-600 text-emerald-600 py-2 px-4 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
                                     >
@@ -366,14 +421,14 @@ function WaitingPageContent() {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button 
-                                    onClick={() => navigate.push('/cart')}
+                                    onClick={() => router.push('/cart')}
                                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                 >
                                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                     Belanja Lagi
                                 </button>
                                 <button 
-                                    onClick={() => navigate.push('/orders')}
+                                    onClick={() => router.push('/orders')}
                                     className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                 >
                                     <Icon icon="lucide:package" width={16} height={16} />
@@ -398,13 +453,13 @@ function WaitingPageContent() {
                             {qr_code_url && (
                                 <div className="text-center mb-6">
                                     <p className="text-sm text-gray-500 mb-3">Scan QR Code untuk Membayar:</p>
-                                    <div 
+                                    <div
                                         className="inline-block border-2 border-gray-200 rounded-xl p-2 bg-white cursor-pointer hover:border-emerald-500 transition-colors"
                                         onClick={() => setShowQrPreview(true)}
                                     >
                                         <Image src={qr_code_url} alt="QR Code" className="w-56 h-56 object-contain" width={224} height={224} />
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={handleDownloadQr}
                                         className="flex items-center justify-center gap-2 mx-auto mt-3 border border-emerald-600 text-emerald-600 py-2 px-4 rounded-lg text-sm font-medium hover:bg-emerald-50 transition-colors"
                                     >
@@ -424,14 +479,14 @@ function WaitingPageContent() {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button 
-                                    onClick={() => navigate.push('/cart')}
+                                    onClick={() => router.push('/cart')}
                                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                 >
                                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                     Belanja Lagi
                                 </button>
                                 <button 
-                                    onClick={() => navigate.push('/orders')}
+                                    onClick={() => router.push('/orders')}
                                     className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                 >
                                     <Icon icon="lucide:package" width={16} height={16} />
@@ -469,14 +524,14 @@ function WaitingPageContent() {
                             <div className="flex justify-center mt-6">
                                 <div className="flex gap-3 w-full max-w-md">
                                     <button 
-                                        onClick={() => navigate.push('/cart')}
+                                        onClick={() => router.push('/cart')}
                                         className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                     >
                                         <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                         Belanja Lagi
                                     </button>
                                     <button 
-                                        onClick={() => navigate.push('/orders')}
+                                        onClick={() => router.push('/orders')}
                                         className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                     >
                                         <Icon icon="lucide:package" width={16} height={16} />
@@ -489,7 +544,7 @@ function WaitingPageContent() {
 
                     {/* Payment Instructions Link */}
                     <div className="text-center">
-                        <button 
+                        <button
                             onClick={() => setShowInstructions(true)}
                             className="flex items-center justify-center gap-2 w-full mt-4 text-emerald-700 py-2 font-medium hover:underline"
                         >
@@ -516,33 +571,34 @@ function WaitingPageContent() {
                     {' '}Kami.
                 </p>
             </main>
-            
+            <Footer />
+
             {/* QR Preview Modal */}
             {showQrPreview && qr_code_url && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <div className="absolute inset-0 bg-black/50" onClick={() => setShowQrPreview(false)} />
-                    
+
                     {/* Modal */}
                     <div className="relative bg-white rounded-2xl p-8 max-w-3xl w-full shadow-2xl">
-                        <button 
+                        <button
                             onClick={() => setShowQrPreview(false)}
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"
                         >
                             <Icon icon="lucide:x" width={24} height={24} />
                         </button>
-                        
+
                         <h3 className="text-xl font-bold text-center mb-6">QR Code</h3>
-                        
+
                         <div className="flex justify-center">
                             <Image src={qr_code_url} alt="QR Code Large" className="w-96 h-96 object-contain" width={384} height={384} />
                         </div>
                     </div>
                 </div>
             )}
-            
+
             {/* Payment Instructions Modal */}
-            <PaymentInstructionsModal 
+            <PaymentInstructionsModal
                 isOpen={showInstructions}
                 onClose={() => setShowInstructions(false)}
                 paymentMethod={payment_method}
