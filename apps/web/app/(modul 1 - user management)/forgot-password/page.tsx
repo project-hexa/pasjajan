@@ -10,8 +10,8 @@ import {
   FieldError,
   FieldLabel,
 } from "@workspace/ui/components/field";
+import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
@@ -25,77 +25,61 @@ export default function ForgotPasswordPage() {
   });
   const router = useRouter();
 
-  const handleSubmit = (data: z.infer<typeof forgotPasswordSchema>) => {
-    console.log(data);
+  const handleSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    sessionStorage.setItem("emailForResetPassword", data.email);
+
+    router.push("/reset-password");
   };
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex lg:w-1/2 md:w-2/3 max-lg:px-5 max-sm:-mt-40 flex-col overflow-hidden md:border-2 md:border-black max-sm:mx-5">
+      <Card className="flex flex-col overflow-hidden max-lg:px-5 max-sm:mx-5 max-sm:-mt-40 md:w-2/3 md:border-2 md:border-black lg:w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
-          {!forgotPassForm.formState.isSubmitSuccessful ? (
-            <CardTitle className="text-2xl">Lupa Password?</CardTitle>
-          ) : (
-            <>
-              <Image
-                src="/icon-email-verif-code.svg"
-                alt="Verification Code"
-                width={250}
-                height={250}
-              />
-              <CardTitle className="text-2xl">Verifikasi Email</CardTitle>
-            </>
-          )}
+          <CardTitle className="text-2xl">Lupa Password?</CardTitle>
 
-          {!forgotPassForm.formState.isSubmitSuccessful ? (
-            <form
-              id="forgotPass"
-              onSubmit={forgotPassForm.handleSubmit(handleSubmit)}
-              className="flex flex-col items-center justify-center gap-4"
-            >
-              <Controller
-                control={forgotPassForm.control}
-                name="email"
-                render={({ field, fieldState }) => (
-                  <Field>
-                    <FieldDescription className="text-center text-xl">
-                      Masukan Email Anda Untuk Melakukan Verifikasi Kode.
-                    </FieldDescription>
-                    <FieldLabel htmlFor="email">Email</FieldLabel>
-                    <Input
-                      type="email"
-                      id="email"
-                      placeholder="Masukan Email"
-                      aria-invalid={fieldState.invalid}
-                      {...field}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
+          <form
+            id="forgotPass"
+            onSubmit={forgotPassForm.handleSubmit(handleSubmit)}
+            className="flex flex-col items-center justify-center gap-4"
+          >
+            <Controller
+              control={forgotPassForm.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldDescription className="text-center text-xl">
+                    Masukan Email Anda Untuk Melakukan Verifikasi Kode.
+                  </FieldDescription>
+                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Masukan Email"
+                    aria-invalid={fieldState.invalid}
+                    {...field}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
 
-              <Button type="submit" form="forgotPass">
-                Kirim
-              </Button>
-              <Button variant="link">Coba cara lain</Button>
-            </form>
-          ) : (
-            <>
-              <p className="text-center text-xl">
-                Anda telah memasukan{" "}
-                <span className="font-bold">
-                  {forgotPassForm.getValues("email")}
-                </span>{" "}
-                sebagai alamat email untuk akun anda silakan verifikasi alamat
-                email ini dengan mengklik tombol di bawah.
-              </p>
-              <Button onClick={() => router.push("/reset-password")}>
-                Verifkasi Email
-              </Button>
-            </>
-          )}
+            <Button type="submit" form="forgotPass">
+              {forgotPassForm.formState.isSubmitting ? (
+                <Icon
+                  icon={"lucide:loader-circle"}
+                  width={24}
+                  className="animate-spin"
+                />
+              ) : (
+                "Kirim"
+              )}
+            </Button>
+            <Button variant="link">Coba cara lain</Button>
+          </form>
         </CardContent>
       </Card>
     </div>

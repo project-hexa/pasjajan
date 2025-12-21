@@ -20,7 +20,6 @@ return new class extends Migration
 			$table->string('otp');
 			$table->timestamp('expires_at');
 			$table->unsignedTinyInteger('attempt_count');
-			$table->boolean('is_verified')->default(false);
             $table->timestamps();
 			$table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });

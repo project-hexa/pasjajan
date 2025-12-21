@@ -26,8 +26,10 @@ import {
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
 import { Label } from "@workspace/ui/components/label";
+import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -43,17 +45,39 @@ export const RegisterForm = () => {
       password_confirmation: "",
     },
   });
-  const { setRegisterHold } = useAuthStore();
+  const { register } = useAuthStore();
   const router = useRouter();
+  const phone = registerForm.watch("phone_number");
 
-  const handleOnSubmit = (data: z.infer<typeof registerSchema>) => {
+  useEffect(() => {
+    if (phone.startsWith("+62")) {
+      registerForm.setValue("phone_number", phone.slice(3));
+    }
+
+    if (phone.startsWith("0")) {
+      registerForm.setValue("phone_number", phone.slice(1));
+    }
+  }, [phone, registerForm]);
+
+  const handleOnSubmit = async (data: z.infer<typeof registerSchema>) => {
     const phone_number = data.phone_number.startsWith("0")
       ? "+62" + data.phone_number.slice(1)
       : "+62" + data.phone_number;
     data.phone_number = phone_number;
 
-    setRegisterHold(data);
-    router.push("/send-otp");
+    const result = await register(data);
+
+    if (result.ok) {
+      toast.success(result.message, {
+        toasterId: "global",
+      });
+
+      router.push("/send-otp");
+    } else {
+      toast.error(result.message, {
+        toasterId: "global",
+      });
+    }
   };
 
   return (
@@ -160,8 +184,8 @@ export const RegisterForm = () => {
               </FieldLabel>
               <Password id="password" field={field} fieldState={fieldState} />
               <FieldDescription>
-                Buat password menggunakan kombinasi huruf besar, huruf
-                kecil, dan minimal 1 simbol.
+                Buat password menggunakan kombinasi huruf besar, huruf kecil,
+                dan minimal 1 simbol.
               </FieldDescription>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>

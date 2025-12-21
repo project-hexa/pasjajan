@@ -101,10 +101,8 @@ Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/verify-otp', 'verifyOtp');
 
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
-	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
-		Route::post('/auth/register', 'registerPost');
-		Route::post('/auth/forgot-password', 'forgotPassword');
-	});
+    Route::post('/auth/register', 'registerPost');
+    Route::post('/auth/forgot-password', 'forgotPassword');
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {

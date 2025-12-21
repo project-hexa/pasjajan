@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/useAuthStore";
+import Cookies from "js-cookie"
 
 type ClassValue = string | false | null | undefined;
 
@@ -42,7 +42,7 @@ export default function StoreProductList({
   const [quantity, setQuantity] = React.useState(1);
   const [toast, setToast] = React.useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
   const toastTimerRef = React.useRef<number | null>(null);
-  const { token } = useAuthStore();
+  const token = Cookies.get("token");
   
   const [items, setItems] = React.useState<StoreProduct[]>(products ?? []);
 
