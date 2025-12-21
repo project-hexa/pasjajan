@@ -100,9 +100,6 @@ Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/send-otp', 'sendOtp');
 	Route::post('/auth/verify-otp', 'verifyOtp');
 
-	// Endpoint untuk mengetest email
-	Route::post('/auth/test-send-email', 'testSendEmail');
-
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
 	Route::middleware(EnsureOtpIsVerified::class)->group(function () {
 		Route::post('/auth/register', 'registerPost');
@@ -138,8 +135,14 @@ Route::controller(UserController::class)->group(function () {
 
 // Membungkus route yang berkaitan dengan testing ke route group yang menjalankan TestController
 Route::controller(TestController::class)->group(function () {
-	// Route untuk mengetest koneksi smtp
-	Route::get('/test-smtp-connection', 'testSMTPConnection');
+	// Endpoint untuk mengetest koneksi smtp
+	Route::get('/test/connect-smtp', 'testSMTPConnectionOnly');
+
+	// Endpoint untuk mengetest koneksi resend
+	Route::get('/test/connect-resend', 'testResendConnectionOnly');
+
+	// Endpoint untuk mengetest kirim email
+	Route::post('/test/send-email', 'testSendEmail');
 });
 
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
