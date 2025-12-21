@@ -30,7 +30,7 @@ function ShopeepayCallbackContent() {
         };
 
         handleCallback();
-    }, [router, searchParams]);
+    }, [navigate, searchParams]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50">
