@@ -16,6 +16,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\VoucherController;
 
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
@@ -130,6 +131,18 @@ Route::controller(UserController::class)->group(function () {
 	});
 });
 
+// Membungkus route yang berkaitan dengan testing ke route group yang menjalankan TestController
+Route::controller(TestController::class)->group(function () {
+	// Endpoint untuk mengetest koneksi smtp
+	Route::get('/test/connect-smtp', 'testSMTPConnectionOnly');
+
+	// Endpoint untuk mengetest koneksi resend
+	Route::get('/test/connect-resend', 'testResendConnectionOnly');
+
+	// Endpoint untuk mengetest kirim email
+	Route::post('/test/send-email', 'testSendEmail');
+});
+
 // Membungkus route yang berkaitan dengan layanan pengiriman (tracking & review) ke route group yang menjalankan DeliveryController
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -197,9 +210,21 @@ Route::middleware('auth:sanctum')->group(function () {
 		Route::put('/admin/promos/{id}', 'update');
 		Route::delete('/admin/promos/{id}', 'destroy');
 	});
+
+	Route::controller(CustomerController::class)->group(function () {
+		Route::get('/admin/customers/points', 'getCustomersWithPoints')->name('customers.points');
+		Route::get('/admin/customers/{id}/point-history', 'getCustomerPointHistory')->name('customers.point-history');
+	});
 });
 
 
+// ============= CUSTOMER VOUCHER & POINTS =============
+Route::middleware('auth:sanctum')->group(function () {
+	Route::get('/customer/points', [VoucherController::class, 'getCustomerPoints']);
+	Route::get('/customer/vouchers', [VoucherController::class, 'getCustomerVouchers']);
+	Route::get('/vouchers/available', [VoucherController::class, 'getAvailableVouchers']);
+	Route::post('/customer/vouchers/redeem', [VoucherController::class, 'redeemVoucher']);
+});
 
 // ================= PRODUCT ROUTES =================
 //Stores
