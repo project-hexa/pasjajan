@@ -14,14 +14,15 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
+import { useNavigate } from "@/hooks/useNavigate";
+import { useForm } from "react-hook-form";
 
 export const Logout = () => {
   const { logout } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
   const token = Cookies.get("token");
+  const role = Cookies.get("token");
 
   const logoutForm = useForm({
     defaultValues: {
@@ -36,7 +37,9 @@ export const Logout = () => {
       toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/login");
+
+      if (role === "admin") navigate.push("/login/admin");
+      navigate.push("/login");
     } else {
       toast.error(result.message, {
         toasterId: "global",

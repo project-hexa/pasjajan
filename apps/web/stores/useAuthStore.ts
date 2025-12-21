@@ -48,6 +48,7 @@ export const useAuthStore = create<AuthStore>()(
           }
 
           Cookies.set("token", token, cookiesOptions);
+          Cookies.set("role", user_data.role, cookiesOptions);
 
           set({ user: user_data, isLoggedIn: true });
         }, "Berhasil Masuk!"),

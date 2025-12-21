@@ -15,7 +15,7 @@ import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import { toast } from "@workspace/ui/components/sonner";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Cookies from "js-cookie";
@@ -29,7 +29,7 @@ export default function VerificationCodePage() {
     },
   });
   const { sendOTP } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const email = Cookies.get("pendingEmail") || "";
@@ -43,7 +43,7 @@ export default function VerificationCodePage() {
       toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/one-time-password");
+      navigate.push("/one-time-password");
     } else {
       toast.error(result.message, {
         toasterId: "global",

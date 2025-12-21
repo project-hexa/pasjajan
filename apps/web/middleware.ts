@@ -2,28 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
+  const role = request.cookies.get("role")?.value;
   const verificationStep = request.cookies.get("verificationStep")?.value;
   const { pathname } = request.nextUrl;
 
-  // Routes yang memerlukan token (authenticated)
-  const protectedRoute = ["/dashboard", "/profile"].some((route) =>
+  // Routes yang memerlukan token (authenticated) untuk role admin
+  const adminRoute = ["/dashboard"].some((route) => pathname.startsWith(route));
+
+  // Routes yang memerlukan token (authenticated) untuk semua role
+  const protectedRoute = ["/profile"].some((route) =>
     pathname.startsWith(route),
   );
 
   // Routes verification flow (setelah register)
-  const isVerificationFlow = ["/send-otp", "/one-time-password"].some(
-    (route) => pathname.startsWith(route),
+  const isVerificationFlow = ["/send-otp", "/one-time-password"].some((route) =>
+    pathname.startsWith(route),
   );
 
   // Routes auth (login/register)
-  const unprotectedRoute = ["/login", "/register"].some((route) =>
-    pathname.startsWith(route),
+  const unprotectedRoute = ["/login", "/register", "/login/admin"].some(
+    (route) => pathname.startsWith(route),
   );
 
   // 1. Jika akses protected route tanpa token, redirect ke login
   if (protectedRoute && !token) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (adminRoute) {
+    if (!token) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+
+    if (role !== "Admin") {
+      const loginUrl = new URL("/login/admin", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   // 2. Jika sudah login (punya token) tidak bisa masuk ke page login/register
@@ -48,9 +63,7 @@ export default function middleware(request: NextRequest) {
     // Di halaman one-time-password, harus ada step "otp-send"
     if (pathname.startsWith("/one-time-password")) {
       if (verificationStep !== "otp-sent") {
-        return NextResponse.redirect(
-          new URL("/send-otp", request.url),
-        );
+        return NextResponse.redirect(new URL("/send-otp", request.url));
       }
     }
   }

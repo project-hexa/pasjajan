@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   useState,
   useEffect,
@@ -41,7 +42,7 @@ interface CustomerAnalyticsClientProps {
 export default function CustomerAnalyticsClient({
   initialData,
 }: CustomerAnalyticsClientProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const previousSearchValue = useRef(searchParams.get("search") || "");
@@ -77,10 +78,10 @@ export default function CustomerAnalyticsClient({
       });
 
       startTransition(() => {
-        router.push(`?${params.toString()}`);
+        navigate.push(`?${params.toString()}`);
       });
     },
-    [searchParams, router],
+    [searchParams, navigate],
   );
 
   useEffect(() => {
@@ -104,12 +105,12 @@ export default function CustomerAnalyticsClient({
       );
 
       startTransition(() => {
-        router.push(`?${params.toString()}`);
+        navigate.push(`?${params.toString()}`);
       });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchValue, searchParams, router]);
+  }, [searchValue, searchParams, navigate]);
 
   const handlePeriodChange = (
     newPeriod: "daily" | "monthly" | "yearly" | "custom",

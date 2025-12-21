@@ -1,5 +1,6 @@
 import * as React from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Button } from "@workspace/ui/components/button";
 import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Icon } from "@workspace/ui/components/icon";
@@ -7,7 +8,7 @@ import { Input } from "@workspace/ui/components/input";
 import { useSearchStore } from "@/stores/useSearchStore";
 
 export const Search = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
   const pathname = usePathname();
   const { search, setSearch } = useSearchStore();
   const [value, setValue] = React.useState(search ?? "");
@@ -23,11 +24,11 @@ export const Search = () => {
     const isStorePath = pathname?.startsWith("/store/");
     if (isStorePath) {
       const slug = pathname?.split("/")[2];
-      if (trimmed) router.push(`/store/${slug}?search=${encodeURIComponent(trimmed)}`);
-      else router.push(`/store/${slug}`);
+      if (trimmed) navigate.push(`/store/${slug}?search=${encodeURIComponent(trimmed)}`);
+      else navigate.push(`/store/${slug}`);
     } else {
-      if (trimmed) router.push(`/catalogue?search=${encodeURIComponent(trimmed)}`);
-      else router.push(`/catalogue`);
+      if (trimmed) navigate.push(`/catalogue?search=${encodeURIComponent(trimmed)}`);
+      else navigate.push(`/catalogue`);
     }
   };
 
@@ -42,11 +43,11 @@ export const Search = () => {
       const isStorePath = pathname?.startsWith("/store/");
       if (isStorePath) {
         const slug = pathname?.split("/")[2];
-        if (trimmed) router.replace(`/store/${slug}?search=${encodeURIComponent(trimmed)}`);
-        else router.replace(`/store/${slug}`);
+        if (trimmed) navigate.replace(`/store/${slug}?search=${encodeURIComponent(trimmed)}`);
+        else navigate.replace(`/store/${slug}`);
       } else {
-        if (trimmed) router.replace(`/catalogue?search=${encodeURIComponent(trimmed)}`);
-        else router.replace(`/catalogue`);
+        if (trimmed) navigate.replace(`/catalogue?search=${encodeURIComponent(trimmed)}`);
+        else navigate.replace(`/catalogue`);
       }
       debounceRef.current = null;
     }, 300);

@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/componen
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { use, useEffect, useState } from "react";
 import { PromoForm } from "../../_components/promo-form";
 import { api } from "@/lib/utils/axios";
 
 export default function EditPromoPage({ params }: { params: Promise<{ id: string }> }) {
-    const router = useRouter();
+    const navigate = useNavigate();
     const { id } = use(params);
     const [loading, setLoading] = useState(false);
     const [initialData, setInitialData] = useState(null);
@@ -26,14 +26,14 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
             } catch (error: any) {
                 console.error(error);
                 toast.error("Gagal memuat detail promo", { toasterId: "global" });
-                router.push("/dashboard/promo");
+                navigate.push("/dashboard/promo");
             } finally {
                 setFetching(false);
             }
         };
 
         fetchPromo();
-    }, [id, router]);
+    }, [id, navigate]);
 
     const onSubmit = async (values: any) => {
         setLoading(true);
@@ -71,8 +71,8 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
             });
 
             toast.success("Promo berhasil diperbarui!", { toasterId: "global" });
-            router.push("/dashboard/promo");
-            router.refresh();
+            navigate.push("/dashboard/promo");
+            navigate.refresh();
         } catch (error: any) {
             console.error(error);
             const message = error.response?.data?.message || "Terjadi kesalahan";

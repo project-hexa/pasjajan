@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
@@ -39,7 +40,7 @@ interface Pagination {
 
 export default function CustomerPointHistoryPage() {
     const params = useParams();
-    const router = useRouter();
+    const navigate = useNavigate();
     const customerId = params.id as string;
 
     const [customer, setCustomer] = useState<Customer | null>(null);
@@ -60,7 +61,7 @@ export default function CustomerPointHistoryPage() {
             console.error("Failed to fetch customer history", error);
             if (error.response?.status === 404) {
                 toast.error("Pelanggan tidak ditemukan", { toasterId: "global" });
-                router.push("/dashboard/customer-points");
+                navigate.push("/dashboard/customer-points");
             } else {
                 toast.error("Gagal memuat data pelanggan", { toasterId: "global" });
             }

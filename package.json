@@ -21,7 +21,6 @@
     "radix:add": "pnpm add --filter=ui",
     "create:fitur": "turbo gen \"Templating Frontend Dev Pasjajan\""
   },
-  
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
@@ -50,6 +49,11 @@
   "dependencies": {
     "@turbo/gen": "^2.6.0",
     "inquirer": "^12.10.0",
+    "nextjs-toploader": "",
     "recharts": "^3.5.1"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

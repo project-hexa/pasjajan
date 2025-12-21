@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Button } from "@workspace/ui/components/button";
 import Link from "next/link";
 
@@ -51,7 +51,7 @@ type ApiBranch = Partial<{
 }>;
 
 export default function BranchManagementPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,7 +126,7 @@ export default function BranchManagementPage() {
           </h2>
         </div>
         <Button
-          onClick={() => router.push("/dashboard/branch-data/create")}
+          onClick={() => navigate.push("/dashboard/branch-data/create")}
           className="bg-[#1E8F59] text-white hover:bg-[#166E45]"
         >
           Tambah Cabang

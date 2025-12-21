@@ -28,7 +28,7 @@ import {
 import { Label } from "@workspace/ui/components/label";
 import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
@@ -46,7 +46,7 @@ export const RegisterForm = () => {
     },
   });
   const { register } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
   const phone = registerForm.watch("phone_number");
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export const RegisterForm = () => {
         toasterId: "global",
       });
 
-      router.push("/send-otp");
+      navigate.push("/send-otp");
     } else {
       toast.error(result.message, {
         toasterId: "global",
