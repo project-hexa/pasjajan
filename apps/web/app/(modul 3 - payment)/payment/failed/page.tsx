@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuthStore } from "@/stores/useAuthStore";
 import Cookies from "js-cookie";
+import { useNavigate } from "@/hooks/useNavigate";
 
 interface PaymentData {
     order_code: string;
@@ -68,7 +69,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
     };
 
 function FailedPageContent() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const searchParams = useSearchParams();
     // Sanitize order code - hapus suffix :1 atau :digit jika ada
     const rawOrderCode = searchParams.get("order");
@@ -85,7 +86,7 @@ function FailedPageContent() {
     useEffect(() => {
         const validateAndLoadData = async () => {
             if (!orderCode) {
-                router.push('/cart');
+                navigate.push('/cart');
                 return;
             }
 
@@ -116,7 +117,7 @@ function FailedPageContent() {
                 if (paymentStatus === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture') {
                     // Order is paid, redirect to success
                     setIsRedirecting(true);
-                    router.replace(`/payment/success?order=${orderCode}`);
+                    navigate.replace(`/payment/success?order=${orderCode}`);
                     return;
                 }
 
@@ -132,7 +133,7 @@ function FailedPageContent() {
                     } else {
                         // Order is still pending and not expired, redirect to waiting
                         setIsRedirecting(true);
-                        router.replace(`/payment/waiting?order=${orderCode}`);
+                        navigate.replace(`/payment/waiting?order=${orderCode}`);
                         return;
                     }
                 }
@@ -154,7 +155,7 @@ function FailedPageContent() {
         };
 
         validateAndLoadData();
-    }, [orderCode, router]);
+    }, [orderCode, navigate]);
 
     // Show loading while redirecting or loading
     if (loading || isRedirecting) {
@@ -170,8 +171,8 @@ function FailedPageContent() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50 p-4">
                 <p className="text-gray-600 mb-4">Order tidak ditemukan</p>
-                <button
-                    onClick={() => router.push('/cart')}
+                <button 
+                    onClick={() => navigate.push('/cart')}
                     className="bg-emerald-700 text-white py-2 px-4 rounded-lg hover:bg-emerald-800"
                 >
                     Kembali ke Keranjang
@@ -243,15 +244,15 @@ function FailedPageContent() {
 
                     {/* Action Buttons */}
                     <div className="flex gap-3">
-                        <button
-                            onClick={() => router.push('/cart')}
+                        <button 
+                            onClick={() => navigate.push('/cart')}
                             className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                         >
                             <Icon icon="lucide:shopping-cart" width={18} height={18} />
                             Belanja Lagi
                         </button>
-                        <button
-                            onClick={() => router.push(`/payment/detail?order_code=${order_code}`)}
+                        <button 
+                            onClick={() => navigate.push('/orders')}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >
                             <Icon icon="lucide:package" width={18} height={18} />

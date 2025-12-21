@@ -13,7 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { ReactNode, useState } from "react";
 
 const menuinOrder = [
@@ -46,7 +47,7 @@ const menuinOrder = [
 export default function MyOrdersLayout({ children }: { children: ReactNode }) {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [open, setOpen] = useState<boolean>(false);
-  const router = useRouter();
+  const navigate = useNavigate();
   const pathname = usePathname();
 
   return (
@@ -86,7 +87,7 @@ export default function MyOrdersLayout({ children }: { children: ReactNode }) {
         {menuinOrder.map((menu, i) => (
           <Button
             key={i}
-            onClick={() => router.push(menu.link)}
+            onClick={() => navigate.push(menu.link)}
             variant={pathname === menu.link ? "secondary" : "outline"}
           >
             {menu.label}

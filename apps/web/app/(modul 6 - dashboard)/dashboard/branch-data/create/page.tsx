@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { BranchForm } from "../_components/branch-form";
 import { createBranch as createBranchService } from "@/services/branches";
@@ -16,7 +16,7 @@ type BranchFormValues = {
 };
 
 export default function CreateBranchPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: BranchFormValues) => {
@@ -35,8 +35,8 @@ export default function CreateBranchPage() {
         throw new Error(responseData?.message || 'Gagal menambahkan cabang');
       }
 
-      router.push('/dashboard/branch-data');
-    } catch (error: unknown) {
+      navigate.push('/dashboard/branch-data');
+    } catch (error: any) {
       console.error("Error creating branch:", error);
       const axiosErr = error as AxiosError<{ message?: string }>;
       const message = axiosErr?.response?.data?.message || (error instanceof Error ? error.message : "Terjadi kesalahan saat menambahkan cabang");

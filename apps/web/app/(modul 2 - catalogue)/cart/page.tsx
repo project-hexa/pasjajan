@@ -4,7 +4,7 @@ import React, { Suspense } from "react";
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import Cookies from "js-cookie";
 
 interface CartItem {
@@ -25,7 +25,7 @@ const ADMIN_FEE = 1000;
 const formatPrice = (value: number) => `Rp. ${value.toLocaleString("id-ID")}`;
 
 export default function CartPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [items, setItems] = React.useState<CartItem[]>(initialCart);
 
   React.useEffect(() => {
@@ -155,7 +155,7 @@ export default function CartPage() {
       const token = Cookies.get('token');
       if (!token) {
         alert('Silakan login terlebih dahulu!');
-        router.push('/login');
+        navigate.push('/login');
         return;
       }
 
@@ -206,12 +206,12 @@ export default function CartPage() {
       localStorage.removeItem('pasjajan_cart');
 
       // Redirect to payment page with order code
-      router.push(`/payment?order=${orderCode}`);
+      navigate.push(`/payment?order=${orderCode}`);
     } catch (error) {
       console.error('Checkout error:', error);
       alert(error instanceof Error ? error.message : 'Gagal melakukan checkout. Silakan coba lagi.');
     }
-  }, [items, subtotal, totals.total, router]);
+  }, [items, subtotal, totals.total, navigate]);
 
   return (
     <>
@@ -223,7 +223,7 @@ export default function CartPage() {
           <div className="flex flex-col gap-3 text-[#111827]">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={() => navigate.back()}
               className="flex w-max items-center gap-2 text-sm font-medium text-[#187247] transition hover:text-[#0A6B3C]"
             >
               <svg

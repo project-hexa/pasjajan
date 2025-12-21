@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import * as React from "react";
 import { useSearchStore } from "@/stores/useSearchStore";
 import { HeroBanner } from "./components/hero-banner";
@@ -71,7 +72,7 @@ export default function CatalogueClient() {
   const params = useSearchParams();
   const q = params?.get("search")?.trim() ?? "";
 
-  const router = useRouter();
+  const navigate = useNavigate();
   const { search, setSearch } = useSearchStore();
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -169,11 +170,11 @@ export default function CatalogueClient() {
   React.useEffect(() => {
     const val = (search || "").trim();
     const id = setTimeout(() => {
-      if (val) router.replace(`/catalogue?search=${encodeURIComponent(val)}`);
-      else router.replace(`/catalogue`);
+      if (val) navigate.replace(`/catalogue?search=${encodeURIComponent(val)}`);
+      else navigate.replace(`/catalogue`);
     }, 400);
     return () => clearTimeout(id);
-  }, [search, router]);
+  }, [search, navigate]);
 
   // first matched restaurant (not used currently)
   // const matchedFirst = matchedRestaurants.length > 0 ? matchedRestaurants[0] : null;

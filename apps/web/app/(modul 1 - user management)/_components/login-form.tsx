@@ -16,13 +16,15 @@ import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 export const LoginForm = () => {
   const { login } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
+  const pathname = usePathname();
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -30,7 +32,7 @@ export const LoginForm = () => {
       email: "",
       password: "",
       rememberMe: false,
-      role: "Customer",
+      role: pathname === "/login/admin" ? "Admin" : "Customer",
     },
   });
 
@@ -41,7 +43,9 @@ export const LoginForm = () => {
       toast.success("Berhasil Masuk!", {
         toasterId: "global",
       });
-      router.push("/");
+
+      if (pathname === "/login/admin") navigate.push("/dashboard");
+      navigate.push("/");
     } else {
       toast.error(result.message, {
         toasterId: "global",
