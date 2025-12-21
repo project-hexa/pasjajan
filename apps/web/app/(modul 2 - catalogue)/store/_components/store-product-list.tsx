@@ -22,7 +22,9 @@ export interface StoreProduct {
   price: number;
   image: string;
   details?: string;
+  store_id?: string | number; // Add store_id
 }
+
 
 interface StoreProductListProps {
   products: StoreProduct[];
@@ -198,9 +200,9 @@ export default function StoreProductList({
                   type="button"
                   className="absolute inset-x-0 bottom-0 rounded-2xl bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
                   onClick={(event) => {
-                      event.stopPropagation();
-                      openProduct(product);
-                    }}
+                    event.stopPropagation();
+                    openProduct(product);
+                  }}
                 >
                   Tambah
                 </button>
@@ -326,6 +328,7 @@ export default function StoreProductList({
                         price: selectedProduct.price,
                         quantity,
                         image: selectedProduct.image,
+                        store_id: selectedProduct.store_id, // Save store_id
                       } as unknown);
                     }
 
