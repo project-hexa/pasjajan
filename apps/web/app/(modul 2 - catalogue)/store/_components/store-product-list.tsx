@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 type ClassValue = string | false | null | undefined;
 
@@ -35,10 +37,65 @@ export default function StoreProductList({
   outerClassName,
   innerClassName,
 }: StoreProductListProps) {
+  const router = useRouter();
   const [selectedProduct, setSelectedProduct] = React.useState<StoreProduct | null>(null);
   const [quantity, setQuantity] = React.useState(1);
   const [toast, setToast] = React.useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
   const toastTimerRef = React.useRef<number | null>(null);
+  const { token } = useAuthStore();
+  
+  const [items, setItems] = React.useState<StoreProduct[]>(products ?? []);
+
+  // if no products passed, fetch from API products endpoint (seed data)
+  React.useEffect(() => {
+    if (items.length > 0) return;
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:8000/api";
+
+    let mounted = true;
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/products`);
+        const payload = await r.json();
+
+        // normalize response to array
+        let arr: unknown[] = [];
+        if (Array.isArray(payload)) arr = payload as unknown[];
+        else if (payload && typeof payload === "object") {
+          const p1 = payload as { data?: unknown; stores?: unknown };
+          if (Array.isArray(p1.data)) arr = p1.data as unknown[];
+          const pd = p1.data as { data?: unknown } | undefined;
+          if (Array.isArray(pd?.data)) arr = pd.data as unknown[];
+        }
+
+        const mapped: StoreProduct[] = arr.map((p: unknown) => {
+          const obj = p as Record<string, unknown>;
+          const id = String(obj.id ?? obj.product_id ?? obj.sku ?? Math.random());
+          const name = String(obj.name ?? obj.title ?? "Produk");
+          const description = String(obj.description ?? obj.short_description ?? "");
+          const price = Number(obj.price ?? obj.final_price ?? obj.sale_price ?? 0);
+          const image = String(obj.image_url ?? obj.image ?? "/images/Screenshot 2025-10-25 173437.png");
+          const details = (obj.details ?? obj.long_description) as string | undefined;
+
+          return {
+            id,
+            name,
+            description,
+            price,
+            image,
+            details,
+          } as StoreProduct;
+        });
+
+        if (mounted && mapped.length > 0) setItems(mapped);
+      } catch {
+        // ignore fetch errors
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [items.length]);
 
   React.useEffect(() => {
     if (selectedProduct) {
@@ -101,7 +158,7 @@ export default function StoreProductList({
     <>
       <div className={outerClasses}>
         <div className={innerClasses}>
-          {products.map((product) => {
+          {items.map((product) => {
             const cardClasses = cx(
               "relative flex min-h-[240px] flex-col rounded-2xl border border-[#E5E7EB] bg-white shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0A6B3C]",
               variant === "scroll" && "w-[200px] flex-shrink-0",
@@ -124,7 +181,7 @@ export default function StoreProductList({
                 <div className="p-3 pb-16">
                   <div className="relative h-32 w-full overflow-hidden rounded-md bg-white">
                     <Image
-                      src={product.image}
+                      src={product.image || '/images/Screenshot 2025-10-25 173437.png'}
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 50vw, (max-width: 1280px) 20vw, 15vw"
@@ -141,9 +198,9 @@ export default function StoreProductList({
                   type="button"
                   className="absolute inset-x-0 bottom-0 rounded-2xl bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
                   onClick={(event) => {
-                    event.stopPropagation();
-                    openProduct(product);
-                  }}
+                      event.stopPropagation();
+                      openProduct(product);
+                    }}
                 >
                   Tambah
                 </button>
@@ -168,7 +225,7 @@ export default function StoreProductList({
             <button
               type="button"
               onClick={closeProduct}
-              className="absolute -left-5 -top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#EF4444] text-lg font-semibold text-white shadow-lg transition hover:bg-[#DC2626]"
+              className="absolute -left-5 -top-5 flex h-10 w-10 items-center justify-center rounded-full bg-[#D3BCBC] border border-black text-lg font-semibold text-black shadow-lg transition hover:bg-[#D3BCBC]"
               aria-label="Tutup detail produk"
             >
               ×
@@ -178,7 +235,7 @@ export default function StoreProductList({
               <div className="flex justify-center">
                 <div className="relative h-48 w-48 overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white">
                   <Image
-                    src={selectedProduct.image}
+                    src={selectedProduct.image || '/images/Screenshot 2025-10-25 173437.png'}
                     alt={selectedProduct.name}
                     fill
                     sizes="(max-width: 768px) 60vw, (max-width: 1280px) 30vw, 20vw"
@@ -227,9 +284,64 @@ export default function StoreProductList({
                 type="button"
                 className="mt-8 w-full rounded-full bg-[#0A6B3C] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#07502C]"
                 onClick={() => {
-                  // simulate add to cart
-                  showToast("Barang berhasil di tambahkan ke keranjang");
-                  closeProduct();
+                  if (!selectedProduct) return;
+
+                  // require login
+                  if (!token) {
+                    showToast("Silakan masuk terlebih dahulu untuk menambahkan produk ke keranjang");
+                    try {
+                      // delay navigation so the toast is visible longer
+                      setTimeout(() => {
+                        try {
+                          router.push("/login");
+                        } catch {
+                          /* ignore */
+                        }
+                      }, 3500);
+                    } catch {
+                      // ignore
+                    }
+                    return;
+                  }
+
+                  try {
+                    const key = "pasjajan_cart";
+                    const raw = localStorage.getItem(key);
+                    const parsed: unknown[] = raw ? (JSON.parse(raw) as unknown[]) : [];
+
+                    const existingIndex = parsed.findIndex((i) => {
+                      const entry = i as Record<string, unknown>;
+                      const id = entry.id ?? entry.product_id;
+                      return String(id ?? "") === selectedProduct.id;
+                    });
+
+                    if (existingIndex !== -1) {
+                      const existing = parsed[existingIndex] as Record<string, unknown>;
+                      existing.quantity = Number(existing.quantity ?? 0) + quantity;
+                    } else {
+                      parsed.push({
+                        id: selectedProduct.id,
+                        name: selectedProduct.name,
+                        variant: selectedProduct.details ?? "",
+                        price: selectedProduct.price,
+                        quantity,
+                        image: selectedProduct.image,
+                      } as unknown);
+                    }
+
+                    localStorage.setItem(key, JSON.stringify(parsed));
+                    // notify other components (navbar) that cart changed
+                    try {
+                      window.dispatchEvent(new CustomEvent("cart_updated"));
+                    } catch {
+                      // ignore
+                    }
+                    showToast("Barang berhasil di tambahkan ke keranjang");
+                    closeProduct();
+                  } catch (err) {
+                    console.error(err);
+                    showToast("Gagal menambahkan ke keranjang");
+                  }
                 }}
               >
                 Tambah Keranjang

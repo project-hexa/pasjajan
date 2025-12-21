@@ -44,7 +44,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <Icon icon="lucide:chevron-down" className="size-4 opacity-50" />
+        <Icon icon={"lucide:chevron-down"} className="size-4 opacity-50" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );

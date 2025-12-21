@@ -18,6 +18,11 @@ const navigation = [
     icon: "lucide:user-round",
   },
   {
+    name: "Poin Pelanggan",
+    href: "/dashboard/customer-points",
+    icon: "lucide:coins",
+  },
+  {
     name: "Notifikasi",
     href: "/dashboard/notifications",
     icon: "lucide:bell",
@@ -36,6 +41,11 @@ const navigation = [
     name: "Promo",
     href: "/dashboard/promo",
     icon: "lucide:tag",
+  },
+  {
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: "icon-park-outline:ad-product",
   },
 ];
 

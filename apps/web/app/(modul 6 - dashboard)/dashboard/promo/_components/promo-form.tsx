@@ -10,6 +10,7 @@ import { Textarea } from "@workspace/ui/components/textarea";
 import { Label } from "@workspace/ui/components/label";
 import Image from "next/image";
 import { Icon } from "@workspace/ui/components/icon";
+import { api } from "@/lib/utils/axios";
 
 const promoSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -63,15 +64,24 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
         },
     });
 
-    const appliesTo = watch("applies_to");
-    const appliesToProduct = watch("applies_to_product");
     const selectedStoreIds = watch("store_ids") || [];
     const selectedProductIds = watch("product_ids") || [];
 
     useEffect(() => {
-        // Fetch stores and products for selection
-        fetch("http://localhost:8000/api/admin/promos/list/stores").then(res => res.json()).then(setStores).catch(console.error);
-        fetch("http://localhost:8000/api/admin/promos/list/products").then(res => res.json()).then(setProducts).catch(console.error);
+        // Fetch stores and products for selection using axios
+        const fetchData = async () => {
+            try {
+                const [storesRes, productsRes] = await Promise.all([
+                    api.get("/stores"),
+                    api.get("/products"),
+                ]);
+                setStores(storesRes.data.data.data || []);
+                setProducts(productsRes.data.data.data || []);
+            } catch (error) {
+                console.error("Failed to fetch stores/products", error);
+            }
+        };
+        fetchData();
 
         if (initialData) {
             const formData = {
@@ -196,21 +206,13 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
 
             {/* Targeting Logic */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border rounded-lg bg-slate-50">
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="applies_to">Applies To Stores</Label>
-                        <select
-                            id="applies_to"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            {...register("applies_to")}
-                        >
-                            <option value="All">All Stores</option>
-                            <option value="Specific">Specific Stores</option>
-                        </select>
-                    </div>
-                    {appliesTo === "Specific" && (
-                        <div className="h-40 overflow-y-auto border rounded bg-white p-2">
-                            {stores.map(store => (
+                <div className="space-y-2">
+                    <Label>Pilih Stores</Label>
+                    <div className="h-48 overflow-y-auto border rounded bg-white p-2">
+                        {stores.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">Loading stores...</p>
+                        ) : (
+                            stores.map(store => (
                                 <div key={store.id} className="flex items-center space-x-2 py-1">
                                     <input
                                         type="checkbox"
@@ -224,26 +226,19 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
                                         {store.name}
                                     </label>
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                            ))
+                        )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{selectedStoreIds.length} store dipilih</p>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="applies_to_product">Applies To Products</Label>
-                        <select
-                            id="applies_to_product"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            {...register("applies_to_product")}
-                        >
-                            <option value="All">All Products</option>
-                            <option value="Specific">Specific Products</option>
-                        </select>
-                    </div>
-                    {appliesToProduct === "Specific" && (
-                        <div className="h-40 overflow-y-auto border rounded bg-white p-2">
-                            {products.map(product => (
+                <div className="space-y-2">
+                    <Label>Pilih Products</Label>
+                    <div className="h-48 overflow-y-auto border rounded bg-white p-2">
+                        {products.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">Loading products...</p>
+                        ) : (
+                            products.map(product => (
                                 <div key={product.id} className="flex items-center space-x-2 py-1">
                                     <input
                                         type="checkbox"
@@ -257,9 +252,10 @@ export function PromoForm({ initialData, onSubmit, isLoading }: PromoFormProps) 
                                         {product.name}
                                     </label>
                                 </div>
-                            ))}
-                        </div>
-                    )}
+                            ))
+                        )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{selectedProductIds.length} product dipilih</p>
                 </div>
             </div>
 

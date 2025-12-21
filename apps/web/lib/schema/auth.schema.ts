@@ -39,10 +39,11 @@ const passwordSchema = z.string().superRefine((val, ctx) => {
 
 export const registerSchema = z
   .object({
+    token: z.string({ message: "Credentials dibutuhkan" }),
     full_name: z
       .string()
-      .min(2, "Nama lengkap minimal harus 3 karakter")
-      .max(20, "Nama lengkap maksimal 30 karakter"),
+      .min(3, "Nama lengkap minimal harus 3 karakter")
+      .max(30, "Nama lengkap maksimal 30 karakter"),
     email: emailSchema,
     phone_number: phoneSchema,
     address: z
@@ -69,13 +70,14 @@ export const loginSchema = z.object({
   role: z.enum(["Admin", "Staff", "Customer"]).optional(),
 });
 
-export const otpSchema = z.object({
+export const verifyOTPSchema = z.object({
+  email: emailSchema,
   pin: z.string().min(6, {
     message: "OTP anda harus terdiri dari 6 karakter.",
   }),
 });
 
-export const verificationCodeSchema = z.object({
+export const sendOTPSchema = z.object({
   email: emailSchema,
 });
 
@@ -97,3 +99,26 @@ export const resetPasswordSchema = z
       });
     }
   });
+
+export const addAddressSchema = z.object({
+  pinpoint: z
+    .string()
+    .min(3, "Pinpoint minimal harus 3 karakter")
+    .max(200, "Pinpoint maksimal 200 karakter"),
+  label_address: z
+    .string()
+    .min(3, "Label alamat minimal harus 3 karakter")
+    .max(50, "Label alamat maksimal 50 karakter"),
+  address: z
+    .string()
+    .min(10, "Alamat minimal harus 10 karakter")
+    .max(200, "Alamat maksimal 200 karakter"),
+  reciper_name: z
+    .string()
+    .min(3, "Nama penerima minimal harus 3 karakter")
+    .max(50, "Nama penerima maksimal 50 karakter"),
+  phone_number: z
+    .string()
+    .min(10, "Nomor telepon minimal harus 10 karakter")
+    .max(15, "Nomor telepon maksimal 15 karakter"),
+});
