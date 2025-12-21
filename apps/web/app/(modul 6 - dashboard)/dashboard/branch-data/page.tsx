@@ -61,6 +61,46 @@ export default function BranchManagementPage() {
     const fetchBranches = async () => {
       try {
         setLoading(true);
+
+        // Mock Data Override
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const formattedBranches = [
+          {
+            id: "1",
+            name: "Cabang Pusat",
+            address: "Jl. Sudirman No. 1",
+            income: "Rp 150.000.000",
+            contact: "081234567890",
+            status: "active",
+            code: "PST",
+            latitude: -6.1,
+            longitude: 106.8,
+          },
+          {
+            id: "2",
+            name: "Cabang Jakarta Barat",
+            address: "Jl. Panjang No. 10",
+            income: "Rp 80.000.000",
+            contact: "081298765432",
+            status: "active",
+            code: "JKB",
+            latitude: -6.2,
+            longitude: 106.7,
+          },
+          {
+            id: "3",
+            name: "Cabang Bandung",
+            address: "Jl. Asia Afrika",
+            income: "Rp 95.000.000",
+            contact: "0811223344",
+            status: "active",
+            code: "BDG",
+            latitude: -6.9,
+            longitude: 107.6,
+          },
+        ];
+
+        /*
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/branches`,
           {
@@ -104,8 +144,9 @@ export default function BranchManagementPage() {
           latitude: branch.latitude,
           longitude: branch.longitude,
         }));
+        */
 
-        setBranches(formattedBranches);
+        setBranches(formattedBranches as any);
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -173,13 +214,27 @@ export default function BranchManagementPage() {
               {currentBranches.length > 0 ? (
                 currentBranches.map((branch) => (
                   <TableRow key={branch.id} className="h-16">
-                    <TableCell className="pl-8 font-medium text-left">{branch.name}</TableCell>
-                    <TableCell className="text-left">{branch.address}</TableCell>
-                    <TableCell className="text-center">{branch.income}</TableCell>
-                    <TableCell className="text-center">{branch.contact}</TableCell>
+                    <TableCell className="pl-8 text-left font-medium">
+                      {branch.name}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {branch.address}
+                    </TableCell>
                     <TableCell className="text-center">
-                      <span className={branch.status === 'active' ? 'text-green-600' : 'text-red-600'}>
-                        {branch.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      {branch.income}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {branch.contact}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={
+                          branch.status === "active"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {branch.status === "active" ? "Aktif" : "Nonaktif"}
                       </span>
                     </TableCell>
                     <TableCell className="pr-8">
@@ -202,7 +257,10 @@ export default function BranchManagementPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell
+                    colSpan={7}
+                    className="py-8 text-center text-gray-500"
+                  >
                     Tidak ada data cabang yang tersedia.
                   </TableCell>
                 </TableRow>

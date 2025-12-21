@@ -22,6 +22,7 @@ class BaseController extends Controller
 			'alpha_num' => 'Isian :attribute hanya boleh berisi huruf dan angka.',
 			'alpha_dash' => 'Isian :attribute hanya boleh berisi huruf, angka, tanda hubung, dan garis bawah.',
 			'ascii' => 'Isian :attribute hanya boleh berisi karakter alfanumerik dan simbol ASCII tunggal.',
+			'date' => 'Isian :attribute harus mengikuti format date yang valid',
 			'confirmed' => 'Konfirmasi :attribute tidak cocok.',
 			'unique' => 'Isian :attribute sudah digunakan.',
 			'exists' => 'Isian :attribute yang dipilih tidak terdapat dalam database.',

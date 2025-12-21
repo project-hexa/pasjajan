@@ -25,7 +25,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "bg-white text-foreground rounded-md shadow-sm py-0.5 px-1 w-[280px] [--cell-size:--spacing(3.5)] text-[7px] group/calendar mx-auto overflow-hidden border border-gray-100",
+        "bg-white text-foreground rounded-md shadow-sm py-4 px-1 w-[280px] [--cell-size:--spacing(3.5)] text-[7px] group/calendar mx-auto overflow-hidden border border-gray-100",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
@@ -42,9 +42,9 @@ function Calendar({
           "flex gap-1 flex-col relative",
           defaultClassNames.months
         ),
-        month: cn("flex flex-col w-full gap-0", defaultClassNames.month),
+        month: cn("flex flex-col w-full gap-4", defaultClassNames.month),
         nav: cn(
-          "flex items-center gap-0.5 w-full absolute top-0 inset-x-0 justify-between",
+          "flex items-center gap-4 w-full absolute top-0 inset-x-0 justify-between",
           defaultClassNames.nav
         ),
         button_previous: cn(
@@ -133,21 +133,21 @@ function Calendar({
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
-              <Icon icon={"lucide:chevron-left"} className={cn("size-3.5", className)} {...props} />
+              <Icon icon={"lucide:chevron-left"} className={cn("text-sm", className)} {...props} />
             )
           }
 
           if (orientation === "right") {
             return (
               <Icon icon={"lucide:chevron-right"}
-                className={cn("size-3.5", className)}
+                className={cn("text-sm", className)}
                 {...props}
               />
             )
           }
 
           return (
-            <Icon icon={"lucide:chevron-down"} className={cn("size-3.5", className)} {...props} />
+            <Icon icon={"lucide:chevron-down"} className={cn("text-sm", className)} {...props} />
           )
         },
         DayButton: CalendarDayButton,

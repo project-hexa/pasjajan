@@ -2,81 +2,81 @@
 
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
+import { api } from "@/lib/utils/axios";
 import { Card } from "@workspace/ui/components/card";
+import { Button } from "@workspace/ui/components/button";
+import { Icon } from "@workspace/ui/components/icon";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-const promos = [
-  {
-    title: "Wajah Bersih Maksimal",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo1.jpg",
-  },
-  {
-    title: "Snack Paradise",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo2.png",
-  },
-  {
-    title: "Warehouse Sale",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo3.png",
-  },
-  {
-    title: "UHT Milk Fair",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo4.png",
-  },
-  {
-    title: "Perlindungan Keluarga Bebas Kuman",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo5.jpg",
-  },
-  {
-    title: "Strong & Shiny Hair",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo6.jpg",
-  },
-  {
-    title: "Hangat & Terlindungi Sepanjang Hari",
-    date: "1 – 7 November 2025",
-    image: "/promo/promo7.jpg",
-  },
-  {
-    title: "Krimer Kental Manis",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo8.jpg",
-  },
-  {
-    title: "Warna Baru Gaya Baru",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo9.jpg",
-  },
-  {
-    title: "Lebih Terang, Lebih Baik",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo10.jpg",
-  },
-  {
-    title: "Ngopi Nikmat!",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo11.jpg",
-  },
-  {
-    title: "Find Your Perfect Shade",
-    date: "1 – 30 November 2025",
-    image: "/promo/promo12.jpg",
-  },
-];
+interface Promo {
+  id: number;
+  name: string;
+  banner_url: string | null;
+  description: string;
+  discount_percentage: string;
+  min_order_value: string;
+  start_date: string;
+  end_date: string;
+  status: string;
+}
 
-const toSlug = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
 
 export default function PromoPage() {
-  
+  const [promos, setPromos] = useState<Promo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchPromos = async (page: number = 1) => {
+    setLoading(true);
+    try {
+      const response = await api.get(`/promos?page=${page}`);
+      // ApiResponse format: { success, message, data: { data: [...], meta: {...} } }
+      const responseData = response.data.data;
+      setPromos(responseData.data || []);
+      setMeta(responseData.meta || null);
+    } catch (error) {
+      console.error("Failed to fetch promos", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPromos(currentPage);
+  }, [currentPage]);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    return format(new Date(dateString), "d MMMM yyyy", { locale: id });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const PromoSkeleton = () => (
+    <Card className="overflow-hidden rounded-xl border bg-white p-0">
+      <Skeleton className="aspect-[16/9] w-full" />
+      <div className="p-4 pt-3 space-y-2">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
+    </Card>
+  );
+
   return (
     <>
       <Navbar />
@@ -86,33 +86,94 @@ export default function PromoPage() {
           Semua Promo
         </h1>
 
-        <div className="grid cursor-pointer grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {promos.map((promo, index) => (
-            <Link
-              key={toSlug(promo.title)}
-              href={`/promo/${promo.title.toLowerCase().replace(/\s+/g, "-")}`}
-            >
-              <Card
-                key={index}
-                className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-              >
-                <div className="group relative aspect-[16/9] w-full overflow-hidden">
-                  <Image
-                    src={promo.image}
-                    alt={promo.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+        {loading ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <PromoSkeleton key={i} />
+            ))}
+          </div>
+        ) : promos.length === 0 ? (
+          <div className="text-center py-20">
+            <Icon icon="lucide:tag" className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+            <p className="text-gray-500 text-lg">Tidak ada promo tersedia saat ini</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid cursor-pointer grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {promos.map((promo) => (
+                <Link
+                  key={promo.id}
+                  href={`/promo/${promo.id}`}
+                >
+                  <Card className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                    <div className="group relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+                      {promo.banner_url ? (
+                        <Image
+                          src={promo.banner_url}
+                          alt={promo.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <Icon icon="lucide:image" className="h-12 w-12 text-gray-300" />
+                        </div>
+                      )}
+                      {/* Discount Badge */}
+                      <span className="absolute top-3 right-3 rounded-md bg-green-700 px-2 py-1 text-xs font-bold text-white">
+                        {Math.round(Number(promo.discount_percentage))}% OFF
+                      </span>
+                    </div>
 
-                <div className="p-4 pt-3">
-                  <h2 className="font-bold text-gray-800">{promo.title}</h2>
-                  <p className="text-sm text-gray-500">{promo.date}</p>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                    <div className="p-4 pt-3">
+                      <h2 className="font-bold text-gray-800 line-clamp-1">{promo.name}</h2>
+                      <p className="text-sm text-gray-500 line-clamp-1 mt-1">{promo.description}</p>
+                      <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                        <Icon icon="lucide:calendar" className="h-3 w-3" />
+                        {formatDate(promo.start_date)} - {formatDate(promo.end_date)}
+                      </p>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {meta && meta.last_page > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <Icon icon="lucide:chevron-left" className="h-4 w-4" />
+                </Button>
+
+                {Array.from({ length: meta.last_page }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => handlePageChange(page)}
+                    className={currentPage === page ? "bg-green-700 hover:bg-green-800" : ""}
+                  >
+                    {page}
+                  </Button>
+                ))}
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === meta.last_page}
+                >
+                  <Icon icon="lucide:chevron-right" className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </main>
 
       <Footer />

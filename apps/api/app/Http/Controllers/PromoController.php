@@ -8,8 +8,7 @@ use App\Models\Promo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Store;
-use App\Models\Product;
+use App\Helpers\ApiResponse;
 
 class PromoController extends Controller
 {
@@ -32,17 +31,26 @@ class PromoController extends Controller
             ->orderBy('start_date', 'asc')
             ->paginate($perPage);
 
-        return PromoResource::collection($promos);
+        return ApiResponse::success(
+            PromoResource::collection($promos)->response()->getData(true),
+            'Active promos retrieved successfully'
+        );
     }
 
     public function show($id, Request $request)
     {
-        $promo = Promo::with(['products'])
+        $promo = Promo::with(['products', 'stores'])
             ->where('id', $id)
-            ->active()
-            ->firstOrFail();
+            ->first();
 
-        return new PromoResource($promo);
+        if (!$promo) {
+            return ApiResponse::notFound('Promo not found');
+        }
+
+        return ApiResponse::success(
+            new PromoResource($promo),
+            'Promo retrieved successfully'
+        );
     }
 
     private function ensureAdmin()
@@ -50,9 +58,7 @@ class PromoController extends Controller
         $user = Auth::user();
 
         if (!$user || $user->role !== 'Admin') {
-            abort(response()->json([
-                'message' => 'Forbidden. Only admin can manage promos.',
-            ], 403));
+            abort(ApiResponse::forbidden('Forbidden. Only admin can manage promos.'));
         }
     }
 
@@ -62,7 +68,7 @@ class PromoController extends Controller
      */
     public function index(Request $request)
     {
-        // $this->ensureAdmin();
+        $this->ensureAdmin();
 
         $perPage = $request->query('per_page', 15);
 
@@ -70,18 +76,10 @@ class PromoController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
-        return PromoResource::collection($promos);
-
-    }
-
-    public function listStores()
-    {
-        return response()->json(Store::select('id', 'name')->get());
-    }
-
-    public function listProducts()
-    {
-        return response()->json(Product::select('id', 'name')->get());
+        return ApiResponse::success(
+            PromoResource::collection($promos)->response()->getData(true),
+            'Promos retrieved successfully'
+        );
     }
 
     /**
@@ -90,7 +88,7 @@ class PromoController extends Controller
      */
     public function store(Request $request)
     {
-        // $this->ensureAdmin();
+        $this->ensureAdmin();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -113,10 +111,7 @@ class PromoController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
+            return ApiResponse::validationError($validator->errors()->toArray());
         }
 
         $data = $validator->validated();
@@ -147,9 +142,10 @@ class PromoController extends Controller
 
         $promo->load(['stores', 'products']);
 
-        return (new PromoResource($promo))
-            ->response()
-            ->setStatusCode(201);
+        return ApiResponse::created(
+            new PromoResource($promo),
+            'Promo created successfully'
+        );
     }
 
     /**
@@ -160,7 +156,11 @@ class PromoController extends Controller
     {
         $this->ensureAdmin();
 
-        $promo = Promo::with(['stores', 'products'])->findOrFail($id);
+        $promo = Promo::with(['stores', 'products'])->find($id);
+
+        if (!$promo) {
+            return ApiResponse::notFound('Promo not found');
+        }
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
@@ -182,10 +182,7 @@ class PromoController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
+            return ApiResponse::validationError($validator->errors()->toArray());
         }
 
         $data = $validator->validated();
@@ -205,7 +202,6 @@ class PromoController extends Controller
 
         $promo->update($data);
 
-        // kalau dikirim, baru di-sync
         if (!is_null($storeIds)) {
             $promo->stores()->sync($storeIds);
         }
@@ -216,7 +212,10 @@ class PromoController extends Controller
 
         $promo->load(['stores', 'products']);
 
-        return new PromoResource($promo);
+        return ApiResponse::success(
+            new PromoResource($promo),
+            'Promo updated successfully'
+        );
     }
 
     /**
@@ -227,16 +226,17 @@ class PromoController extends Controller
     {
         $this->ensureAdmin();
 
-        $promo = Promo::findOrFail($id);
+        $promo = Promo::find($id);
 
-        // hapus pivot dulu kalau mau rapi
+        if (!$promo) {
+            return ApiResponse::notFound('Promo not found');
+        }
+
         $promo->stores()->detach();
         $promo->products()->detach();
 
         $promo->delete();
 
-        return response()->json([
-            'message' => 'Promo deleted successfully',
-        ]);
+        return ApiResponse::success(null, 'Promo deleted successfully');
     }
 }

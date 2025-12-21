@@ -1,4 +1,4 @@
-import Image from "next/image";
+import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import StoreProductList, { StoreProduct } from "../_components/store-product-list";
 import { Navbar } from "@/components/ui/navigation-bar";
@@ -6,8 +6,8 @@ import { Footer } from "@/components/ui/footer";
 
 const defaultHeroSubtitle = "Belanja semua kebutuhan kelontong favoritmu, langsung dari toko terpercaya di kota kamu.";
 
-const defaultPopularProducts: StoreProduct[] = [
-  {
+const defaultPopularProducts: StoreProduct[] = (() => {
+  const base: StoreProduct = {
     id: "minyak-goreng",
     name: "Minyak Goreng",
     description: "Botol 2L",
@@ -15,73 +15,14 @@ const defaultPopularProducts: StoreProduct[] = [
     image: "/images/Screenshot 2025-10-25 173437.png",
     details:
       "Minyak goreng kemasan 2 liter dengan rasa netral yang cocok untuk menumis maupun menggoreng. Kemasan rapat memudahkan penyimpanan di dapur rumah atau toko.",
-  },
-  {
-    id: "fruit-tea",
-    name: "Fruit Tea",
-    description: "Freeze 350 ML",
-    price: 4500,
-    image: "/images/Screenshot 2025-10-25 173713.png",
-    details:
-      "Minuman rasa buah 350 ml dengan sensasi dingin menyegarkan. Praktis dikonsumsi kapan saja dan jadi favorit pelanggan muda.",
-  },
-  {
-    id: "happy-tos",
-    name: "Happy Tos",
-    description: "Keripik 140 g",
-    price: 14500,
-    image: "/images/Screenshot 2025-10-25 174230.png",
-    details:
-      "Keripik jagung renyah 140 gram dengan bumbu gurih manis. Cocok untuk stok camilan keluarga atau paket hampers sederhana.",
-  },
-  {
-    id: "mie-sedap",
-    name: "Mie Sedap",
-    description: "Goreng Selection",
-    price: 3500,
-    image: "/images/Screenshot 2025-10-25 174329.png",
-    details:
-      "Mi instan goreng dengan bumbu selection kaya rasa dan tekstur kenyal. Topping bawang renyah membuat setiap sajian terasa spesial.",
-  },
-  {
-    id: "mamy-poko",
-    name: "MamyPoko",
-    description: "X-tra Kering",
-    price: 51700,
-    image: "/images/Screenshot 2025-10-25 175114.png",
-    details:
-      "Popok bayi tipe celana dengan daya serap tinggi sehingga kulit tetap kering hingga 12 jam. Desain elastis nyaman untuk aktivitas si kecil.",
-  },
-  {
-    id: "ekonomi",
-    name: "Ekonomi",
-    description: "Sabun Cuci Piring",
-    price: 6800,
-    image: "/images/Screenshot 2025-10-25 175248.png",
-    details:
-      "Sabun cuci piring cair dengan formula konsentrat yang efektif mengangkat lemak. Busanya melimpah namun mudah dibilas tanpa residu.",
-  },
-  {
-    id: "minyak-telon",
-    name: "Minyak Telon",
-    description: "Botol 60 ml",
-    price: 24500,
-    image: "/images/Screenshot 2025-10-25 175308.png",
-    details:
-      "Minyak telon 60 ml untuk menjaga kehangatan bayi serta memberi aroma lembut menenangkan. Diformulasikan dari bahan alami pilihan.",
-  },
-  {
-    id: "yupie",
-    name: "Yupie Permen",
-    description: "Gummy 9 Rasa",
-    price: 14500,
-    image: "/images/Screenshot 2025-10-25 175227.png",
-    details:
-      "Permen gummy dengan sembilan rasa buah berbeda dalam satu kemasan. Teksturnya kenyal dan disukai anak-anak maupun dewasa.",
-  },
-];
+  };
+
+  // create multiple identical products to simplify backend mapping during development
+  return Array.from({ length: 8 }).map((_, idx) => ({ ...base, id: `${base.id}-${idx + 1}` }));
+})();
 
 const storeSeeds = [
+  { slug: "pas-jajan-setiabudhi", name: "Pas Jajan - Setiabudhi" },
   { slug: "sushi-day-bandung", name: "Sushi Day - Bandung" },
   { slug: "burger-baik-cimahi", name: "Burger Baik - Cimahi" },
   { slug: "warkop-bandung", name: "Warkop - Bandung" },
@@ -93,7 +34,22 @@ const storeSeeds = [
   { slug: "toko-manis-bandung", name: "Toko Manis - Bandung", category: "Dessert" },
 ];
 
-const storeCatalogue = storeSeeds.map((seed) => ({
+type StoreView = {
+  slug: string;
+  name: string;
+  category: string;
+  rating: number;
+  reviewCount: string;
+  distance: string;
+  eta: string;
+  discounts: string[];
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string;
+  popularProducts: StoreProduct[];
+};
+
+const storeCatalogue: StoreView[] = storeSeeds.map((seed) => ({
   slug: seed.slug,
   name: seed.name,
   category: seed.category ?? "Snack",
@@ -108,15 +64,152 @@ const storeCatalogue = storeSeeds.map((seed) => ({
   popularProducts: defaultPopularProducts.map((product) => ({ ...product })),
 }));
 
-const storeIndex = Object.fromEntries(storeCatalogue.map((store) => [store.slug, store]));
+const storeIndex: Record<string, StoreView> = Object.fromEntries(storeCatalogue.map((store) => [store.slug, store]));
 
-export default function StorePage(props: any) {
-  const { params, searchParams } = props as { params: { storeSlug: string }; searchParams: { search?: string } };
-  const store = storeIndex[params.storeSlug];
+export default async function StorePage(props: unknown) {
+  const { params, searchParams } = props as { params: { storeSlug: string }; searchParams?: { search?: string } };
+  const slug = params.storeSlug;
 
-  if (!store) {
-    notFound();
+  // helper to normalize API responses
+  const extractArray = <T = unknown>(payload: unknown): T[] => {
+    if (!payload) return [] as T[];
+    if (Array.isArray(payload)) return payload as unknown as T[];
+    if (typeof payload === "object" && payload !== null) {
+      const p = payload as unknown as { data?: unknown; stores?: unknown };
+      if (Array.isArray(p.data)) return p.data as unknown as T[];
+      const pd = p.data as unknown as { data?: unknown };
+      if (Array.isArray(pd?.data)) return pd.data as unknown as T[];
+      if (Array.isArray(p.stores)) return p.stores as unknown as T[];
+    }
+    return [] as T[];
+  };
+
+  // fetch stores and products in parallel, but do not fail the page on errors
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  const [storesResp, productsResp] = await Promise.all([
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/stores`, { cache: "no-store" });
+        return await r.json();
+      } catch {
+        return null;
+      }
+    })(),
+    (async () => {
+      try {
+        const r = await fetch(`${apiBase}/products`, { cache: "no-store" });
+        return await r.json();
+      } catch {
+        return null;
+      }
+    })(),
+  ]);
+
+  type RawStore = {
+    id?: string | number;
+    code?: string;
+    slug?: string;
+    name?: string;
+    title?: string;
+    category?: string;
+    rating?: number;
+    review_count?: string | number;
+    distance?: string;
+    eta?: string;
+    discounts?: string[];
+    offers?: string[];
+    hero_title?: string;
+    description?: string;
+    image_url?: string;
+    logo_url?: string;
+    products?: RawProduct[];
+    [key: string]: unknown;
+  };
+
+  type RawProduct = {
+    id?: string | number;
+    product_id?: string | number;
+    sku?: string;
+    name?: string;
+    title?: string;
+    description?: string;
+    short_description?: string;
+    price?: number | string;
+    final_price?: number | string;
+    sale_price?: number | string;
+    image_url?: string;
+    image?: string;
+    details?: string;
+    long_description?: string;
+    store_id?: string | number;
+    store_code?: string;
+    seller?: string;
+    owner?: string;
+    merchant?: string;
+    [key: string]: unknown;
+  };
+
+  const stores = extractArray<RawStore>(storesResp);
+  const products = extractArray<RawProduct>(productsResp);
+
+  const found = stores.find((s: RawStore) => {
+    const candidates = [s.code, s.slug, s.name].filter(Boolean).map((v) => String(v).toLowerCase());
+    return candidates.includes(String(slug).toLowerCase());
+  });
+
+  // fallback to seeded data when API doesn't provide a match
+  let store: StoreView | null = storeIndex[slug] ?? null;
+
+  if (found) {
+    store = {
+      slug: found.code || found.slug || slug,
+      name: found.name || found.title || "Store",
+      category: found.category || "Snack",
+      rating: found.rating || 4.8,
+      reviewCount: String(found.review_count ?? "0"),
+      distance: found.distance || "1km",
+      eta: found.eta || "15min",
+      discounts: found.discounts || found.offers || [],
+      heroTitle: found.hero_title || "Toko Jajanan No.1 di Indonesia",
+      heroSubtitle: found.description || defaultHeroSubtitle,
+      heroImage: found.image_url || found.logo_url || "/img/logo2.png",
+      popularProducts: Array.isArray(found.products)
+        ? found.products.map((p: RawProduct) => ({
+            id: String(p.id || p.product_id || p.sku || Math.random()),
+            name: p.name || p.title || "Produk",
+            description: p.description || p.short_description || "",
+            price: Number(p.price || p.final_price || p.sale_price || 0),
+            image: p.image_url || p.image || "/images/Screenshot 2025-10-25 173437.png",
+            details: p.details || p.long_description || undefined,
+          }))
+        : [],
+    };
+
+    // enrich popularProducts from global products if available
+    if (products.length > 0) {
+      const storeIdentifiers = [found.id, found.code, found.slug, found.name]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase());
+
+      const matched = products.filter((p: RawProduct) => {
+        const fields = [p.store_id, p.store_code, p.seller, p.owner, p.merchant].filter(Boolean);
+        return fields.some((f) => storeIdentifiers.includes(String(f).toLowerCase()));
+      });
+
+      if (matched.length > 0) {
+        store.popularProducts = matched.map((p: RawProduct) => ({
+          id: String(p.id || p.product_id || p.sku || Math.random()),
+          name: p.name || p.title || "Produk",
+          description: p.description || p.short_description || "",
+          price: Number(p.price || p.final_price || p.sale_price || 0),
+          image: p.image_url || p.image || "/images/Screenshot 2025-10-25 173437.png",
+          details: p.details || p.long_description || undefined,
+        }));
+      }
+    }
   }
+
+  if (!store) return notFound();
 
   const rawQuery = searchParams?.search ?? "";
   const trimmedQuery = rawQuery.trim();
@@ -124,7 +217,7 @@ export default function StorePage(props: any) {
   const hasQuery = normalizedQuery.length > 0;
 
   const searchResults: StoreProduct[] = hasQuery
-    ? store.popularProducts.filter((product) => {
+    ? store.popularProducts.filter((product: StoreProduct) => {
         const haystack = `${product.name} ${product.description}`.toLowerCase();
         return haystack.includes(normalizedQuery);
       })
@@ -135,7 +228,9 @@ export default function StorePage(props: any) {
 
   return (
     <main className="min-h-screen flex flex-col bg-[#F9FAFB] pb-0 pt-0">
-      <Navbar />
+      <Suspense fallback={<div />}>
+        <Navbar />
+      </Suspense>
       <div className="mx-auto flex-1 w-full max-w-[90rem] px-4 pb-10 sm:px-6 lg:px-8 xl:px-10">
         <div
           className={`overflow-hidden transition-all duration-500 ease-in-out ${
@@ -164,15 +259,6 @@ export default function StorePage(props: any) {
                   ))}
                 </div>
               </div>
-              <div className="flex w-full justify-center lg:w-auto">
-                <Image
-                  src="/img/logo3.png"
-                  alt="PasJajan"
-                  width={240}
-                  height={240}
-                  className="h-32 w-auto object-contain sm:h-40 lg:h-48"
-                />
-              </div>
             </div>
           </section>
         </div>
@@ -183,30 +269,13 @@ export default function StorePage(props: any) {
               <p className="text-sm text-[#111827]">
                 Hasil pencarian untuk &quot;<span className="font-semibold">{trimmedQuery}</span>&quot;
               </p>
-              <p className="text-sm text-[#6B7280]">
-                {hasSearchResults ? `${searchResults.length} produk ditemukan` : "Produk tidak ditemukan"}
-              </p>
+              <p className="text-sm text-[#6B7280]">{hasSearchResults ? `${searchResults.length} produk ditemukan` : "Produk tidak ditemukan"}</p>
             </div>
-
-            {hasSearchResults ? (
-              <StoreProductList products={searchResults} variant="grid" outerClassName="mt-6" />
-            ) : (
-              <div className="mt-10">
-                <h3 className="text-2xl font-semibold text-[#111827]">Rekomendasi</h3>
-                <p className="mt-1 text-sm text-[#6B7280]">Produk populer lainnya dari toko ini.</p>
-                <StoreProductList products={store.popularProducts} variant="grid" outerClassName="mt-4" />
-              </div>
-            )}
           </section>
         ) : (
           <section className="mt-12">
             <h3 className="text-2xl font-semibold text-[#111827]">Produk Populer</h3>
-            <StoreProductList
-              products={store.popularProducts}
-              variant="scroll"
-              outerClassName="mt-6 -mx-4 pb-4"
-              innerClassName="px-4"
-            />
+            <StoreProductList products={store.popularProducts} variant="scroll" outerClassName="mt-6 -mx-4 pb-4" innerClassName="px-4" />
           </section>
         )}
       </div>

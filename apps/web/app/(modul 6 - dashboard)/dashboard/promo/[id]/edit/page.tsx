@@ -3,10 +3,12 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { PromoForm } from "../../_components/promo-form";
+import { api } from "@/lib/utils/axios";
 
 export default function EditPromoPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -18,20 +20,13 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
     useEffect(() => {
         const fetchPromo = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/api/promos/${id}`, {
-                    headers: {
-                        "Accept": "application/json",
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setInitialData(data.data);
-                } else {
-                    alert("Failed to fetch promo details");
-                    router.push("/dashboard/promo");
-                }
-            } catch (error) {
+                const response = await api.get(`/promos/${id}`);
+                // ApiResponse format: { success, message, data: { ...promo } }
+                setInitialData(response.data.data);
+            } catch (error: any) {
                 console.error(error);
+                toast.error("Gagal memuat detail promo", { toasterId: "global" });
+                router.push("/dashboard/promo");
             } finally {
                 setFetching(false);
             }
@@ -63,30 +58,25 @@ export default function EditPromoPage({ params }: { params: Promise<{ id: string
 
             // Handle Arrays
             if (values.store_ids && values.store_ids.length > 0) {
-                values.store_ids.forEach((id: string) => formData.append("store_ids[]", id));
+                values.store_ids.forEach((storeId: string) => formData.append("store_ids[]", storeId));
             }
             if (values.product_ids && values.product_ids.length > 0) {
-                values.product_ids.forEach((id: string) => formData.append("product_ids[]", id));
+                values.product_ids.forEach((productId: string) => formData.append("product_ids[]", productId));
             }
 
-            const response = await fetch(`http://localhost:8000/api/admin/promos/${id}`, {
-                method: "POST", // Using POST for FormData with _method override
+            await api.post(`/admin/promos/${id}`, formData, {
                 headers: {
-                    "Accept": "application/json",
+                    "Content-Type": "multipart/form-data",
                 },
-                body: formData,
             });
 
-            if (response.ok) {
-                router.push("/dashboard/promo");
-                router.refresh(); // Refresh list
-            } else {
-                const errorData = await response.json();
-                alert(`Failed to update promo: ${errorData.message}`);
-            }
-        } catch (error) {
+            toast.success("Promo berhasil diperbarui!", { toasterId: "global" });
+            router.push("/dashboard/promo");
+            router.refresh();
+        } catch (error: any) {
             console.error(error);
-            alert("An error occurred");
+            const message = error.response?.data?.message || "Terjadi kesalahan";
+            toast.error(`Gagal memperbarui promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }

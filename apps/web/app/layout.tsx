@@ -2,6 +2,7 @@ import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -11,7 +12,10 @@ const fontSans = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Pasjajan",
+  title: {
+    absolute: "Pasjajan - SmartMart",
+    template: "Pasjajan | %s",
+  },
   description: "Aplikasi kasir untuk usaha makanan dan minuman.",
 };
 
@@ -39,6 +43,9 @@ export default function RootLayout({
           toastOptions={{
             classNames: { closeButton: "toaster-close-btn", toast: "toaster" },
           }}
+          richColors
+          theme="light"
+          id="global"
           offset={100}
         />
       </body>

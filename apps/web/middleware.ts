@@ -11,7 +11,7 @@ export default function middleware(request: NextRequest) {
   );
 
   // Routes verification flow (setelah register)
-  const isVerificationFlow = ["/verification-code", "/one-time-password"].some(
+  const isVerificationFlow = ["/send-otp", "/one-time-password"].some(
     (route) => pathname.startsWith(route),
   );
 
@@ -38,8 +38,8 @@ export default function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    // Di halaman verification-code, harus ada step "email-send"
-    if (pathname.startsWith("/verification-code")) {
+    // Di halaman send-otp, harus ada step "email-send"
+    if (pathname.startsWith("/send-otp")) {
       if (verificationStep !== "email-sent") {
         return NextResponse.redirect(new URL("/", request.url));
       }
@@ -49,7 +49,7 @@ export default function middleware(request: NextRequest) {
     if (pathname.startsWith("/one-time-password")) {
       if (verificationStep !== "otp-sent") {
         return NextResponse.redirect(
-          new URL("/verification-code", request.url),
+          new URL("/send-otp", request.url),
         );
       }
     }
@@ -60,7 +60,7 @@ export default function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/verification-code:path*",
+    "/send-otp:path*",
     "/one-time-password:path*",
     "/dashboard:path*",
     "/profile:path*",

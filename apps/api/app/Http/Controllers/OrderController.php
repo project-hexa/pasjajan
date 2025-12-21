@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckoutRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Address;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -25,22 +26,64 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
+            // Ambil customer dari user yang login
+            $user = $request->user();
+            $customer = $user->customer;
+
+            if (!$customer) {
+                return ApiResponse::error('User tidak memiliki profil customer', 400);
+            }
+
+            // Ambil data customer dari User (snapshot)
+            $customerName = $user->full_name;
+            $customerEmail = $user->email;
+            $customerPhone = $user->phone_number;
+
+            // Ambil data shipping dari Address jika address_id dikirim
+            $shippingAddress = null;
+            $shippingRecipientName = null;
+            $shippingRecipientPhone = null;
+
+            if ($request->address_id) {
+                $address = Address::where('id', $request->address_id)
+                    ->where('customer_id', $customer->id) // Pastikan address milik customer
+                    ->first();
+
+                if (!$address) {
+                    return ApiResponse::error('Alamat tidak ditemukan atau bukan milik Anda', 400);
+                }
+
+                $shippingAddress = $address->detail_address;
+                $shippingRecipientName = $address->recipient_name;
+                $shippingRecipientPhone = $address->phone_number;
+            } else {
+                // Fallback ke request jika tidak ada address_id (custom address)
+                $shippingAddress = $request->shipping_address;
+                $shippingRecipientName = $request->shipping_recipient_name;
+                $shippingRecipientPhone = $request->shipping_recipient_phone;
+            }
+
+            // Validasi shipping address harus ada
+            if (!$shippingAddress || !$shippingRecipientName || !$shippingRecipientPhone) {
+                return ApiResponse::error('Data alamat pengiriman tidak lengkap', 400);
+            }
+
             // Generate unique order code
             $orderCode = $this->generateOrderCode();
 
-            // Create order
+            // Create order dengan snapshot data
             $order = Order::create([
                 'code' => $orderCode,
-                'customer_id' => $request->customer_id,
+                'customer_id' => $customer->id,
                 'address_id' => $request->address_id ?? null,
                 'store_id' => $request->store_id ?? null,
                 'voucher_id' => $request->voucher_id ?? null,
-                'customer_name' => $request->customer_name,
-                'customer_email' => $request->customer_email,
-                'customer_phone' => $request->customer_phone ?? null,
-                'shipping_address' => $request->shipping_address,
-                'shipping_recipient_name' => $request->shipping_recipient_name,
-                'shipping_recipient_phone' => $request->shipping_recipient_phone,
+                'customer_name' => $customerName,
+                'customer_email' => $customerEmail,
+                'customer_phone' => $customerPhone,
+                'shipping_address' => $shippingAddress,
+                'shipping_recipient_name' => $shippingRecipientName,
+                'shipping_recipient_phone' => $shippingRecipientPhone,
                 'sub_total' => $request->sub_total,
                 'discount' => $request->discount ?? 0,
                 'shipping_fee' => $request->shipping_fee,
@@ -98,8 +141,13 @@ class OrderController extends Controller
     public function getOrder(string $code)
     {
         try {
+            // Ambil customer dari user yang login
+            $user = request()->user();
+            $customer = $user->customer;
+
             $order = Order::with(['items', 'paymentMethod'])
                 ->where('code', $code)
+                ->where('customer_id', $customer->id) // Ownership check
                 ->firstOrFail();
 
             return ApiResponse::success([
@@ -158,17 +206,21 @@ class OrderController extends Controller
     public function getOrders(Request $request)
     {
         try {
-            $customerId = $request->query('customer_id');
+            // Ambil customer dari user yang login
+            $user = $request->user();
+            $customer = $user->customer;
+
+            if (!$customer) {
+                return ApiResponse::error('User tidak memiliki profil customer', 400);
+            }
+
             $status = $request->query('status');
             $paymentStatus = $request->query('payment_status');
             $perPage = $request->query('per_page', 10);
 
             $query = Order::with(['items', 'paymentMethod'])
+                ->where('customer_id', $customer->id) // Auto-filter by logged-in customer
                 ->orderBy('created_at', 'desc');
-
-            if ($customerId) {
-                $query->where('customer_id', $customerId);
-            }
 
             if ($status) {
                 $query->where('status', $status);
@@ -338,7 +390,13 @@ class OrderController extends Controller
     public function cancelOrder(string $code)
     {
         try {
-            $order = Order::where('code', $code)->firstOrFail();
+            // Ambil customer dari user yang login
+            $user = request()->user();
+            $customer = $user->customer;
+
+            $order = Order::where('code', $code)
+                ->where('customer_id', $customer->id) // Ownership check
+                ->firstOrFail();
 
             // Validasi apakah order bisa di-cancel
             if (!$order->canBeCancelled()) {
@@ -398,5 +456,81 @@ class OrderController extends Controller
         }
 
         return $code;
+    }
+
+    /**
+     * Get payment receipt data for an order
+     * 
+     * @param string $code
+     * @return JsonResponse
+     */
+    public function getPaymentReceipt(string $code)
+    {
+        try {
+            // Ambil customer dari user yang login
+            $user = request()->user();
+            $customer = $user->customer;
+
+            $order = Order::with(['items.product', 'paymentMethod', 'customer.user'])
+                ->where('code', $code)
+                ->where('customer_id', $customer->id) // Ownership check
+                ->firstOrFail();
+
+            // Validasi order sudah dibayar
+            if (!$order->isPaid()) {
+                return ApiResponse::error(
+                    'Bukti pembayaran hanya tersedia untuk order yang sudah dibayar. Status pembayaran: ' . $order->payment_status,
+                    400
+                );
+            }
+
+            // Format items dengan nomor urut
+            $items = $order->items->map(function ($item, $index) {
+                return [
+                    'no' => $index + 1,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? 'Produk #' . $item->product_id,
+                    'product_image' => $item->product->image_url ?? null,
+                    'price' => (float) $item->price,
+                    'quantity' => $item->quantity,
+                    'sub_total' => (float) $item->sub_total,
+                ];
+            });
+
+            $receipt = [
+                'order_code' => $order->code,
+                'status_message' => 'Telah berhasil dibayar',
+                'customer' => [
+                    'name' => $order->customer_name,
+                    'address' => $order->shipping_address,
+                    'recipient_name' => $order->shipping_recipient_name,
+                    'phone' => $order->shipping_recipient_phone ?? $order->customer_phone,
+                ],
+                'payment' => [
+                    'paid_at' => $order->paid_at?->toIso8601String(),
+                    'paid_at_formatted' => $order->paid_at?->format('H:i | d F Y'),
+                    'payment_method' => $order->paymentMethod?->method_name ?? 'Unknown',
+                    'payment_method_code' => $order->paymentMethod?->code ?? null,
+                ],
+                'items' => $items,
+                'summary' => [
+                    'sub_total' => (float) $order->sub_total,
+                    'discount' => (float) $order->discount,
+                    'shipping_fee' => (float) $order->shipping_fee,
+                    'admin_fee' => (float) $order->admin_fee,
+                    'grand_total' => (float) $order->grand_total,
+                ],
+                'created_at' => $order->created_at->toIso8601String(),
+            ];
+
+            return ApiResponse::success([
+                'receipt' => $receipt,
+            ], 'Bukti pembayaran berhasil diambil');
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return ApiResponse::notFound('Order tidak ditemukan atau bukan milik Anda');
+        } catch (\Exception $e) {
+            Log::error('Get Payment Receipt Error: ' . $e->getMessage());
+            return ApiResponse::serverError('Gagal mengambil bukti pembayaran');
+        }
     }
 }

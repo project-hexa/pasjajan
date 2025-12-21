@@ -3,10 +3,12 @@
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PromoForm } from "../_components/promo-form";
+import { api } from "@/lib/utils/axios";
 
 export default function CreatePromoPage() {
     const router = useRouter();
@@ -39,25 +41,19 @@ export default function CreatePromoPage() {
                 values.product_ids.forEach((id: string) => formData.append("product_ids[]", id));
             }
 
-            const response = await fetch("http://localhost:8000/api/admin/promos", {
-                method: "POST",
+            await api.post("/admin/promos", formData, {
                 headers: {
-                    "Accept": "application/json",
-                    // Content-Type header excluded for FormData to let browser set boundary
+                    "Content-Type": "multipart/form-data",
                 },
-                body: formData,
             });
 
-            if (response.ok) {
-                router.push("/dashboard/promo");
-                router.refresh();
-            } else {
-                const errorData = await response.json();
-                alert(`Failed to create promo: ${errorData.message}`);
-            }
-        } catch (error) {
+            toast.success("Promo berhasil dibuat!", { toasterId: "global" });
+            router.push("/dashboard/promo");
+            router.refresh();
+        } catch (error: any) {
             console.error(error);
-            alert("An error occurred");
+            const message = error.response?.data?.message || "Terjadi kesalahan";
+            toast.error(`Gagal membuat promo: ${message}`, { toasterId: "global" });
         } finally {
             setLoading(false);
         }

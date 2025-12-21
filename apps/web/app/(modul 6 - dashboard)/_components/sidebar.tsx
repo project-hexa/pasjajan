@@ -18,6 +18,11 @@ const navigation = [
     icon: "lucide:user-round",
   },
   {
+    name: "Poin Pelanggan",
+    href: "/dashboard/customer-points",
+    icon: "lucide:coins",
+  },
+  {
     name: "Notifikasi",
     href: "/dashboard/notifications",
     icon: "lucide:bell",
@@ -37,21 +42,32 @@ const navigation = [
     href: "/dashboard/promo",
     icon: "lucide:tag",
   },
+  {
+    name: "Produk",
+    href: "/dashboard/products",
+    icon: "icon-park-outline:ad-product",
+  },
+  {
+    name: "Delivery",
+    href: "/dashboard/delivery",
+    icon: "lucide:truck",
+  },
 ];
 
 export function Sidebar() {
   const pathName = usePathname();
 
   return (
-    <aside className="sticky top-[100px] flex h-[calc(100vh-116px)] flex-col gap-4 rounded-3xl bg-[#F7FFFB] py-8">
+    <aside suppressHydrationWarning className="sticky top-[100px] flex h-[calc(100vh-116px)] flex-col gap-4 rounded-3xl bg-[#F7FFFB] py-8 z-50 shadow-sm">
       <h2 className="px-4 text-nowrap">Dashboard Summary</h2>
-      <ul className="flex-1">
+      <ul suppressHydrationWarning className="flex-1 overflow-y-auto pb-4 mb-2">
         {navigation.map((item) => (
           <li key={item.name}>
             <Link
               href={item.href}
+              suppressHydrationWarning
               className={cn(
-                "relative flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC]",
+                "relative flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC] z-10",
                 {
                   "bg-[#B9DCCC]": pathName === item.href,
                 },
