@@ -17,20 +17,36 @@ type APIResponse<T, E = Record<string, string[]>> =
   | SuccessResponse<T>
   | ErrorResponse<E>;
 
-type APIError = {
-  message: string;
-  status?: number;
-  errors?: Record<string, string[]>;
-};
+export interface Store {
+  id: number;
+  code: string;
+  name: string;
+  address: string;
+  phone_number: string;
+  latitude?: string;
+  longitude?: string;
+  is_active: number;
+  image_url?: string;
+}
 
-type ActionResult =
-  | {
-      ok: true;
-      message: string;
-    }
-  | {
-      ok: false;
-      message: string;
-      errors?: Record<string, string[]>;
-      status?: number;
-    };
+export interface Product {
+  id: number;
+  name: string;
+  code: string;
+  description: string;
+  price: string | number;
+  stock: number;
+  image_url: string | null;
+  product_category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface Promo {
+  id: number;
+  title: string;
+  image_url: string;
+  link?: string;
+}

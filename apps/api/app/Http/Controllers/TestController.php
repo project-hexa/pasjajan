@@ -12,14 +12,26 @@ class TestController extends BaseController
     public function testSMTPConnectionOnly(Request $request): JsonResponse
     {
         try {
-            // Get the default mailer (or 'smtp' specifically)
-            $mailer = Mail::mailer('smtp');
+			// Get the default mailer (or 'smtp' specifically)
+			$mailer = Mail::mailer('smtp');
 
-            // Get the underlying transport
-            $transport = $mailer->getSymfonyTransport();
+			// Docblock to help static analyzers (mailer implementation may vary)
+			/** @var mixed $mailer */
 
-            // Try to start the transport (this checks connection and authentication)
-            $transport->start();
+			// Get the underlying transport (guarded: implementations differ between Laravel versions)
+			$transport = null;
+			if (method_exists($mailer, 'getSymfonyTransport')) {
+				$transport = $mailer->getSymfonyTransport();
+			} elseif (method_exists($mailer, 'getTransport')) {
+				$transport = $mailer->getTransport();
+			}
+
+			// Try to start the transport (this checks connection and authentication)
+			if ($transport && method_exists($transport, 'start')) {
+				$transport->start();
+			} else {
+				throw new Exception('Transport start method not available');
+			}
 
 			return $this->sendSuccessResponse('SMTP connection successful!');
 
@@ -33,14 +45,26 @@ class TestController extends BaseController
     public function testResendConnectionOnly(Request $request): JsonResponse
     {
         try {
-            // Get the default mailer (or 'smtp' specifically)
-            $mailer = Mail::mailer('resend');
+			// Get the default mailer (or 'resend' specifically)
+			$mailer = Mail::mailer('resend');
 
-            // Get the underlying transport
-            $transport = $mailer->getSymfonyTransport();
+			// Docblock to help static analyzers (mailer implementation may vary)
+			/** @var mixed $mailer */
 
-            // Try to start the transport (this checks connection and authentication)
-            $transport->start();
+			// Get the underlying transport (guarded: implementations differ between Laravel versions)
+			$transport = null;
+			if (method_exists($mailer, 'getSymfonyTransport')) {
+				$transport = $mailer->getSymfonyTransport();
+			} elseif (method_exists($mailer, 'getTransport')) {
+				$transport = $mailer->getTransport();
+			}
+
+			// Try to start the transport (this checks connection and authentication)
+			if ($transport && method_exists($transport, 'start')) {
+				$transport->start();
+			} else {
+				throw new Exception('Transport start method not available');
+			}
 
 			return $this->sendSuccessResponse('Resend connection successful!');
 
