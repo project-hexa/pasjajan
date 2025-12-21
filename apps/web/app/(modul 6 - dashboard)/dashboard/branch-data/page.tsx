@@ -22,6 +22,8 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { Icon } from "@workspace/ui/components/icon";
+import { getBranches as getBranchesService } from "@/services/branches";
+import { AxiosError } from "axios";
 
 interface Branch {
   id: string;
@@ -61,22 +63,7 @@ export default function BranchManagementPage() {
     const fetchBranches = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/branches`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mengambil data cabang");
-        }
-
-        const responseData = await response.json();
+        const responseData = await getBranchesService();
         console.log("API Response:", responseData);
 
         // Get branches from the nested data.branches
@@ -107,8 +94,10 @@ export default function BranchManagementPage() {
 
         setBranches(formattedBranches);
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+      } catch (err: unknown) {
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : "An error occurred");
+        setError(message);
         console.error("Error fetching branches:", err);
       } finally {
         setLoading(false);

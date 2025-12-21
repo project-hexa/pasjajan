@@ -6,6 +6,8 @@ import { Card, CardContent } from "@workspace/ui/components/card";
 import { toast } from "sonner";
 import { Icon } from "@workspace/ui/components/icon";
 import { EditBranchForm } from "../../_components/edit-branch-form";
+import { getBranch as getBranchService, updateBranch as updateBranchService, toggleBranch as toggleBranchService } from "@/services/branches";
+import { AxiosError } from "axios";
 
 interface BranchData {
   id: string;
@@ -46,21 +48,7 @@ export default function EditBranchPage() {
   useEffect(() => {
     const fetchBranch = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/branches/${params.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Gagal mengambil data cabang");
-        }
-
-        const responseData = await response.json();
+        const responseData = await getBranchService(String(params.id));
         // Normalisasi bentuk data: dukung data langsung, data.branch, atau data.branches (array)
         let raw: ApiBranch | null = null;
         const idParam = String(params.id);
@@ -113,43 +101,26 @@ export default function EditBranchPage() {
   const handleSubmit = async (formData: BranchFormValues) => {
     try {
       setIsLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/branches/${params.id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            code: formData.code,
-            address: formData.address,
-            phone_number: formData.phone_number,
-            // Beberapa backend mengabaikan is_active pada PUT. Tetap kirim jika didukung.
-            is_active: formData.status === 'Active',
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Gagal memperbarui cabang");
+      const response = await updateBranchService(String(params.id), {
+        name: formData.name,
+        code: formData.code,
+        address: formData.address,
+        phone_number: formData.phone_number,
+        // Beberapa backend mengabaikan is_active pada PUT. Tetap kirim jika didukung.
+        is_active: formData.status === 'Active',
+      });
+      if (response.status < 200 || response.status >= 300) {
+        const errorData = response.data as { message?: string } | undefined;
+        throw new Error(errorData?.message || "Gagal memperbarui cabang");
       }
       // Setelah PUT sukses, panggil endpoint khusus activate/deactivate HANYA jika status berubah
       const desiredActive = formData.status === 'Active';
       const currentActive = branch?.status === 'active';
       if (desiredActive !== currentActive) {
-        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/branches/${params.id}/${desiredActive ? 'activate' : 'deactivate'}`;
-        const toggleResp = await fetch(endpoint, {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-          },
-        });
-        if (!toggleResp.ok) {
-          const err = await toggleResp.json().catch(() => ({}));
-          throw new Error(err.message || 'Gagal mengubah status cabang');
+        const toggleResp = await toggleBranchService(String(params.id), desiredActive);
+        if (toggleResp.status < 200 || toggleResp.status >= 300) {
+          const err = (toggleResp.data as { message?: string } | undefined) ?? {};
+          throw new Error(err?.message || 'Gagal mengubah status cabang');
         }
       }
 
@@ -157,7 +128,8 @@ export default function EditBranchPage() {
       router.push('/dashboard/branch-data');
     } catch (error: unknown) {
       console.error("Error updating branch:", error);
-      const message = error instanceof Error ? error.message : "Terjadi kesalahan saat memperbarui cabang";
+      const axiosErr = error as AxiosError<{ message?: string }>;
+      const message = axiosErr?.response?.data?.message || (error instanceof Error ? error.message : "Terjadi kesalahan saat memperbarui cabang");
       toast.error(message);
     } finally {
       setIsLoading(false);
