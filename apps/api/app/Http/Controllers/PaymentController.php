@@ -137,7 +137,7 @@ class PaymentController extends Controller
                 'midtrans_order_id' => $result->order_id,
                 'payment_instructions' => $result->payment_instructions,
                 'payment_status' => 'pending',
-                'expired_at' => now()->addMinutes(1), // Set expire time saat payment process
+                'expired_at' => now()->addHours(1), // Set expire time saat payment process
             ];
             
             // Update shipping address jika dikirim

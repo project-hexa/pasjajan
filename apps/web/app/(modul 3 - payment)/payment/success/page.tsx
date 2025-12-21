@@ -253,7 +253,7 @@ function SuccessPageContent() {
                             Belanja Lagi
                         </button>
                         <button
-                            onClick={() => router.push('/orders')}
+                            onClick={() => router.push(`/payment/detail?order_code=${orderData.order_code}`)}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >
                             <Icon icon="lucide:package" width={18} height={18} />
