@@ -4,45 +4,74 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Swift_SmtpTransport;
-use Swift_TransportException;
+use Illuminate\Http\JsonResponse;
 use Exception;
 
-class TestController extends Controller
+class TestController extends BaseController
 {
-    public function testSMTPConnection(Request $request)
+    public function testSMTPConnectionOnly(Request $request): JsonResponse
     {
-        $mailConfig = config('mail.mailers.smtp');
-
         try {
-            // Create Swift SMTP Transport
-            $transport = new Swift_SmtpTransport(
-                $mailConfig['host'], 
-                $mailConfig['port'], 
-                $mailConfig['encryption']
-            );
+            // Get the default mailer (or 'smtp' specifically)
+            $mailer = Mail::mailer('smtp');
 
-            $transport->setUsername($mailConfig['username']);
-            $transport->setPassword($mailConfig['password']);
+            // Get the underlying transport
+            $transport = $mailer->getSymfonyTransport();
 
-            // Try to start the transport
+            // Try to start the transport (this checks connection and authentication)
             $transport->start();
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'SMTP connection successful!'
-            ]);
+			return $this->sendSuccessResponse('SMTP connection successful!');
 
-        } catch (Swift_TransportException $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'SMTP connection failed: '.$e->getMessage()
-            ]);
         } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unexpected error: '.$e->getMessage()
-            ]);
+			$errors['error_test'] = $e->getMessage();
+
+			return $this->sendFailResponse('SMTP connection failed.', $errors);
         }
     }
+
+    public function testResendConnectionOnly(Request $request): JsonResponse
+    {
+        try {
+            // Get the default mailer (or 'smtp' specifically)
+            $mailer = Mail::mailer('resend');
+
+            // Get the underlying transport
+            $transport = $mailer->getSymfonyTransport();
+
+            // Try to start the transport (this checks connection and authentication)
+            $transport->start();
+
+			return $this->sendSuccessResponse('Resend connection successful!');
+
+        } catch (Exception $e) {
+			$errors['error_test'] = $e->getMessage();
+
+			return $this->sendFailResponse('Resend connection failed.', $errors);
+        }
+    }
+
+	public function testSendEmail(Request $request): JsonResponse
+	{
+		try {
+			// Ambil email dari inputan
+			$email = $request->input('email');
+
+			// Tetapkan isi konten pada badan email/chat/sms
+			$content = "Test kirim email ke alamat email.";
+
+			// Mengirim otp ke alamat email milik user terkait
+			Mail::raw($content, function ($message) use ($email) {
+				$message->to($email)->subject('Test Email');
+			});
+
+			$result['email'] = $email;
+
+			return $this->sendSuccessResponse("Test kirim email berhasil.", $result);
+		} catch (Exception $e) {
+			$errors['error_test'] = $e->getMessage();
+
+			return $this->sendSuccessResponse("Test kirim emaill gagal.", $errors);
+		}
+	}
 }
