@@ -2,6 +2,7 @@ import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const fontSans = Poppins({
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body
         className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
+        <NextTopLoader color={"#d92"} showSpinner={false} />
         {children}
         <Toaster
           position="top-center"
