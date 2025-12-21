@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useNavigate } from "@/hooks/useNavigate";
 
 interface PaymentData {
     order_code: string;
@@ -64,7 +65,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
 };
 
 function FailedPageContent() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
     const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
@@ -75,7 +76,7 @@ function FailedPageContent() {
     useEffect(() => {
         const validateAndLoadData = async () => {
             if (!orderCode) {
-                router.push('/cart');
+                navigate.push('/cart');
                 return;
             }
 
@@ -98,7 +99,7 @@ function FailedPageContent() {
                 if (paymentStatus === 'paid' || paymentStatus === 'settlement' || paymentStatus === 'capture') {
                     // Order is paid, redirect to success
                     setIsRedirecting(true);
-                    router.replace(`/payment/success?order=${orderCode}`);
+                    navigate.replace(`/payment/success?order=${orderCode}`);
                     return;
                 }
 
@@ -114,7 +115,7 @@ function FailedPageContent() {
                     } else {
                         // Order is still pending and not expired, redirect to waiting
                         setIsRedirecting(true);
-                        router.replace(`/payment/waiting?order=${orderCode}`);
+                        navigate.replace(`/payment/waiting?order=${orderCode}`);
                         return;
                     }
                 }
@@ -136,7 +137,7 @@ function FailedPageContent() {
         };
 
         validateAndLoadData();
-    }, [orderCode, router]);
+    }, [orderCode, navigate]);
 
     // Show loading while redirecting or loading
     if (loading || isRedirecting) {
@@ -153,7 +154,7 @@ function FailedPageContent() {
             <div className="min-h-screen flex flex-col items-center justify-center bg-emerald-50/50 p-4">
                 <p className="text-gray-600 mb-4">Order tidak ditemukan</p>
                 <button 
-                    onClick={() => router.push('/cart')}
+                    onClick={() => navigate.push('/cart')}
                     className="bg-emerald-700 text-white py-2 px-4 rounded-lg hover:bg-emerald-800"
                 >
                     Kembali ke Keranjang

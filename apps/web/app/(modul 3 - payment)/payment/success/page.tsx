@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useNavigate } from "@/hooks/useNavigate";
 
 interface OrderData {
     order_code: string;
@@ -66,7 +67,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
 };
 
 function SuccessPageContent() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
     const [orderData, setOrderData] = useState<OrderData | null>(null);
@@ -76,7 +77,7 @@ function SuccessPageContent() {
     useEffect(() => {
         const validateAndFetchOrder = async () => {
             if (!orderCode) {
-                router.push("/");
+                navigate.push("/");
                 return;
             }
 
@@ -86,7 +87,7 @@ function SuccessPageContent() {
                 
                 if (!result.success || !result.data.order) {
                     alert("Order tidak ditemukan!");
-                    router.push("/");
+                    navigate.push("/");
                     return;
                 }
 
@@ -102,12 +103,12 @@ function SuccessPageContent() {
                     if (expiredAt && now > expiredAt) {
                         // Expired, redirect to failed
                         setIsRedirecting(true);
-                        router.replace(`/payment/failed?order=${orderCode}`);
+                        navigate.replace(`/payment/failed?order=${orderCode}`);
                         return;
                     } else {
                         // Still pending, redirect to waiting
                         setIsRedirecting(true);
-                        router.replace(`/payment/waiting?order=${orderCode}`);
+                        navigate.replace(`/payment/waiting?order=${orderCode}`);
                         return;
                     }
                 }
@@ -115,7 +116,7 @@ function SuccessPageContent() {
                 if (paymentStatus === 'expired' || paymentStatus === 'failed' || paymentStatus === 'cancelled') {
                     // Redirect to failed page
                     setIsRedirecting(true);
-                    router.replace(`/payment/failed?order=${orderCode}`);
+                    navigate.replace(`/payment/failed?order=${orderCode}`);
                     return;
                 }
 
@@ -134,14 +135,14 @@ function SuccessPageContent() {
             } catch (error) {
                 console.error("Error fetching order:", error);
                 alert("Gagal memuat data order!");
-                router.push("/");
+                navigate.push("/");
             } finally {
                 setLoading(false);
             }
         };
 
         validateAndFetchOrder();
-    }, [orderCode, router]);
+    }, [orderCode, navigate]);
 
     // Show loading while redirecting or loading
     if (loading || isRedirecting) {
@@ -216,14 +217,14 @@ function SuccessPageContent() {
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                         <button 
-                            onClick={() => router.push('/cart')}
+                            onClick={() => navigate.push('/cart')}
                             className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-800 transition-colors"
                         >
                             <Icon icon="lucide:shopping-cart" width={18} height={18} />
                             Belanja Lagi
                         </button>
                         <button 
-                            onClick={() => router.push('/orders')}
+                            onClick={() => navigate.push('/orders')}
                             className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-3 px-4 rounded-xl font-medium hover:bg-emerald-50 transition-colors"
                         >
                             <Icon icon="lucide:package" width={18} height={18} />

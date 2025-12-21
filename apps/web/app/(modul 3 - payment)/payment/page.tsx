@@ -1,7 +1,8 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   Card,
   CardContent,
@@ -50,7 +51,7 @@ interface PaymentItem {
 }
 
 function CheckoutPageContent() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const orderCode = searchParams.get("order");
   
@@ -64,7 +65,7 @@ function CheckoutPageContent() {
       try {
         if (!orderCode) {
           alert("Order code tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
@@ -74,7 +75,7 @@ function CheckoutPageContent() {
 
         if (!result.success || !result.data.order) {
           alert("Order tidak ditemukan!");
-          router.push("/cart");
+          navigate.push("/cart");
           return;
         }
 
@@ -106,14 +107,14 @@ function CheckoutPageContent() {
       } catch (error) {
         console.error("Error loading order data:", error);
         alert("Gagal memuat data order!");
-        router.push("/cart");
+        navigate.push("/cart");
       } finally {
         setLoading(false);
       }
     };
 
     loadOrderData();
-  }, [orderCode, router]);
+  }, [orderCode, navigate]);
 
   const productTotal = orderData?.sub_total || 0;
   const shipping = orderData?.shipping_fee || 10000;
@@ -181,7 +182,7 @@ function CheckoutPageContent() {
       localStorage.setItem("payment_data", JSON.stringify(result.data));
 
       // Redirect to waiting page
-      router.push(`/payment/waiting?order=${orderCode}`);
+      navigate.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
       alert("Gagal menghubungi server!");
@@ -221,7 +222,7 @@ function CheckoutPageContent() {
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-6">
           <button
-            onClick={() => router.back()}
+            onClick={() => navigate.back()}
             className="h-10 w-10 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center"
           >
             <Icon icon="lucide:arrow-left" width={20} height={20} />

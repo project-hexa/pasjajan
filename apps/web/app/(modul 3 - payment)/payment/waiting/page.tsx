@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useNavigate } from "@/hooks/useNavigate";
 import { PaymentInstructionsModal } from '@/components/PaymentInstructionsModal';
 import Image from 'next/image';
 
@@ -102,7 +103,7 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean }
 };
 
 function WaitingPageContent() {
-    const router = useRouter();
+    const navigate = useNavigate();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order");
     const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
@@ -139,13 +140,13 @@ function WaitingPageContent() {
                         // Check payment status FIRST before checking expired_at
                         if (status === 'paid' || status === 'settlement' || status === 'capture') {
                             setIsRedirecting(true);
-                            router.replace(`/payment/success?order=${orderCode}`);
+                            navigate.replace(`/payment/success?order=${orderCode}`);
                             return;
                         }
                         
                         if (status === 'expired' || status === 'failed' || status === 'cancelled') {
                             setIsRedirecting(true);
-                            router.replace(`/payment/failed?order=${orderCode}`);
+                            navigate.replace(`/payment/failed?order=${orderCode}`);
                             return;
                         }
                         
@@ -156,7 +157,7 @@ function WaitingPageContent() {
                         if (expiredAt && now > expiredAt) {
                             // Order is expired, redirect to failed
                             setIsRedirecting(true);
-                            router.replace(`/payment/failed?order=${orderCode}`);
+                            navigate.replace(`/payment/failed?order=${orderCode}`);
                             return;
                         }
                         
@@ -173,18 +174,18 @@ function WaitingPageContent() {
                     } else {
                         // Order not found
                         alert("Order tidak ditemukan!");
-                        router.push("/");
+                        navigate.push("/");
                     }
                 } catch (error) {
                     console.error("Error fetching order:", error);
                     alert("Gagal memuat data order!");
-                    router.push("/");
+                    navigate.push("/");
                 }
                 setLoading(false);
             } else {
                 // No localStorage and no orderCode
                 alert("Data pembayaran tidak ditemukan!");
-                router.push("/");
+                navigate.push("/");
                 setLoading(false);
             }
         };
@@ -212,7 +213,7 @@ function WaitingPageContent() {
                     if (status === 'paid' || status === 'settlement' || status === 'capture') {
                         setIsRedirecting(true);
                         localStorage.removeItem("payment_data");
-                        router.replace(`/payment/success?order=${orderCode}`);
+                        navigate.replace(`/payment/success?order=${orderCode}`);
                         return;
                     }
                     
@@ -241,9 +242,9 @@ function WaitingPageContent() {
         if ((isExpired || paymentStatus === 'expired') && !isRedirecting) {
             setIsRedirecting(true);
             localStorage.removeItem("payment_data");
-            router.replace(`/payment/failed?order=${orderCode}`);
+            navigate.replace(`/payment/failed?order=${orderCode}`);
         }
-    }, [isExpired, paymentStatus, router, orderCode, isRedirecting]);
+    }, [isExpired, paymentStatus, navigate, orderCode, isRedirecting]);
 
     const handleExpired = () => {
         setIsExpired(true);
@@ -423,14 +424,14 @@ function WaitingPageContent() {
                             {/* Action Buttons */}
                             <div className="flex gap-3">
                                 <button 
-                                    onClick={() => router.push('/cart')}
+                                    onClick={() => navigate.push('/cart')}
                                     className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                 >
                                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                     Belanja Lagi
                                 </button>
                                 <button 
-                                    onClick={() => router.push('/orders')}
+                                    onClick={() => navigate.push('/orders')}
                                     className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                 >
                                     <Icon icon="lucide:package" width={16} height={16} />
@@ -468,14 +469,14 @@ function WaitingPageContent() {
                             <div className="flex justify-center mt-6">
                                 <div className="flex gap-3 w-full max-w-md">
                                     <button 
-                                        onClick={() => router.push('/cart')}
+                                        onClick={() => navigate.push('/cart')}
                                         className="flex-1 flex items-center justify-center gap-2 bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors"
                                     >
                                         <Icon icon="lucide:shopping-cart" width={16} height={16} />
                                         Belanja Lagi
                                     </button>
                                     <button 
-                                        onClick={() => router.push('/orders')}
+                                        onClick={() => navigate.push('/orders')}
                                         className="flex-1 flex items-center justify-center gap-2 border-2 border-emerald-700 text-emerald-700 py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                                     >
                                         <Icon icon="lucide:package" width={16} height={16} />

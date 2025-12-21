@@ -3,13 +3,13 @@
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 
 export default function TrackingPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handlePesananSelesai = () => {
-    router.push("/delivery/1/rating");
+    navigate.push("/delivery/1/rating");
   };
 
   const steps = [

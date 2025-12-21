@@ -12,7 +12,7 @@ import {
 } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -23,14 +23,14 @@ export default function ForgotPasswordPage() {
       email: "",
     },
   });
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     sessionStorage.setItem("emailForResetPassword", data.email);
 
-    router.push("/reset-password");
+    navigate.push("/reset-password");
   };
 
   return (

@@ -4,7 +4,7 @@ import React, { Suspense } from "react";
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 
 interface CartItem {
   id: string;
@@ -23,7 +23,7 @@ const ADMIN_FEE = 1000;
 const formatPrice = (value: number) => `Rp. ${value.toLocaleString("id-ID")}`;
 
 export default function CartPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [items, setItems] = React.useState<CartItem[]>(initialCart);
 
   React.useEffect(() => {
@@ -154,7 +154,7 @@ export default function CartPage() {
           <div className="flex flex-col gap-3 text-[#111827]">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={() => navigate.back()}
               className="flex w-max items-center gap-2 text-sm font-medium text-[#187247] transition hover:text-[#0A6B3C]"
             >
               <svg

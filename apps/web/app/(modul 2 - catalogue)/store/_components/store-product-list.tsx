@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import Cookies from "js-cookie"
 
 type ClassValue = string | false | null | undefined;
@@ -37,7 +37,7 @@ export default function StoreProductList({
   outerClassName,
   innerClassName,
 }: StoreProductListProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = React.useState<StoreProduct | null>(null);
   const [quantity, setQuantity] = React.useState(1);
   const [toast, setToast] = React.useState<{ visible: boolean; message: string }>({ visible: false, message: "" });
@@ -293,7 +293,7 @@ export default function StoreProductList({
                       // delay navigation so the toast is visible longer
                       setTimeout(() => {
                         try {
-                          router.push("/login");
+                          navigate.push("/login");
                         } catch {
                           /* ignore */
                         }

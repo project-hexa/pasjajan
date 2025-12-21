@@ -15,14 +15,14 @@ import {
 import { Icon } from "@workspace/ui/components/icon";
 import { InputOTP, InputOTPSlot } from "@workspace/ui/components/input-otp";
 import { toast } from "@workspace/ui/components/sonner";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import Cookies from "js-cookie";
 
 export default function OTPPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { verifyOTP, sendOTP } = useAuthStore();
   const [emailForOTP, setEmailForOTP] = useState<string>("");
   const otpForm = useForm<z.infer<typeof verifyOTPSchema>>({
@@ -54,7 +54,7 @@ export default function OTPPage() {
 
       Cookies.remove("OTP_attempt_count");
       Cookies.remove("OTP_expires_at");
-      router.push("/");
+      navigate.push("/");
     } else {
       toast.error(result.message, {
         toasterId: "global",

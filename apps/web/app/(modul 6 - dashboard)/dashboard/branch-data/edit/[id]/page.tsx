@@ -1,6 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { toast } from "@workspace/ui/components/sonner";
@@ -20,7 +21,7 @@ interface BranchData {
 
 export default function EditBranchPage() {
   const params = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [branch, setBranch] = useState<BranchData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -98,7 +99,7 @@ export default function EditBranchPage() {
       toast.success("Data cabang berhasil diperbarui", {
         toasterId: "global",
       });
-      router.push("/dashboard/branch-data");
+      navigate.push("/dashboard/branch-data");
     } catch (error: any) {
       console.error("Error updating branch:", error);
       toast.error(
