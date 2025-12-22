@@ -32,6 +32,7 @@ class AuthController extends BaseController
         $validator = $this->makeValidator($request->all(), [
             'user_identity' => 'required|string',
             'password' => 'required|string',
+            "role" => 'required|in:Admin,Staff,Customer'
         ]);
 
         if ($validator->fails()) {
@@ -86,11 +87,21 @@ class AuthController extends BaseController
             );
         }
 
-        if($user->role !== "Admin"){
+        // Validasi role HANYA jika yang login adalah Admin
+        if($data['role'] === "Admin" && $user->role !== "Admin"){
             return $this->sendFailResponse(
                 "Akses Ditolak!",
                 code: 401,
                 description: "Anda bukan admin!."
+            );
+        }
+
+        // Validasi role HANYA jika yang login adalah Staff
+        if($data['role'] === "Staff" && $user->role !== "Staff"){
+            return $this->sendFailResponse(
+                "Akses Ditolak!",
+                code: 401,
+                description: "Anda bukan staff!."
             );
         }
 
@@ -137,9 +148,9 @@ class AuthController extends BaseController
 
         if ($validator->fails()) {
             return $this->sendFailResponse(
-                'Validasi register gagal.',
-                ['errors' => $validator->errors()],
-                422
+                'Email/No Hp sudah terdaftar!',
+                code: 422,
+                description: "Silahkan gunakan Email/No hp lain."
             );
         }
 
@@ -259,6 +270,7 @@ class AuthController extends BaseController
     public function sendOtp(Request $request): JsonResponse
     {
         $type = $request->has('email') ? 'email' : ($request->has('phone_number') ? 'phone_number' : null);
+        $context = $request->input('context', 'register');
 
         if (!$type) {
             return $this->sendFailResponse(
@@ -269,6 +281,7 @@ class AuthController extends BaseController
 
         $validator = $this->makeValidator($request->all(), [
             $type => $type === 'email' ? 'required|email' : 'required|string',
+            'context' => 'sometimes|in:register,forgot_password',
         ]);
 
         if ($validator->fails()) {
@@ -282,25 +295,62 @@ class AuthController extends BaseController
         $data = $validator->validated();
         $user = User::where($type, $data[$type])->first();
 
-        if (!$user) {
-            return $this->sendFailResponse(
-                'User tidak ditemukan.',
-                code: 404
-            );
+        if ($context === 'register') {
+            // Untuk registrasi: email/hp TIDAK BOLEH sudah terdaftar DAN terverifikasi
+            if ($user && $user->email_verified_at !== null) {
+                return $this->sendFailResponse(
+                    'Email/No HP sudah terdaftar dan terverifikasi.',
+                    code: 409
+                );
+            }
+
+            if ($user && $user->email_verified_at === null) {
+                $otp = Otp::where('user_id', $user->id)->first();
+                $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+                $otp = $otp
+                    ? $this->updateOtp($expire, $user)
+                    : $this->createOtp($expire, $user);
+            } else {
+                // User belum terdaftar sama sekali (registrasi pertama kali)
+                $otp = Otp::where($type, $data[$type])->first();
+                $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+                $otp = $otp
+                    ? $this->updateOtp($expire, null, $data[$type])
+                    : $this->createOtp($expire, null, $data[$type]);
+            }
+        } else {
+            // Untuk lupa password: email/hp HARUS sudah terdaftar
+            if (!$user) {
+                return $this->sendFailResponse(
+                    'Email/No HP tidak terdaftar.',
+                    code: 404
+                );
+            }
+
+            if ($user->email_verified_at === null) {
+                return $this->sendFailResponse(
+                    'Email belum terverifikasi. Silakan verifikasi email terlebih dahulu.',
+                    code: 403
+                );
+            }
+
+            $otp = Otp::where('user_id', $user->id)->first();
+            $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+            $otp = $otp
+                ? $this->updateOtp($expire, $user)
+                : $this->createOtp($expire, $user);
         }
 
-        $otp = Otp::where('user_id', $user->id)->first();
-        $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
-
-        $otp = $otp
-            ? $this->updateOtp($expire, $user)
-            : $this->createOtp($expire, $user);
-
-        $content = "Kode OTP Anda: {$otp->otp}. Berlaku {$expire} menit.";
+        $content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam " . $expire . " menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
 
         try {
-            Mail::raw($content, function ($msg) use ($user) {
-                $msg->to($user->email)->subject('Kode OTP');
+            $email = $context === 'register' ? $data[$type] : $user->email;
+
+            Mail::raw($content, function ($msg) use ($email) {
+                $msg->to($email)->subject('Kode OTP');
             });
         } catch (\Throwable $e) {
             \Log::error('OTP email failed', ['error' => $e->getMessage()]);
@@ -405,27 +455,26 @@ class AuthController extends BaseController
     }
 
     // Method untuk memasukkan data inputan otp dari user ke database
-    private function createOtp(int $expiringTime, User $user = null, string $email = null): Otp
+    private function createOtp(int $expiringTime, User $user = null, string $identifier = null): Otp
     {
         // Membuat otp, berikut bentuk hash & waktu kadaluarsanya
         $otp = rand(100000, 999999);
         //$hashedOtp = Hash::make($otp);
         $expiresAt = now()->addMinutes($expiringTime);
 
-        // Jika data user tidak ditemukan, maka
-        if (!$user) {
-            // Memasukkan (insert) data otp (tanpa data user) ke database
+        if (!$user && $identifier) {
+        // Untuk registrasi (user belum ada)
             return Otp::create([
-                'email' => $email,
+                'email' => $identifier, // Bisa email atau phone_number
                 'otp' => $otp,
                 'expires_at' => $expiresAt,
                 'attempt_count' => 1,
             ]);
         }
 
-        // Memasukkan (insert) data otp ke database
+        // Untuk forgot password (user sudah ada)
         return Otp::create([
-            'user_id' => $user['id'],
+            'user_id' => $user->id,
             'otp' => $otp,
             'expires_at' => $expiresAt,
             'attempt_count' => 1,
@@ -433,7 +482,7 @@ class AuthController extends BaseController
     }
 
     // Method untuk mengubah data otp milik user di database
-    private function updateOtp(int $expiringTime, User $user = null, string $email = null): Otp
+    private function updateOtp(int $expiringTime, User $user = null, string $identifier = null): Otp
     {
         // Membuat kode otp, berikut bentuk hash & waktu kadaluarsanya
         $otp_code = rand(100000, 999999);
@@ -441,7 +490,7 @@ class AuthController extends BaseController
         $otp = null;
 
         // Jika data user tidak ditemukan, maka
-        if (!$user) {
+        if (!$user && $identifier) {
             // Mencari otp milik user di database
             $otp = Otp::where('email', $email)->first();
         } else {
