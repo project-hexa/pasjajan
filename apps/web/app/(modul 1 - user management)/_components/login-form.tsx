@@ -20,6 +20,8 @@ import { usePathname } from "next/navigation";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 export const LoginForm = () => {
   const { login } = useAuthStore();
@@ -32,9 +34,15 @@ export const LoginForm = () => {
       email: "",
       password: "",
       rememberMe: false,
-      role: pathname === "/login/admin" ? "Admin" : "Customer",
+      role: "Customer",
     },
   });
+
+  useEffect(() => {
+    if (pathname === "/login/admin") {
+      loginForm.setValue("role", "Admin");
+    }
+  }, [pathname, loginForm]);
 
   const handleOnSubmit = async (data: z.infer<typeof loginSchema>) => {
     const result = await login(data);
@@ -44,12 +52,28 @@ export const LoginForm = () => {
         toasterId: "global",
       });
 
-      if (pathname === "/login/admin") navigate.push("/dashboard");
-      navigate.push("/");
+      if (pathname === "/login/admin" && data.role === "Admin") {
+        navigate.push("/dashboard");
+      } else {
+        navigate.push("/");
+      }
     } else {
       toast.error(result.message, {
+        description: result.description,
         toasterId: "global",
       });
+
+      if (result.errors) {
+        if (!result.errors.email) {
+          if (Cookies.get("verificationStep") === "otp-sent") {
+            navigate.push("/one-time-password");
+          } else {
+            Cookies.set("verificationStep", "email-sent");
+            Cookies.set("pendingEmail", loginForm.getValues("email"));
+            navigate.push("/send-otp");
+          }
+        }
+      }
     }
   };
 
