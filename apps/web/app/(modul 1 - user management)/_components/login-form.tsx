@@ -66,7 +66,7 @@ export const LoginForm = () => {
       });
 
       if (result.errors) {
-        if (result.errors.email_verified === false) {
+        if (result.errors.email_verified) {
           if (Cookies.get("verificationStep") === "otp-sent") {
             navigate.push("/one-time-password");
           } else {
