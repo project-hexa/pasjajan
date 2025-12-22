@@ -68,6 +68,11 @@ class Order extends Model
         return $this->belongsTo(Store::class);
     }
 
+    public function shipment()
+    {
+        return $this->hasOne(Shipment::class);
+    }
+
 
     // Helper Methods - Order Status
     public function isPending()
