@@ -1,3 +1,9 @@
+type APIError = {
+  message?: string;
+  errors?: Record<string, string[]>;
+  status?: number;
+};
+
 export const handleStore = async (
   tryFnc: () => Promise<void>,
   successMessage: string,
