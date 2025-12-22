@@ -17,7 +17,7 @@ type APIResponse<T, E = Record<string, string[]>> =
   | SuccessResponse<T>
   | ErrorResponse<E>;
 
-export interface Store {
+interface Store {
   id: number;
   code: string;
   name: string;
@@ -29,7 +29,7 @@ export interface Store {
   image_url?: string;
 }
 
-export interface Product {
+interface Product {
   id: number;
   name: string;
   code: string;
@@ -44,7 +44,7 @@ export interface Product {
   };
 }
 
-export interface Promo {
+interface Promo {
   id: number;
   title: string;
   image_url: string;
