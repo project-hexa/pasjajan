@@ -171,7 +171,13 @@ class NotificationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
         $query = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email']);
+
+        // Jika bukan Admin, hanya tampilkan notifikasi milik sendiri
+        if ($user->role !== 'Admin') {
+            $query->where('to_user_id', $user->id);
+        }
 
         $this->applyFilters($query, $request);
 
