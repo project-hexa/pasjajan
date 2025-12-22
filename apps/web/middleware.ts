@@ -20,24 +20,22 @@ export default function middleware(request: NextRequest) {
   );
 
   // Routes auth (login/register)
-  const unprotectedRoute = ["/login", "/register", "/login/admin"].some(
-    (route) => pathname.startsWith(route),
+  const unprotectedRoute = ["/login", "/register"].some((route) =>
+    pathname.startsWith(route),
   );
 
   // 1. Jika akses protected route tanpa token, redirect ke login
   if (protectedRoute && !token) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (adminRoute) {
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
-
     if (role !== "Admin") {
-      const loginUrl = new URL("/login/admin", request.url);
-      return NextResponse.redirect(loginUrl);
+      if (!token) {
+        return NextResponse.redirect(new URL("/login/admin", request.url));
+      }
+
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
