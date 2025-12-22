@@ -42,10 +42,6 @@ export const useAuthStore = create<AuthStore>()(
           const res = await authService.login(payload);
           const { token, user_data } = res;
 
-          if (user_data.role !== "Admin") {
-            throw res;
-          }
-
           if (payload.rememberMe) {
             Object.assign(cookiesOptions, { expires: 7 });
           }
