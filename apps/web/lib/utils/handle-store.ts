@@ -16,6 +16,7 @@ export const handleStore = async (
     return {
       ok: false,
       message: err?.message ?? defaultErrorMessage,
+      description: err?.description,
       errors: err?.errors,
       status: err?.status,
     };
