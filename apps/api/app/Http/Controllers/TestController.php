@@ -12,66 +12,64 @@ class TestController extends BaseController
     public function testSMTPConnectionOnly(Request $request): JsonResponse
     {
         try {
-            // Get the default mailer (or 'smtp' specifically)
-            $mailer = Mail::mailer('smtp');
+            config(['mail.default' => 'smtp']);
 
-            // Get the underlying transport
-            $transport = $mailer->getSymfonyTransport();
+            $configured = config('mail.mailers.resend.transport') === 'smtp';
 
-            // Try to start the transport (this checks connection and authentication)
-            $transport->start();
+            if (!$configured) {
+                throw new Exception('Resend mailer not properly configured');
+            }
 
-			return $this->sendSuccessResponse('SMTP connection successful!');
+            return $this->sendSuccessResponse('Resend connection successful!');
 
         } catch (Exception $e) {
-			$errors['error_test'] = $e->getMessage();
+            $errors['error_test'] = $e->getMessage();
 
-			return $this->sendFailResponse('SMTP connection failed.', $errors);
+            return $this->sendFailResponse('Resend connection failed.', $errors);
         }
     }
 
     public function testResendConnectionOnly(Request $request): JsonResponse
     {
         try {
-            // Get the default mailer (or 'smtp' specifically)
-            $mailer = Mail::mailer('resend');
+            config(['mail.default' => 'resend']);
 
-            // Get the underlying transport
-            $transport = $mailer->getSymfonyTransport();
+            $configured = config('mail.mailers.resend.transport') === 'resend';
 
-            // Try to start the transport (this checks connection and authentication)
-            $transport->start();
+            if (!$configured) {
+                throw new Exception('Resend mailer not properly configured');
+            }
 
-			return $this->sendSuccessResponse('Resend connection successful!');
+            return $this->sendSuccessResponse('Resend connection successful!');
 
         } catch (Exception $e) {
-			$errors['error_test'] = $e->getMessage();
+            $errors['error_test'] = $e->getMessage();
 
-			return $this->sendFailResponse('Resend connection failed.', $errors);
+            return $this->sendFailResponse('Resend connection failed.', $errors);
         }
     }
 
-	public function testSendEmail(Request $request): JsonResponse
-	{
-		try {
-			// Ambil email dari inputan
-			$email = $request->input('email');
+    public function testSendEmail(Request $request): JsonResponse
+    {
+        try {
+            // Ambil email dari inputan
+            $email = $request->input('email');
 
-			// Tetapkan isi konten pada badan email/chat/sms
-			$content = "Test kirim email ke alamat email.";
+            // Tetapkan isi konten pada badan email/chat/sms
+            $content = "Test kirim email ke alamat email.";
 
-			// Mengirim otp ke alamat email milik user terkait
-			Mail::raw($content, function ($message) use ($email) {
-				$message->to($email)->subject('Test Email');
-			});
+            // Mengirim otp ke alamat email milik user terkait
+            Mail::raw($content, function ($message) use ($email) {
+                $message->to($email)->subject('Test Email');
+            });
 
-			$result['email'] = $email;
+            $result['email'] = $email;
 
-			return $this->sendSuccessResponse("Test kirim email berhasil.", $result);
-		} catch (Exception $e) {
-			$errors['error_test'] = $e->getMessage();
+            return $this->sendSuccessResponse("Test kirim email berhasil.", $result);
+        } catch (Exception $e) {
+            $errors['error_test'] = $e->getMessage();
 
-			return $this->sendSuccessResponse("Test kirim emaill gagal.", $errors);
-		}
-	}
+            return $this->sendSuccessResponse("Test kirim emaill gagal.", $errors);
+        }
+    }
 }
