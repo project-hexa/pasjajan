@@ -20,8 +20,8 @@ export default function middleware(request: NextRequest) {
   );
 
   // Routes auth (login/register)
-  const unprotectedRoute = ["/login", "/register"].some((route) =>
-    pathname.startsWith(route),
+  const unprotectedRoute = ["/login", "/register", "/login/admin"].some(
+    (route) => pathname.startsWith(route),
   );
 
   // 1. Jika akses protected route tanpa token, redirect ke login
@@ -41,6 +41,9 @@ export default function middleware(request: NextRequest) {
 
   // 2. Jika sudah login (punya token) tidak bisa masuk ke page login/register
   if (unprotectedRoute && token) {
+    if (role === "Admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
     return NextResponse.redirect(new URL("/", request.url));
   }
 
