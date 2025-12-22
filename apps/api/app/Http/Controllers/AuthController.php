@@ -59,10 +59,38 @@ class AuthController extends BaseController
 
         $user = User::where($field, $data['user_identity'])->first();
 
+        if (!$user) {
+            return $this->sendFailResponse(
+                'Email/No HP belum terdaftar!',
+                code: 401,
+                description: "Silahkan Daftar terlebih dahulu."
+            );
+        }
+
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return $this->sendFailResponse(
-                'Email/No HP atau password salah.',
-                code: 401
+                'Email/No HP atau password salah!',
+                code: 401,
+                description: "Silahkan cek kembali credential anda."
+            );
+        }
+
+        if(!$user->email_verified_at){
+            return $this->sendFailResponse(
+                "Email/No HP belum diverifikasi!",
+                [
+                    "email_verified" => false
+                ],
+                401,
+                "Silahkan Verifikasi Email terlebih dahulu."
+            );
+        }
+
+        if($user->role !== "Admin"){
+            return $this->sendFailResponse(
+                "Akses Ditolak!",
+                code: 401,
+                description: "Anda bukan admin!."
             );
         }
 
