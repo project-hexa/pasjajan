@@ -42,6 +42,10 @@ export const useAuthStore = create<AuthStore>()(
           const res = await authService.login(payload);
           const { token, user_data } = res;
 
+          if (user_data.role !== "Admin") {
+            throw res;
+          }
+
           if (payload.rememberMe) {
             Object.assign(cookiesOptions, { expires: 7 });
           }
@@ -62,6 +66,7 @@ export const useAuthStore = create<AuthStore>()(
           await authService.logout(token);
 
           Cookies.remove("token", cookiesOptions);
+          Cookies.remove("role", cookiesOptions);
 
           set({ user: null, isLoggedIn: false });
         }, "Berhasil Logout"),
