@@ -41,6 +41,8 @@ export const LoginForm = () => {
   useEffect(() => {
     if (pathname === "/login/admin") {
       loginForm.setValue("role", "Admin");
+    } else {
+      loginForm.setValue("role", "Customer");
     }
   }, [pathname, loginForm]);
 
@@ -54,7 +56,7 @@ export const LoginForm = () => {
 
       if (pathname === "/login/admin" && data.role === "Admin") {
         navigate.push("/dashboard");
-      } else {
+      } else if (pathname === "/login" && data.role === "Customer") {
         navigate.push("/");
       }
     } else {
@@ -64,7 +66,7 @@ export const LoginForm = () => {
       });
 
       if (result.errors) {
-        if (!result.errors.email) {
+        if (result.errors.email_verified === false) {
           if (Cookies.get("verificationStep") === "otp-sent") {
             navigate.push("/one-time-password");
           } else {
