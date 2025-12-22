@@ -65,6 +65,9 @@ export const RegisterForm = () => {
       : "+62" + data.phone_number;
     data.phone_number = phone_number;
 
+    // console.log(data)
+    // return;
+
     const result = await register(data);
 
     if (result.ok) {
@@ -75,6 +78,7 @@ export const RegisterForm = () => {
       navigate.push("/send-otp");
     } else {
       toast.error(result.message, {
+        description: result.description,
         toasterId: "global",
       });
     }
