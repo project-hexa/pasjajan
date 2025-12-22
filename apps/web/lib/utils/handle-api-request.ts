@@ -17,6 +17,7 @@ const wrapTryCatch = async <T>(
     if (isAxiosError(error)) {
       throw {
         message: error.response?.data?.message ?? defaultErrorMessage,
+        description: error.response?.data.description,
         errors: error.response?.data?.errors,
         status: error.response?.status,
       } satisfies APIError;
