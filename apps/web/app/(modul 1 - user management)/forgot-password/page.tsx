@@ -16,7 +16,7 @@ import { Input } from "@workspace/ui/components/input";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import Cookies from "js-cookie";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { toast } from "@workspace/ui/components/sonner";
 
 export default function ForgotPasswordPage() {
