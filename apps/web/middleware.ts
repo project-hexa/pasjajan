@@ -31,11 +31,11 @@ export default function middleware(request: NextRequest) {
 
   if (adminRoute) {
     if (role !== "Admin") {
-      if (!token) {
-        return NextResponse.redirect(new URL("/login/admin", request.url));
-      }
-
       return NextResponse.redirect(new URL("/", request.url));
+    }
+
+    if (role === "Admin" && !token) {
+      return NextResponse.redirect(new URL("/login/admin", request.url));
     }
   }
 
