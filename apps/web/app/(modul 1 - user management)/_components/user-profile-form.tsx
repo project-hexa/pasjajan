@@ -1,8 +1,8 @@
 "use client";
 
 import { editProfileSchema } from "@/lib/schema/user-profile.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useUserStore } from "@/stores/useUserStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
+import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Avatar,
