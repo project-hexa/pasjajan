@@ -1,7 +1,7 @@
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { addAddressSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {

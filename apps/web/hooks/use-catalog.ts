@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { StoreService, ProductService, PromoService } from "../services/api-service";
-import { Store, Product, Promo } from "../types/api";
 
 export const useCatalog = () => {
   const [stores, setStores] = useState<Store[]>([]);

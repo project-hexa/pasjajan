@@ -260,7 +260,7 @@ class UserController extends BaseController
 		$rules = [
 			'email_before' => 'required|exists:App\Models\User,email|string|email',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
-			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
+			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string',
 			'full_name' => 'nullable|string',
 			'birth_date' => 'nullable|date',
 			'gender' => 'nullable|string',

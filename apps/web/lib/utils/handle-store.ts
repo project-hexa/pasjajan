@@ -1,20 +1,15 @@
-type APIError = {
-  message?: string;
-  errors?: Record<string, string[]>;
-  status?: number;
-};
-
-export const handleStore = async (
-  tryFnc: () => Promise<void>,
-  successMessage: string,
+export const handleStore = async <T = undefined>(
+  tryFnc: () => Promise<T>,
+  successMessage?: string,
   defaultErrorMessage = "Terjadi Kesalahan",
 ) => {
   try {
-    await tryFnc();
+    const data = await tryFnc();
 
     return {
       ok: true,
-      message: successMessage,
+      message: successMessage ?? "",
+      ...(data !== undefined ? { data } : {}),
     };
   } catch (error) {
     const err = error as APIError;
@@ -22,6 +17,7 @@ export const handleStore = async (
     return {
       ok: false,
       message: err?.message ?? defaultErrorMessage,
+      description: err?.description,
       errors: err?.errors,
       status: err?.status,
     };

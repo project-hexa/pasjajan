@@ -2,7 +2,7 @@
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
 import { loginSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Checkbox } from "@workspace/ui/components/checkbox";
@@ -20,6 +20,8 @@ import { usePathname } from "next/navigation";
 import { useNavigate } from "@/hooks/useNavigate";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { useEffect } from "react";
+import Cookies from "js-cookie";
 
 export const LoginForm = () => {
   const { login } = useAuthStore();
@@ -32,9 +34,17 @@ export const LoginForm = () => {
       email: "",
       password: "",
       rememberMe: false,
-      role: pathname === "/login/admin" ? "Admin" : "Customer",
+      role: "Customer",
     },
   });
+
+  useEffect(() => {
+    if (pathname === "/login/admin") {
+      loginForm.setValue("role", "Admin");
+    } else {
+      loginForm.setValue("role", "Customer");
+    }
+  }, [pathname, loginForm]);
 
   const handleOnSubmit = async (data: z.infer<typeof loginSchema>) => {
     const result = await login(data);
@@ -44,12 +54,28 @@ export const LoginForm = () => {
         toasterId: "global",
       });
 
-      if (pathname === "/login/admin") navigate.push("/dashboard");
-      navigate.push("/");
+      if (pathname === "/login/admin" && data.role === "Admin") {
+        navigate.push("/dashboard");
+      } else if (pathname === "/login" && data.role === "Customer") {
+        navigate.push("/");
+      }
     } else {
       toast.error(result.message, {
+        description: result.description,
         toasterId: "global",
       });
+
+      if (result.errors) {
+        if (result.errors.email_verified) {
+          if (Cookies.get("verificationStep") === "otp-sent") {
+            navigate.push("/one-time-password");
+          } else {
+            Cookies.set("verificationStep", "email-sent");
+            Cookies.set("pendingEmail", loginForm.getValues("email"));
+            navigate.push("/send-otp");
+          }
+        }
+      }
     }
   };
 

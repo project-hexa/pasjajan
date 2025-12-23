@@ -1,7 +1,7 @@
 "use client";
 
 import { verifyOTPSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -39,7 +39,8 @@ export default function OTPPage() {
   const [isMaxAttempt, setIsMaxAttempt] = useState(false);
 
   useEffect(() => {
-    const email = Cookies.get("pendingEmail") || "";
+    const email =
+      Cookies.get("pendingEmail") || Cookies.get("emailForResetOTP") || "";
     setEmailForOTP(email);
     otpForm.setValue("email", email);
   }, [otpForm]);
@@ -78,7 +79,7 @@ export default function OTPPage() {
 
     if (result.ok) {
       toast.success(result.message, { toasterId: "global" });
-      otpForm.resetField("otp")
+      otpForm.resetField("otp");
 
       const newAttemptCount = attemptCount + 1;
       setAttemptCount(newAttemptCount);

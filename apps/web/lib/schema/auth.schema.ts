@@ -70,7 +70,7 @@ export const loginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   rememberMe: z.boolean().optional(),
-  role: z.enum(["Admin", "Staff", "Customer"]).optional(),
+  role: z.enum(["Admin", "Staff", "Customer"]),
 });
 
 export const verifyOTPSchema = z.object({
@@ -82,6 +82,7 @@ export const verifyOTPSchema = z.object({
 
 export const sendOTPSchema = z.object({
   email: emailSchema,
+  context: z.string().optional(),
 });
 
 export const forgotPasswordSchema = z.object({
