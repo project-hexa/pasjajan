@@ -19,7 +19,7 @@ import AddressDialog, { Address } from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import Cookies from "js-cookie";
 
 

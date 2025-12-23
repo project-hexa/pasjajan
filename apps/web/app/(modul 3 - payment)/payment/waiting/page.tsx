@@ -7,7 +7,7 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { PaymentInstructionsModal } from '@/components/PaymentInstructionsModal';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import Cookies from "js-cookie";
 
 interface PaymentData {

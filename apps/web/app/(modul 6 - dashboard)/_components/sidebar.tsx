@@ -44,6 +44,11 @@ const navigation = [
     icon: "lucide:tag",
   },
   {
+    name: "Data Pengguna",
+    href: "/dashboard/users",
+    icon: "lucide:user-round",
+  },
+  {
     name: "Voucher",
     href: "/dashboard/vouchers",
     icon: "lucide:ticket",

@@ -6,7 +6,7 @@ import {
   verifyOTPSchema,
 } from "@/lib/schema/auth.schema";
 import { handleStore } from "@/lib/utils/handle-store";
-import { authService } from "@/services/auth.service";
+import { authService } from "@/app/(modul 1 - user management)/_services/auth.service";
 import Cookies from "js-cookie";
 import z from "zod";
 import { create } from "zustand";
@@ -30,7 +30,6 @@ interface AuthStore {
 const cookiesOptions: Cookies.CookieAttributes = {
   path: "/",
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -63,6 +62,7 @@ export const useAuthStore = create<AuthStore>()(
           await authService.logout(token);
 
           Cookies.remove("token", cookiesOptions);
+          Cookies.remove("role", cookiesOptions);
 
           set({ user: null, isLoggedIn: false });
         }, "Berhasil Logout"),

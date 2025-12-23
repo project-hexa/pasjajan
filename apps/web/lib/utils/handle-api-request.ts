@@ -1,52 +1,73 @@
-import { api, createServerApi } from "./axios";
-import { Store, Product, Promo } from "../../types/api";
+import { AxiosRequestConfig, AxiosResponse, isAxiosError } from "axios";
+import { api } from "./axios";
 
-type RequestOptions = {
-  params?: Record<string, unknown>;
-  headers?: Record<string, string>;
-  defaultErrorMessage?: string;
+const wrapTryCatch = async <T>(
+  callback: () => Promise<AxiosResponse>,
+  defaultErrorMessage?: string,
+): Promise<T> => {
+  try {
+    const { data } = await callback();
+
+    if (!data.success) {
+      throw data;
+    }
+
+    return data.data;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      throw {
+        message: error.response?.data?.message ?? defaultErrorMessage,
+        description: error.response?.data.description,
+        errors: error.response?.data?.errors,
+        status: error.response?.status,
+      } satisfies APIError;
+    }
+
+    throw error;
+  }
 };
+
+interface RequestConfig extends AxiosRequestConfig {
+  defaultErrorMessage?: string;
+}
 
 export const handleApiRequest = {
-  async get<T>(url: string, options?: RequestOptions): Promise<T> {
-    const res = await api.get(url, { params: options?.params, headers: options?.headers });
-    return res.data as T;
-  },
-  async post<T>(url: string, payload?: unknown, options?: RequestOptions): Promise<T> {
-    const res = await api.post(url, payload, { headers: options?.headers });
-    return res.data as T;
-  },
-  async patch<T>(url: string, payload?: unknown, options?: RequestOptions): Promise<T> {
-    const res = await api.patch(url, payload, { headers: options?.headers });
-    return res.data as T;
-  },
-  async delete<T>(url: string, options?: RequestOptions): Promise<T> {
-    const res = await api.delete(url, { params: options?.params, headers: options?.headers });
-    return res.data as T;
-  },
-  async serverGet<T>(url: string, options?: RequestOptions): Promise<T> {
-    const serverApi = await createServerApi();
-    const res = await serverApi.get(url, { params: options?.params, headers: options?.headers });
-    return res.data as T;
-  },
-};
+  get: async <TResponse = unknown>(url: string, config?: RequestConfig) =>
+    await wrapTryCatch<TResponse>(
+      () => api.get<APIResponse<TResponse>>(url, config),
+      config?.defaultErrorMessage,
+    ),
+  post: async <TResponse = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig,
+  ) =>
+    await wrapTryCatch<TResponse>(
+      () => api.post<APIResponse<TResponse>>(url, data, config),
+      config?.defaultErrorMessage,
+    ),
+  put: async <TResponse = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig,
+  ) =>
+    await wrapTryCatch<TResponse>(
+      () => api.put<APIResponse<TResponse>>(url, data, config),
+      config?.defaultErrorMessage,
+    ),
+  patch: async <TResponse = unknown>(
+    url: string,
+    data?: unknown,
+    config?: RequestConfig,
+  ) =>
+    await wrapTryCatch<TResponse>(
+      () => api.patch<APIResponse<TResponse>>(url, data, config),
+      config?.defaultErrorMessage,
+    ),
 
-export const StoreService = {
-  getAll: () =>
-    handleApiRequest.get<Store[]>("/stores", {
-      defaultErrorMessage: "Gagal memuat daftar toko",
-    }),
-
-  getById: (id: string | number) => handleApiRequest.get<Store>(`/stores/${id}`),
-};
-
-export const ProductService = {
-  getAll: () =>
-    handleApiRequest.get<Product[]>("/products", {
-      defaultErrorMessage: "Gagal memuat produk",
-    }),
-};
-
-export const PromoService = {
-  getActive: () => handleApiRequest.get<Promo[]>("/promos"),
+  delete: async <TResponse = unknown>(url: string, config?: RequestConfig) =>
+    await wrapTryCatch<TResponse>(
+      () => api.delete<APIResponse<TResponse>>(url, config),
+      config?.defaultErrorMessage,
+    ),
 };

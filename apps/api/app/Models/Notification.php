@@ -12,6 +12,9 @@ class Notification extends Model
         'body',
         'from_user_id',
         'to_user_id',
+        'type',
+        'related_id',
+        'data'
     ];
 
     protected $casts = [

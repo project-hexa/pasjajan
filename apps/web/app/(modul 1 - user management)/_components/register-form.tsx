@@ -2,7 +2,7 @@
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
 import { registerSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -65,6 +65,9 @@ export const RegisterForm = () => {
       : "+62" + data.phone_number;
     data.phone_number = phone_number;
 
+    // console.log(data)
+    // return;
+
     const result = await register(data);
 
     if (result.ok) {
@@ -75,6 +78,7 @@ export const RegisterForm = () => {
       navigate.push("/send-otp");
     } else {
       toast.error(result.message, {
+        description: result.description,
         toasterId: "global",
       });
     }

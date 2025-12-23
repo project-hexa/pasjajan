@@ -31,6 +31,7 @@ export function AnalyticChart({ label, data, className }: AnalyticChartProps) {
         margin={{
           left: 12,
           right: 12,
+          top: 12,
         }}
       >
         <CartesianGrid />

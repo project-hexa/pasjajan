@@ -8,7 +8,7 @@ import Cookies from "js-cookie";
 import { Icon } from "@workspace/ui/components/icon";
 import { Navbar } from "@/components/ui/navigation-bar";
 import { Footer } from "@/components/ui/footer";
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 
 interface OrderItem {
     product_id: number;

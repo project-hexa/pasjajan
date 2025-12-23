@@ -1,5 +1,6 @@
 "use client";
 
+import { useNavigate } from "@/hooks/useNavigate";
 import { forgotPasswordSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
@@ -12,9 +13,11 @@ import {
 } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
-import { useNavigate } from "@/hooks/useNavigate";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import Cookies from "js-cookie";
+import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
+import { toast } from "@workspace/ui/components/sonner";
 
 export default function ForgotPasswordPage() {
   const forgotPassForm = useForm<z.infer<typeof forgotPasswordSchema>>({
@@ -24,13 +27,27 @@ export default function ForgotPasswordPage() {
     },
   });
   const navigate = useNavigate();
+  const { sendOTP } = useAuthStore();
 
   const handleSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const result = await sendOTP({
+      email: data.email,
+      context: "forgot_password",
+    });
 
-    sessionStorage.setItem("emailForResetPassword", data.email);
+    if (result.ok) {
+      toast.success(result.message, {
+        toasterId: "global",
+      });
 
-    navigate.push("/reset-password");
+      Cookies.set("emailForResetPassword", data.email);
+
+      navigate.push("/one-time-password");
+    } else {
+      toast.error(result.message, {
+        toasterId: "global",
+      });
+    }
   };
 
   return (

@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Store } from "@/types/api";
 import * as React from "react";
 import { useSearchStore } from "@/stores/useSearchStore";
 import { HeroBanner } from "./components/hero-banner";
