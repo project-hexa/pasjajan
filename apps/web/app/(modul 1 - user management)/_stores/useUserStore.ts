@@ -1,4 +1,4 @@
-import { editProfileSchema } from "@/lib/schema/user-profile.schema";
+import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleStore } from "@/lib/utils/handle-store";
 import { userService } from "@/app/(modul 1 - user management)/_services/user.service";
 import z from "zod";

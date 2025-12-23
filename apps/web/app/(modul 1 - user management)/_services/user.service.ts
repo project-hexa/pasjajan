@@ -1,4 +1,4 @@
-import { editProfileSchema } from "@/lib/schema/user-profile.schema";
+import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import z from "zod";
 import Cookies from "js-cookie";
