@@ -87,9 +87,32 @@ class BaseController extends Controller
 		];
 
 		if (!empty($errors)) {
-			$response['errors'] = $errors;
+			if (!empty($description)) {
+				$response['description'] = $description . ', ' . $this->flattenErrors($errors);
+			} else {
+				$response['description'] = $this->flattenErrors($errors);
+			}
 		}
 
 		return response()->json($response, $code);
+	}
+
+	private function flattenErrors($errors): string
+	{
+		$result = [];
+
+		if ($errors instanceof MessageBag) {
+			$errors = $errors->all();
+		}
+
+		if (is_array($errors)) {
+			foreach ($errors as $error) {
+				$result[] = $this->flattenErrors($error); // recurse
+			}
+		} else {
+			$result[] = $errors; // single string
+		}
+
+		return implode(', ', $result);
 	}
 }
