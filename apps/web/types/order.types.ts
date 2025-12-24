@@ -6,7 +6,19 @@ export type OrderStatus =
     | "completed"
     | "cancelled";
 
-export type PaymentStatus = "unpaid" | "pending" | "paid" | "expired" | "refunded";
+export type PaymentStatus =
+    | "unpaid"
+    | "pending"
+    | "paid"
+    | "expired"
+    | "refunded"
+    | "settlement"
+    | "capture"
+    | "failed"
+    | "cancelled"
+    | "cancel"
+    | "deny"
+    | "expire";
 
 export interface PaymentMethod {
     id: number;
