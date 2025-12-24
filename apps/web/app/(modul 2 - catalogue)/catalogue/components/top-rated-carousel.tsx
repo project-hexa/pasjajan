@@ -20,6 +20,7 @@ interface TopRatedCarouselProps {
 
 export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCarouselProps) {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [items, setItems] = React.useState<RestaurantCard[]>(restaurants ?? []);
 
   const scrollBy = (direction: "left" | "right") => {
     const node = scrollContainerRef.current;
@@ -31,14 +32,78 @@ export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCa
     node.scrollTo({ left: node.scrollLeft + offset, behavior: "smooth" });
   };
 
-  if (restaurants.length === 0) return null;
+  // keep local items in sync with props
+  React.useEffect(() => setItems(restaurants ?? []), [restaurants]);
+
+  // when no restaurants provided, attempt to fetch top-rated stores from API
+  React.useEffect(() => {
+    if ((items || []).length > 0) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const apiRoot = (process.env.NEXT_PUBLIC_API_URL as string) || "http://localhost:8000/api";
+        const candidates = [
+          `${apiRoot}/stores/top-rated`,
+          `${apiRoot}/stores?top_rated=1`,
+          `${apiRoot}/top-rated/stores`,
+          `${apiRoot}/stores`,
+        ];
+
+        for (const url of candidates) {
+          try {
+            const r = await fetch(url);
+            if (!r.ok) continue;
+            const payload = await r.json();
+            const arr = Array.isArray(payload)
+              ? payload
+              : Array.isArray(payload.data)
+              ? payload.data
+              : Array.isArray(payload.data?.data)
+              ? payload.data.data
+              : Array.isArray(payload.stores)
+              ? payload.stores
+              : [];
+
+            if (arr.length === 0) continue;
+
+            const mapped: RestaurantCard[] = arr.map((s: unknown, idx: number) => {
+              const obj = s as Record<string, unknown>;
+              return {
+                id: obj.id ?? obj.code ?? idx,
+                slug: (obj.slug ?? String(obj.id ?? obj.code ?? idx)) as string,
+                title: (obj.name ?? obj.title ?? "") as string,
+                image: (obj.image_url ?? obj.logo_url ?? obj.image ?? "/img/logo2.png") as string,
+                offers: (obj.offers ?? obj.discounts ?? []) as string[],
+              } as RestaurantCard;
+            });
+
+            if (mounted) {
+              setItems(mapped);
+              break;
+            }
+          } catch {
+            // try next candidate
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [items]);
+
+  if ((items || []).length === 0) return null;
 
   return (
     <section className="relative">
       {showHeading && (
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-[26px] font-semibold text-[#33363F]">Resto Top Rating</h2>
+            <h2 className="text-[26px] font-semibold text-[#33363F]">Cabang Pilihan</h2>
           </div>
         </div>
       )}
@@ -56,7 +121,7 @@ export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCa
           ref={scrollContainerRef}
           className="flex gap-4 overflow-x-auto pb-2 pr-4 md:pl-1"
         >
-          {restaurants.map((restaurant) => (
+          {items.map((restaurant) => (
             <Link
               key={restaurant.id}
               href={restaurant.slug ? `/store/${restaurant.slug}` : '#'}

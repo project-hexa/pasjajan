@@ -25,6 +25,7 @@ class User extends Authenticatable
 		'birth_date',
 		'gender',
 		'phone_number_verified_at',
+		'email_verified_at',
 		'avatar',
 		'role',
 		'remember_token',
@@ -32,7 +33,9 @@ class User extends Authenticatable
 		'last_login_date',
 		'reason_deleted',
 	];
-	
+
+    protected $dates = ['phone_number_verified_at', 'email_verified_at'];
+
 	public function otps(): HasMany
 	{
 		return $this->hasMany(Otp::class);

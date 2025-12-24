@@ -1,124 +1,64 @@
 import { z } from "zod";
-import { passwordStrength } from "check-password-strength";
+import {
+  addressSchema,
+  passwordSchema,
+  passwordValidation,
+  userSchema,
+} from "./user.schema";
 
-const emailSchema = z.string().email("Email tidak Valid");
-
-const phoneSchema = z.string();
-
-const passwordSchema = z.string().superRefine((val, ctx) => {
-  const strength = passwordStrength(val);
-
-  if (val.length < 8) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password minimal harus 8 karakter",
-    });
-  }
-
-  if (!strength.contains.includes("uppercase")) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password harus mengandung huruf besar",
-    });
-  }
-
-  if (!strength.contains.includes("lowercase")) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password harus mengandung huruf kecil",
-    });
-  }
-
-  if (!strength.contains.includes("symbol")) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Password harus mengandung setidaknya 1 simbol",
-    });
-  }
+export const otp = z.string().min(6, {
+  message: "OTP anda harus terdiri dari 6 karakter.",
 });
 
-export const registerSchema = z
-  .object({
-    token: z.string({ message: "Credentials dibutuhkan" }),
-    full_name: z
-      .string()
-      .min(3, "Nama lengkap minimal harus 3 karakter")
-      .max(30, "Nama lengkap maksimal 30 karakter"),
-    email: emailSchema,
-    phone_number: phoneSchema,
-    address: z
-      .string()
-      .min(10, "Alamat minimal harus 10 karakter")
-      .max(200, "Alamat maksimal 200 karakter"),
-    password: passwordSchema,
-    password_confirmation: z.string(),
+export const registerSchema = userSchema
+  .pick({
+    full_name: true,
+    email: true,
+    phone_number: true,
   })
-  .superRefine((data, ctx) => {
-    if (data.password !== data.password_confirmation) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Konfirmasi password tidak sesuai dengan password sebelumnya.",
-        path: ["password_confirmation"],
-      });
-    }
+  .extend({
+    address: addressSchema,
+    password: passwordSchema,
+    password_confirmation: passwordSchema,
+  })
+  .superRefine((val, ctx) => passwordValidation(val, ctx));
+
+export const loginSchema = userSchema
+  .pick({
+    email: true,
+    role: true,
+  })
+  .extend({
+    password: passwordSchema,
+    rememberMe: z.boolean(),
   });
 
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  rememberMe: z.boolean().optional(),
-  role: z.enum(["Admin", "Staff", "Customer"]).optional(),
-});
-
-export const verifyOTPSchema = z.object({
-  email: emailSchema,
-  pin: z.string().min(6, {
-    message: "OTP anda harus terdiri dari 6 karakter.",
-  }),
-});
-
-export const sendOTPSchema = z.object({
-  email: emailSchema,
-});
-
-export const forgotPasswordSchema = z.object({
-  email: emailSchema,
-});
-
-export const resetPasswordSchema = z
-  .object({
-    password: passwordSchema,
-    password_confirmation: z.string(),
+export const verifyOTPSchema = userSchema
+  .pick({
+    email: true,
   })
-  .superRefine((data, ctx) => {
-    if (data.password !== data.password_confirmation) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Konfirmasi password tidak sesuai dengan password sebelumnya.",
-        path: ["password_confirmation"],
-      });
-    }
+  .extend({
+    otp,
   });
 
-export const addAddressSchema = z.object({
-  pinpoint: z
-    .string()
-    .min(3, "Pinpoint minimal harus 3 karakter")
-    .max(200, "Pinpoint maksimal 200 karakter"),
-  label_address: z
-    .string()
-    .min(3, "Label alamat minimal harus 3 karakter")
-    .max(50, "Label alamat maksimal 50 karakter"),
-  address: z
-    .string()
-    .min(10, "Alamat minimal harus 10 karakter")
-    .max(200, "Alamat maksimal 200 karakter"),
-  reciper_name: z
-    .string()
-    .min(3, "Nama penerima minimal harus 3 karakter")
-    .max(50, "Nama penerima maksimal 50 karakter"),
-  phone_number: z
-    .string()
-    .min(10, "Nomor telepon minimal harus 10 karakter")
-    .max(15, "Nomor telepon maksimal 15 karakter"),
+export const sendOTPSchema = userSchema
+  .pick({
+    email: true,
+  })
+  .extend({
+    context: z.enum(["register", "forgot_password"]),
+  });
+
+export const forgotPasswordSchema = userSchema.pick({
+  email: true,
 });
+
+export const resetPasswordSchema = userSchema
+  .pick({
+    email: true,
+  })
+  .extend({
+    password: passwordSchema,
+    password_confirmation: passwordSchema,
+  })
+  .superRefine((val, ctx) => passwordValidation(val, ctx));

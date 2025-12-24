@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
 export const api = axios.create({
@@ -10,7 +10,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  (config) => {
+  (config): InternalAxiosRequestConfig => {
     const token = Cookies.get("token");
 
     if (token) {
@@ -35,11 +35,9 @@ api.interceptors.response.use(
   },
 );
 
-export const createServerApi = async () => {
+export async function getApiWithAuth() {
   const { cookies } = await import("next/headers");
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-
+  const token = (await cookies()).get("token")?.value;
   return axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     headers: {
@@ -48,4 +46,4 @@ export const createServerApi = async () => {
       ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
-};
+}

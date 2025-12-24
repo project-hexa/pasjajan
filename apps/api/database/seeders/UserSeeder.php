@@ -17,12 +17,13 @@ class UserSeeder extends Seeder
     {
         // Admin User
         $adminUser = User::create([
-            'full_name' => 'Admin System',
+            'full_name' => 'Admin PasJajan',
             'email' => 'admin@pasjajan.com',
             'phone_number' => '+6281234567890',
             'password' => Hash::make('Password123!'),
             'role' => 'Admin',
             'phone_number_verified_at' => now(),
+            'email_verified_at' => now(),
             'last_login_date' => now(),
         ]);
 
@@ -34,14 +35,23 @@ class UserSeeder extends Seeder
             'password' => Hash::make('Password123!'),
             'role' => 'Staff',
             'phone_number_verified_at' => now(),
+            'email_verified_at' => now(),
             'last_login_date' => now(),
         ]);
 
+<<<<<<< HEAD
         // $stores = Store::all();
 
         // $staffUser->staff()->create([
         // 	'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
         // ]);
+=======
+        $stores = Store::all();
+
+        $staffUser->staff()->create([
+            'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
+        ]);
+>>>>>>> origin/dev
 
         // Customer User 1
         $customerUser1 = User::create([
@@ -51,6 +61,7 @@ class UserSeeder extends Seeder
             'password' => Hash::make('Password123!'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
+            'email_verified_at' => now(),
             'last_login_date' => now(),
         ]);
 
@@ -66,10 +77,15 @@ class UserSeeder extends Seeder
             'password' => Hash::make('Password123!'),
             'role' => 'Customer',
             'phone_number_verified_at' => now(),
+            'email_verified_at' => now(),
             'last_login_date' => now(),
         ]);
 
+<<<<<<< HEAD
         $customerUser1->customer()->create([
+=======
+        $customerUser2->customer()->create([
+>>>>>>> origin/dev
             'point' => 0,
         ]);
     }

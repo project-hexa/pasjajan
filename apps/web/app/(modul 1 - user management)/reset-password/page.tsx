@@ -1,18 +1,22 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
+import { useNavigate } from "@/hooks/useNavigate";
 import { resetPasswordSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
-import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
 import { toast } from "@workspace/ui/components/sonner";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { authService } from "../_services/auth.service";
 
 export default function ForgotPasswordPage() {
+  const navigate = useNavigate();
+
   const resetPassForm = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -20,27 +24,36 @@ export default function ForgotPasswordPage() {
       password_confirmation: "",
     },
   });
-  const router = useRouter();
 
-  const handleSubmit = (data: z.infer<typeof resetPasswordSchema>) => {
-    toast.promise(
-      new Promise<typeof resetPasswordSchema>((resolve) =>
-        resolve(resetPasswordSchema),
-      ),
-      {
-        loading: "Loading...",
+  useEffect(() => {
+    const email = sessionStorage.getItem("emailForResetPassword");
+
+    if (!email) {
+      navigate.push("/forgot-password");
+    } else {
+      resetPassForm.setValue("email", email);
+    }
+  }, [resetPassForm, navigate]);
+
+  const handleSubmit = async (data: z.infer<typeof resetPasswordSchema>) => {
+    const result = await authService.resetPassword(data);
+
+    if (result.ok) {
+      toast.success(result.message, {
         toasterId: "global",
-        success: () => "Password Berhasil Diganti!",
-        error: () => "Gagal Mengganti Password!",
-      },
-    );
-    router.push("/login");
-    console.log(data);
+      });
+
+      navigate.replace("/login");
+    } else {
+      toast.error(result.message, {
+        toasterId: "global",
+      });
+    }
   };
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="flex lg:w-1/2 md:w-2/3 max-lg:px-5 max-sm:-mt-40 flex-col overflow-hidden md:border-2 md:border-black max-sm:mx-5">
+      <Card className="flex flex-col overflow-hidden max-lg:px-5 max-sm:mx-5 max-sm:-mt-40 md:w-2/3 md:border-2 md:border-black lg:w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
           <Icon icon="uil:padlock" width={200} />
           <CardTitle className="text-2xl">Atur Password</CardTitle>
@@ -88,8 +101,20 @@ export default function ForgotPasswordPage() {
               )}
             />
 
-            <Button type="submit" form="resetPass">
-              Simpan
+            <Button
+              type="submit"
+              form="resetPass"
+              disabled={resetPassForm.formState.isSubmitting}
+            >
+              {resetPassForm.formState.isSubmitting ? (
+                <Icon
+                  icon="lucide:loader-circle"
+                  width={24}
+                  className="animate-spin"
+                />
+              ) : (
+                "Simpan"
+              )}
             </Button>
           </form>
         </CardContent>

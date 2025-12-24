@@ -1,7 +1,6 @@
 "use client";
 
 import { sendOTPSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -15,10 +14,12 @@ import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import { toast } from "@workspace/ui/components/sonner";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
+import Cookies from "js-cookie";
 import z from "zod";
+import { authService } from "../_services/auth.service";
 
 export default function VerificationCodePage() {
   const verifCodeForm = useForm<z.infer<typeof sendOTPSchema>>({
@@ -27,22 +28,24 @@ export default function VerificationCodePage() {
       email: "",
     },
   });
-  const { sendOTP } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const email = sessionStorage.getItem("emailForOTP") || "";
+    const email = Cookies.get("pendingEmail") || "";
     verifCodeForm.setValue("email", email);
   }, [verifCodeForm]);
 
   const handleSubmit = async (data: z.infer<typeof sendOTPSchema>) => {
-    const result = await sendOTP(data.email);
+    const result = await authService.sendOTP({
+      email: data.email,
+      context: "register",
+    });
 
     if (result.ok) {
       toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/one-time-password");
+      navigate.push("/one-time-password");
     } else {
       toast.error(result.message, {
         toasterId: "global",

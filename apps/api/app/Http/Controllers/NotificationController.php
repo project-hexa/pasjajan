@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponse;
+use App\Jobs\SendNotificationEmail;
 use App\Mail\NotificationMail;
 use App\Models\Customer;
 use App\Models\Notification;
@@ -85,9 +86,7 @@ class NotificationController extends Controller
 
             $timestamp = now();
             $notificationsData = [];
-            $emailsSent = 0;
-            $emailsFailed = 0;
-            $recipientEmails = [];
+            $recipients = [];
 
             foreach ($customers as $customer) {
                 $notificationsData[] = [
@@ -99,42 +98,43 @@ class NotificationController extends Controller
                     'updated_at' => $timestamp,
                 ];
 
-                try {
-                    Mail::to($customer->user->email)->send(
-                        new NotificationMail($data['title'], $data['body'], $user->full_name)
-                    );
-                    $emailsSent++;
-                    $recipientEmails[] = $customer->user->email;
-                } catch (\Exception $mailError) {
-                    $emailsFailed++;
-                    Log::error('Gagal mengirim email notifikasi', [
-                        'to' => $customer->user->email,
-                        'customer_name' => $customer->user->full_name,
-                        'error' => $mailError->getMessage()
-                    ]);
-                }
+                $recipients[] = [
+                    'email' => $customer->user->email,
+                    'name' => $customer->user->full_name
+                ];
             }
 
             if (!empty($notificationsData)) {
                 Notification::insert($notificationsData);
             }
 
-            $statusText = $emailsSent > 0 ? 'berhasil' : 'gagal';
-            $recipientPreview = $this->formatRecipientPreview($recipientEmails, $customers->count());
+            // Batch recipients jadi 10 per job
+            $batchSize = 10;
+            $batches = array_chunk($recipients, $batchSize);
+            $totalBatches = count($batches);
+
+            foreach ($batches as $batch) {
+                SendNotificationEmail::dispatch(
+                    $data['title'],
+                    $data['body'],
+                    $user->full_name,
+                    $batch
+                );
+            }
 
             $this->logActivity(
                 'SEND_NOTIFICATION',
-                "Pengiriman notifikasi '{$data['title']}' {$statusText}. Terkirim: {$emailsSent}/{$customers->count()} email. Recipients: {$recipientPreview}"
+                "Notifikasi '{$data['title']}' berhasil dijadwalkan untuk {$customers->count()} penerima dalam {$totalBatches} batch"
             );
 
             return ApiResponse::success(
                 [
                     'total_recipients' => $customers->count(),
-                    'total_sent' => $emailsSent,
-                    'total_failed' => $emailsFailed,
-                    'status' => $emailsSent > 0 ? 'success' : 'failed',
+                    'total_batches' => $totalBatches,
+                    'batch_size' => $batchSize,
+                    'status' => 'queued',
                 ],
-                'Notifikasi berhasil dikirim via email'
+                'Notifikasi berhasil dijadwalkan untuk dikirim via email'
             );
         } catch (\Illuminate\Database\QueryException $e) {
             Log::error('Database error saat mengirim notifikasi', [
@@ -171,7 +171,13 @@ class NotificationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = Auth::user();
         $query = Notification::with(['fromUser:id,full_name,email', 'toUser:id,full_name,email']);
+
+        // Jika bukan Admin, hanya tampilkan notifikasi milik sendiri
+        if ($user->role !== 'Admin') {
+            $query->where('to_user_id', $user->id);
+        }
 
         $this->applyFilters($query, $request);
 

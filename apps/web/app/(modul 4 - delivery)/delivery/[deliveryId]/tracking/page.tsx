@@ -2,144 +2,125 @@
 
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
+import { useDeliveryStore } from "@/stores/useDeliveryStore";
+import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
+import { checkShippingCost } from "@/services/delivery";
+import { useParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { statusNotifications } from "../../../_constants";
+import { StatusToast } from "../../../_components/status-toast";
+import { TrackingStepper } from "../../../_components/tracking-stepper";
+import { TrackingEstimation } from "../../../_components/tracking-estimation";
+import { TrackingTimeline } from "../../../_components/tracking-timeline";
+import { TrackingActionButtons } from "../../../_components/tracking-action-buttons";
 
 export default function TrackingPage() {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const params = useParams();
+  const orderId = params.deliveryId as string;
 
-  const handlePesananSelesai = () => {
-    router.push("/delivery/1/rating");
+  const { trackingData, isLoading, error, fetchTracking, confirmOrder } = useDeliveryStore();
+  const { user } = useUserStore();
+
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [estimatedCost, setEstimatedCost] = useState<any>(null);
+  const previousStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (orderId) {
+      fetchTracking(orderId);
+      checkShippingCost(1).then(res => {
+        if (res.success) setEstimatedCost(res.data);
+      }).catch(err => console.error("Estimasi gagal", err));
+    }
+  }, [orderId, fetchTracking]);
+
+  // Polling Logic
+  useEffect(() => {
+    if (!orderId || error) return;
+    const interval = setInterval(() => fetchTracking(orderId), 5000);
+    return () => clearInterval(interval);
+  }, [orderId, fetchTracking, error]);
+
+  // Handle Status Change Notification
+  useEffect(() => {
+    if (trackingData?.status_utama) {
+      const newStatus = trackingData.status_utama;
+      if (previousStatusRef.current !== null && previousStatusRef.current !== newStatus) {
+        setNotificationMessage(statusNotifications[newStatus] || "Status diperbarui");
+        setShowNotification(true);
+      }
+      previousStatusRef.current = newStatus;
+    }
+  }, [trackingData?.status_utama]);
+
+  const handleTerimaPesanan = async () => {
+    if (confirm("Apakah Anda yakin paket sudah diterima?")) {
+      try {
+        await confirmOrder(orderId);
+        setNotificationMessage("Pesanan berhasil diterima!");
+        setShowNotification(true);
+      } catch (e) {
+        alert("Gagal konfirmasi pesanan.");
+      }
+    }
   };
 
-  const steps = [
-    {
-      icon: <Image src="/img/icon-proses-1.png" alt="Pesanan dibuat" width={32} height={32} className="h-8 w-8" />,
-      label: "Pesanan dibuat",
-      active: true,
-    },
-    {
-      icon: <Image src="/img/icon-proses-2.png" alt="Sedang dikirim" width={32} height={32} className="h-8 w-8" />,
-      label: "Sedang dikirim",
-      active: true,
-    },
-    {
-      icon: <Image src="/img/icon-proses-3.png" alt="Kurir menerima" width={32} height={32} className="h-8 w-8" />,
-      label: "Kurir menerima",
-      active: true,
-    },
-    {
-      icon: <Image src="/img/icon-proses-4.png" alt="Tiba di tujuan" width={32} height={32} className="h-8 w-8" />,
-      label: "Tiba di tujuan",
-      active: true,
-    },
-  ];
+  const handlePesananSelesai = () => {
+    navigate.push(`/delivery/${orderId}/rating`);
+  };
 
-  const statusUpdates = [
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-    {
-      active: true,
-      title: "PasJajan – Senin, 7 November 2025",
-      description: "Verifikasi Konfirmasi Pembayaran. Pembayaran telah diterima Pasjajan dan pesanan sedang disiapkan",
-    },
-  ];
+  if (isLoading && !trackingData) {
+    return <div className="min-h-screen flex items-center justify-center">Loading Tracking...</div>;
+  }
 
-  const lastActiveIndex = steps.findLastIndex((step) => step.active);
-  const totalSegments = steps.length - 1;
-  const progressPercentage = (lastActiveIndex / totalSegments) * 80;
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <p className="text-gray-800 font-medium mb-6 max-w-md">{error}</p>
+        <button
+          onClick={() => navigate.back()}
+          className="rounded-full bg-[#1E6A46] px-8 py-3 text-white font-semibold hover:bg-[#165a3b]"
+        >
+          Kembali
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white font-sans flex flex-col">
       <Navbar />
 
-      <section className="mx-12 mt-8 rounded-2xl border border-[#CDE6D5] bg-[#EEF7F0] p-10 pb-16">
-        <div className="relative flex justify-between items-start">
-          <div className="absolute top-12 right-[10%] left-[10%] z-10 h-[4px] bg-[#8AC79E]"></div>
-          <div
-            className="absolute left-[10%] top-12 h-[4px] bg-[#0A6B3C] z-11"
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-          
-          {steps.map((step, index) => (
-            <div key={index} className="relative flex flex-col items-center w-1/4 text-center">
-              {step.icon}
-              <div
-                className={`absolute z-20 h-5 w-5 rounded-full ${step.active ? "bg-[#0A6B3C]" : "bg-[#8AC79E]"} `}
-                style={{ top: "48px", transform: "translateY(-50%)" }}
-              ></div>
-              <p className={`text-sm font-semibold mt-16 ${step.active ? "text-[#0A6B3C]" : "text-[#8AC79E]"}`}>
-                {step.label}
-              </p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-center text-xl font-bold text-[#0A6B3C]">
-          Pesanan Selesai
-        </p>
-      </section>
+      <StatusToast
+        message={notificationMessage}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+      />
 
-      <section className="mx-12 mt-6 min-h-52 rounded-xl border border-[#CDE6D5] p-8">
-        <h2 className="text-xl font-bold text-black">Status Pengiriman Barang</h2>
-        <hr className="my-4 border-t-2 border-gray-400" />
-        <div className="flex flex-col gap-4">
-          {statusUpdates.map((status, index) => (
-            <div key={index} className="flex items-start">
-              <div className="mr-4 flex flex-col items-center">
-                <div className={`w-5 h-5 rounded-full flex-shrink-0 ${status.active ? "bg-[#1E6A46]" : "bg-[#CDE6D5]"}`}></div>
-                {index < statusUpdates.length - 1 && (
-                  <div className="mt-1 h-16 w-0.5 bg-[#8AC79E]"></div>
-                )}
-              </div>
-              <div className="flex-1 -mt-1">
-                <p className={`font-semibold ${status.active ? "text-[#1E6A46]" : "text-[#B0CFC0]"}`}>
-                  {status.title}
-                </p>
-                <p className={`mt-1 leading-relaxed ${status.active ? "text-gray-700" : "text-gray-400"}`}>
-                  {status.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <TrackingStepper currentStatus={trackingData?.status_utama || "PESANAN_DIBUAT"} />
 
-      <section className="mx-12 mt-8 flex items-center justify-end gap-4">
-        <button type="button" className="rounded-lg border-2 border-[#1E6A46] bg-white px-8 py-3 font-semibold text-[#1E6A46] transition-all hover:bg-[#F0F7F3]">
-          Terima Pesanan
-        </button>
-        {/* --- TOMBOL YANG DIUPDATE --- */}
-        <button 
-          type="button" 
-          onClick={handlePesananSelesai}
-          className="hover:bg-opacity-90 rounded-lg bg-[#1E6A46] px-8 py-3 font-semibold text-white transition-all"
-        >
-          Pesanan Selesai
-        </button>
-      </section>
+      <TrackingEstimation
+        estimatedCost={estimatedCost}
+        kurir={trackingData?.kurir || ""}
+        kurirPhone={trackingData?.kurir_phone || undefined}
+      />
+
+      <TrackingTimeline
+        timeline={trackingData?.timeline || []}
+        proofImage={trackingData?.proof_image}
+      />
+
+      <TrackingActionButtons
+        status={trackingData?.status_utama || ""}
+        rating={trackingData?.rating || undefined}
+        reviewComment={trackingData?.review_comment || undefined}
+        isOwner={Number(user?.id) === Number(trackingData?.customer_user_id)}
+        onReceiveOrder={handleTerimaPesanan}
+        onCompleteOrder={handlePesananSelesai}
+      />
 
       <Footer />
     </div>

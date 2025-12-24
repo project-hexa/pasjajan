@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('birth_date')->nullable();
             $table->enum('gender', ['Laki-Laki', 'Perempuan'])->nullable();
             $table->dateTime('phone_number_verified_at')->nullable();
+            $table->dateTime('email_verified_at')->nullable();
             $table->string('avatar')->nullable(); // URL/path to user's profile photo
 			$table->enum('role', ['Staff', 'Admin', 'Customer'])->default('Customer');
 			$table->string('remember_token')->nullable();

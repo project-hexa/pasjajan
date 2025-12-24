@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -14,20 +14,27 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
-import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { authService } from "../_services/auth.service";
+import { useUserStore } from "../_stores/useUserStore";
 
 export const Logout = () => {
-  const { logout } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
+  const role = Cookies.get("token");
+  const { setIsLoggedIn } = useUserStore();
 
   const handleClick = async () => {
-    const result = await logout();
+    const result = await authService.logout();
 
     if (result.ok) {
-      toast.success(result.message || "Logout Berhasil!", {
+      toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/login");
+
+      setIsLoggedIn(false);
+
+      if (role === "admin") navigate.push("/login/admin");
+      navigate.push("/login");
     } else {
       toast.error(result.message, {
         toasterId: "global",

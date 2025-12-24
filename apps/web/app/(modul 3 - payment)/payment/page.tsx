@@ -2,7 +2,8 @@
 
 import React, { Suspense } from "react";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   Card,
   CardContent,
@@ -18,9 +19,8 @@ import AddressDialog, { Address } from "@/components/AddressDialog";
 import VoucherDialog, { VoucherChoice } from "@/components/VoucherDialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useAuthStore } from "@/stores/useAuthStore";
 import Cookies from "js-cookie";
-
+import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
 
 const currency = (n: number) =>
   new Intl.NumberFormat("id-ID", {
@@ -55,12 +55,11 @@ interface PaymentItem {
 }
 
 function CheckoutPageContent() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   // Sanitize order code - hapus suffix :1 atau :digit jika ada
   const rawOrderCode = searchParams.get("order");
-  const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, '') : null;
-
+  const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
 
   // ====== FETCH ORDER DATA FROM API ======
   const [items, setItems] = React.useState<PaymentItem[]>([]);
@@ -78,48 +77,57 @@ function CheckoutPageContent() {
   });
 
   // Get logged-in user from auth store
-  const { user } = useAuthStore();
+  const { user } = useUserStore();
 
   React.useEffect(() => {
     const loadOrderData = async () => {
       try {
         // Fallback fetch branch name from public API (jika order tidak punya store)
-        const branchesResponse = await fetch("http://localhost:8000/api/branches/public");
+        const branchesResponse = await fetch(
+          "http://localhost:8000/api/branches/public",
+        );
         const branchesResult = await branchesResponse.json();
 
         let fallbackBranchName = "";
-        if (branchesResult.success && branchesResult.data.branches && branchesResult.data.branches.length > 0) {
+        if (
+          branchesResult.success &&
+          branchesResult.data.branches &&
+          branchesResult.data.branches.length > 0
+        ) {
           fallbackBranchName = branchesResult.data.branches[0].name;
         }
 
-
         if (!orderCode) {
-          // Allow page to display without order code
-          setLoading(false);
+          alert("Order code tidak ditemukan!");
+          navigate.push("/cart");
           return;
         }
 
         // Get auth token
-        const token = Cookies.get('token');
+        const token = Cookies.get("token");
 
         // Fetch order detail from API
-        const response = await fetch(`http://localhost:8000/api/orders/${orderCode}`, {
-          headers: token ? {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          } : {
-            'Accept': 'application/json',
-          }
-        });
+        const response = await fetch(
+          `http://localhost:8000/api/orders/${orderCode}`,
+          {
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                }
+              : {
+                  Accept: "application/json",
+                },
+          },
+        );
 
         console.log("Order API Response Status:", response.status);
         const result = await response.json();
         console.log("Order API Response:", result);
 
-        if (!result.success || !result.data?.order) {
-          // Allow page to display even if order not found
-          console.log("Order not found, displaying empty page");
-          setLoading(false);
+        if (!result.success || !result.data.order) {
+          alert("Order tidak ditemukan!");
+          navigate.push("/cart");
           return;
         }
 
@@ -133,16 +141,20 @@ function CheckoutPageContent() {
           setBranchName(fallbackBranchName);
         }
 
-
         // Fetch all products to get names and images
-        const productsResponse = await fetch("http://localhost:8000/api/products", {
-          headers: token ? {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          } : {
-            'Accept': 'application/json',
-          }
-        });
+        const productsResponse = await fetch(
+          "http://localhost:8000/api/products",
+          {
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
+                }
+              : {
+                  Accept: "application/json",
+                },
+          },
+        );
         const productsResult = await productsResponse.json();
 
         // Normalize products data (bisa di data.data atau data)
@@ -157,46 +169,57 @@ function CheckoutPageContent() {
 
         if (productsResult.success && products) {
           // Map order items with product details
-          const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => {
-            const product = products.find((p) => p.id === orderItem.product_id);
-            return {
-              id: orderItem.product_id.toString(),
-              name: product?.name || `Produk ${orderItem.product_id}`,
-              variant: "Varian",
-              price: orderItem.price,
-              qty: orderItem.quantity,
-              image_url: product?.image_url || "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
-            };
-          });
+          const paymentItems: PaymentItem[] = order.items.map(
+            (orderItem: OrderItem) => {
+              const product = products.find(
+                (p) => p.id === orderItem.product_id,
+              );
+              return {
+                id: orderItem.product_id.toString(),
+                name: product?.name || `Produk ${orderItem.product_id}`,
+                variant: "Varian",
+                price: orderItem.price,
+                qty: orderItem.quantity,
+                image_url:
+                  product?.image_url ||
+                  "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+              };
+            },
+          );
 
           setItems(paymentItems);
         } else if (order.items && order.items.length > 0) {
           // Fallback: tampilkan items dari order langsung tanpa product details
-          const paymentItems: PaymentItem[] = order.items.map((orderItem: OrderItem) => ({
-            id: orderItem.product_id.toString(),
-            name: `Produk ${orderItem.product_id}`,
-            variant: "Varian",
-            price: orderItem.price,
-            qty: orderItem.quantity,
-            image_url: "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
-          }));
+          const paymentItems: PaymentItem[] = order.items.map(
+            (orderItem: OrderItem) => ({
+              id: orderItem.product_id.toString(),
+              name: `Produk ${orderItem.product_id}`,
+              variant: "Varian",
+              price: orderItem.price,
+              qty: orderItem.quantity,
+              image_url:
+                "https://images.unsplash.com/photo-1604908176997-431c5f69f6a9?q=80&w=640&auto=format&fit=crop",
+            }),
+          );
           setItems(paymentItems);
         }
       } catch (error) {
         console.error("Error loading order data:", error);
-        // Allow page to display even on error
+        alert("Gagal memuat data order!");
+        navigate.push("/cart");
       } finally {
         setLoading(false);
       }
     };
 
     loadOrderData();
-  }, [orderCode, router]);
+  }, [orderCode, navigate]);
 
   const productTotal = orderData?.sub_total || 0;
   const shipping = orderData?.shipping_fee || 10000;
   const adminFee = orderData?.admin_fee || 1000;
-  const grandTotal = orderData?.grand_total || productTotal + shipping + adminFee;
+  const grandTotal =
+    orderData?.grand_total || productTotal + shipping + adminFee;
 
   // Fetch user addresses
   React.useEffect(() => {
@@ -207,33 +230,39 @@ function CheckoutPageContent() {
       }
 
       try {
-        const token = Cookies.get('token');
-        const res = await fetch(`http://localhost:8000/api/user/profile?email=${user.email}`, {
-          headers: {
-            "Accept": "application/json",
-            ...(token && { "Authorization": `Bearer ${token}` }),
+        const token = Cookies.get("token");
+        const res = await fetch(
+          `http://localhost:8000/api/user/profile?email=${user.email}`,
+          {
+            headers: {
+              Accept: "application/json",
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
           },
-        });
+        );
         const result = await res.json();
 
         if (result.success && result.data?.user?.customer?.addresses) {
           const userAddresses = result.data.user.customer.addresses;
           // Transform to Address format
-          const formattedAddresses: Address[] = userAddresses.map((addr: any) => ({
-            id: addr.id,
-            label: addr.label || 'Alamat',
-            name: `${addr.label || 'Alamat'} – ${addr.recipient_name}`,
-            address: addr.detail_address,
-            phone: addr.phone_number,
-          }));
+          const formattedAddresses: Address[] = userAddresses.map(
+            (addr: any) => ({
+              id: addr.id,
+              label: addr.label || "Alamat",
+              name: `${addr.label || "Alamat"} – ${addr.recipient_name}`,
+              address: addr.detail_address,
+              phone: addr.phone_number,
+            }),
+          );
 
           setAddresses(formattedAddresses);
 
           // Set default address (first one or is_default)
-          const defaultAddr = userAddresses.find((a: any) => a.is_default) || userAddresses[0];
+          const defaultAddr =
+            userAddresses.find((a: any) => a.is_default) || userAddresses[0];
           if (defaultAddr) {
             setAddress({
-              name: `${defaultAddr.label || 'Alamat'} – ${defaultAddr.recipient_name}`,
+              name: `${defaultAddr.label || "Alamat"} – ${defaultAddr.recipient_name}`,
               address: defaultAddr.detail_address,
               phone: defaultAddr.phone_number,
             });
@@ -282,22 +311,26 @@ function CheckoutPageContent() {
 
     try {
       // Get auth token
-      const token = Cookies.get('token');
+      const token = Cookies.get("token");
 
-      const response = await fetch("http://localhost:8000/api/payment/process", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { "Authorization": `Bearer ${token}` }),
+      const response = await fetch(
+        "http://localhost:8000/api/payment/process",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({
+            order_code: orderCode,
+            payment_method_code: payChoice.option,
+            shipping_address: address.address,
+            shipping_recipient_name:
+              address.name?.split(" – ")[1] || address.name,
+            shipping_recipient_phone: address.phone,
+          }),
         },
-        body: JSON.stringify({
-          order_code: orderCode,
-          payment_method_code: payChoice.option,
-          shipping_address: address.address,
-          shipping_recipient_name: address.name?.split(' – ')[1] || address.name,
-          shipping_recipient_phone: address.phone,
-        }),
-      });
+      );
 
       const result = await response.json();
 
@@ -313,21 +346,22 @@ function CheckoutPageContent() {
       localStorage.setItem("payment_data", JSON.stringify(result.data));
 
       // Redirect to waiting page
-      router.push(`/payment/waiting?order=${orderCode}`);
+      navigate.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
 
       // Cek apakah ini masalah user tidak punya customer profile
-      alert("Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.");
+      alert(
+        "Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.",
+      );
       setIsProcessing(false); // Stop loading on error
-
     }
   };
 
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <p className="text-lg">Memuat data keranjang...</p>
       </div>
     );
@@ -352,10 +386,10 @@ function CheckoutPageContent() {
       {/* MAIN CONTENT */}
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* HEADER */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="mb-6 flex items-center gap-3">
           <button
-            onClick={() => router.back()}
-            className="h-10 w-10 rounded-full bg-white shadow hover:bg-gray-50 flex items-center justify-center"
+            onClick={() => navigate.back()}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow hover:bg-gray-50"
           >
             <Icon icon="lucide:arrow-left" width={20} height={20} />
           </button>
@@ -363,32 +397,41 @@ function CheckoutPageContent() {
         </div>
 
         {/* TWO COLUMN LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* LEFT COLUMN - Address & Orders */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* ALAMAT PENGIRIMAN */}
             <Card className="bg-white shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-emerald-700 text-base font-semibold">
+                <CardTitle className="text-base font-semibold text-emerald-700">
                   Alamat Pengiriman
                 </CardTitle>
               </CardHeader>
 
               <CardContent className="flex items-start justify-between gap-8">
-                <div className="flex gap-3 w-1/2">
-                  <Icon icon="lucide:map-pin" width={24} height={24} className="text-emerald-700 flex-shrink-0 mt-1" />
+                <div className="flex w-1/2 gap-3">
+                  <Icon
+                    icon="lucide:map-pin"
+                    width={24}
+                    height={24}
+                    className="mt-1 flex-shrink-0 text-emerald-700"
+                  />
                   <div>
-                    <p className="font-semibold text-gray-900">{address.name}</p>
-                    <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                    <p className="font-semibold text-gray-900">
+                      {address.name}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-600">
                       {address.address}
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">{address.phone}</p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {address.phone}
+                    </p>
                   </div>
                 </div>
 
                 <AddressDialog
                   trigger={
-                    <button className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50 whitespace-nowrap flex-shrink-0">
+                    <button className="flex-shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-gray-50">
                       Ubah
                     </button>
                   }
@@ -408,13 +451,13 @@ function CheckoutPageContent() {
             {/* PESANAN */}
             <div className="space-y-3">
               {/* Header Card */}
-              <Card className="bg-white shadow-sm py-2">
-                <CardContent className="px-4 py-2 flex items-center justify-between">
-                  <h2 className="text-emerald-700 text-sm font-semibold">
+              <Card className="bg-white py-2 shadow-sm">
+                <CardContent className="flex items-center justify-between px-4 py-2">
+                  <h2 className="text-sm font-semibold text-emerald-700">
                     Pesanan
                   </h2>
                   {branchName && (
-                    <p className="text-emerald-700 text-sm font-semibold">
+                    <p className="text-sm font-semibold text-emerald-700">
                       Cabang {branchName}
                     </p>
                   )}
@@ -423,11 +466,11 @@ function CheckoutPageContent() {
 
               {/* Individual Product Cards */}
               {items.map((item, idx) => (
-                <Card key={idx} className="bg-white shadow-sm py-1">
+                <Card key={idx} className="bg-white py-1 shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-stretch gap-4">
                       {/* Product Image */}
-                      <div className="h-16 w-16 rounded-lg overflow-hidden bg-white flex-shrink-0">
+                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-white">
                         <Image
                           src={item.image_url}
                           alt={item.name}
@@ -439,27 +482,28 @@ function CheckoutPageContent() {
 
                       {/* Product Details */}
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900 text-sm">
+                        <p className="text-sm font-semibold text-gray-900">
                           {item.name}
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <Badge
                             variant="secondary"
-                            className="bg-gray-200 text-gray-700 text-xs px-2 py-0.5"
+                            className="bg-gray-200 px-2 py-0.5 text-xs text-gray-700"
                           >
                             {item.variant}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="mt-1 text-sm text-gray-600">
                           {currency(item.price)}
                         </p>
                       </div>
 
                       {/* Quantity & Total - Vertical with space */}
-                      <div className="flex flex-col justify-between items-end text-right">
+                      <div className="flex flex-col items-end justify-between text-right">
                         <p className="text-sm text-gray-600">x{item.qty}</p>
-                        <p className="font-semibold text-gray-900 text-sm">
-                          Total {item.qty} Produk {currency(item.price * item.qty)}
+                        <p className="text-sm font-semibold text-gray-900">
+                          Total {item.qty} Produk{" "}
+                          {currency(item.price * item.qty)}
                         </p>
                       </div>
                     </div>
@@ -473,16 +517,16 @@ function CheckoutPageContent() {
           <div className="lg:col-span-1">
             {/* Combined Card: Payment Method + Voucher + Summary */}
             <Card className="bg-white shadow-sm">
-              <CardContent className="p-4 space-y-5">
+              <CardContent className="space-y-5 p-4">
                 {/* Metode Pembayaran */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <p className="text-sm font-semibold text-emerald-700">
                       Metode Pembayaran
                     </p>
                     <PaymentMethodDialog
                       trigger={
-                        <button className="px-4 py-1.5 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
+                        <button className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm hover:bg-gray-50">
                           Pilih
                         </button>
                       }
@@ -496,7 +540,7 @@ function CheckoutPageContent() {
 
                 {/* Voucher dan Promo */}
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <p className="text-sm font-semibold text-emerald-700">
                       Voucher dan Promo
                     </p>
@@ -504,7 +548,7 @@ function CheckoutPageContent() {
                       current={voucher}
                       onApply={setVoucher}
                       trigger={
-                        <button className="px-4 py-1.5 border border-gray-300 rounded-lg bg-white text-sm hover:bg-gray-50">
+                        <button className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm hover:bg-gray-50">
                           Pilih
                         </button>
                       }
@@ -517,14 +561,16 @@ function CheckoutPageContent() {
 
                 {/* Ringkasan Transaksi */}
                 <div>
-                  <p className="text-sm font-semibold text-emerald-700 mb-3">
+                  <p className="mb-3 text-sm font-semibold text-emerald-700">
                     Ringkasan transaksi
                   </p>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Total Harga Pesanan</span>
-                      <span className="font-medium">{currency(productTotal)}</span>
+                      <span className="font-medium">
+                        {currency(productTotal)}
+                      </span>
                     </div>
 
                     <div className="flex justify-between text-sm text-gray-600">
@@ -537,7 +583,7 @@ function CheckoutPageContent() {
                       <span className="font-medium">{currency(adminFee)}</span>
                     </div>
 
-                    <div className="flex justify-between text-base font-bold text-gray-900 pt-2">
+                    <div className="flex justify-between pt-2 text-base font-bold text-gray-900">
                       <span>Total Pembayaran</span>
                       <span>{currency(grandTotal)}</span>
                     </div>
@@ -545,11 +591,17 @@ function CheckoutPageContent() {
                     <button
                       onClick={handlePayment}
                       disabled={isProcessing}
-                      className="w-full py-3 mt-3 rounded-lg bg-emerald-700 text-white font-semibold text-sm hover:bg-emerald-800 transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed"
+                    >
                       {isProcessing && (
-                        <Icon icon="lucide:loader-2" width={18} height={18} className="animate-spin" />
+                        <Icon
+                          icon="lucide:loader-2"
+                          width={18}
+                          height={18}
+                          className="animate-spin"
+                        />
                       )}
-                      {isProcessing ? 'Memproses...' : 'Bayar Sekarang'}
+                      {isProcessing ? "Memproses..." : "Bayar Sekarang"}
                     </button>
                   </div>
                 </div>
@@ -566,11 +618,13 @@ function CheckoutPageContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-emerald-50/50">
-        <p className="text-lg">Memuat...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-emerald-50/50">
+          <p className="text-lg">Memuat...</p>
+        </div>
+      }
+    >
       <CheckoutPageContent />
     </Suspense>
   );
