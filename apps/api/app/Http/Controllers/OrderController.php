@@ -216,11 +216,35 @@ class OrderController extends Controller
                 return ApiResponse::error('User tidak memiliki profil customer', 400);
             }
 
+            // Auto-update expired orders sebelum fetch
+            // Case 1: Orders dengan expired_at yang sudah lewat
+            Order::where('customer_id', $customer->id)
+                ->whereIn('payment_status', ['pending', 'unpaid'])
+                ->where('status', 'pending')
+                ->whereNotNull('expired_at')
+                ->where('expired_at', '<', now())
+                ->update([
+                    'status' => 'cancelled',
+                    'payment_status' => 'expired',
+                ]);
+
+            // Case 2: Orders tanpa expired_at, tapi created_at sudah lebih dari 1 jam
+            Order::where('customer_id', $customer->id)
+                ->whereIn('payment_status', ['pending', 'unpaid'])
+                ->where('status', 'pending')
+                ->whereNull('expired_at')
+                ->where('created_at', '<', now()->subHour())
+                ->update([
+                    'status' => 'cancelled',
+                    'payment_status' => 'expired',
+                ]);
+
             $status = $request->query('status');
             $paymentStatus = $request->query('payment_status');
             $perPage = $request->query('per_page', 10);
+            $search = $request->query('search');
 
-            $query = Order::with(['items', 'paymentMethod'])
+            $query = Order::with(['items.product', 'paymentMethod'])
                 ->where('customer_id', $customer->id) // Auto-filter by logged-in customer
                 ->orderBy('created_at', 'desc');
 
@@ -232,10 +256,65 @@ class OrderController extends Controller
                 $query->where('payment_status', $paymentStatus);
             }
 
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                        ->orWhere('customer_name', 'like', "%{$search}%");
+                });
+            }
+
             $orders = $query->paginate($perPage);
 
+            // Format response with product details
+            $formattedOrders = $orders->getCollection()->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'code' => $order->code,
+                    'customer_id' => $order->customer_id,
+                    'customer_name' => $order->customer_name,
+                    'customer_email' => $order->customer_email,
+                    'customer_phone' => $order->customer_phone,
+                    'shipping_address' => $order->shipping_address,
+                    'shipping_recipient_name' => $order->shipping_recipient_name,
+                    'shipping_recipient_phone' => $order->shipping_recipient_phone,
+                    'sub_total' => $order->sub_total,
+                    'discount' => $order->discount,
+                    'shipping_fee' => $order->shipping_fee,
+                    'admin_fee' => $order->admin_fee,
+                    'grand_total' => $order->grand_total,
+                    'payment_method' => $order->paymentMethod ? [
+                        'id' => $order->paymentMethod->id,
+                        'name' => $order->paymentMethod->method_name,
+                        'code' => $order->paymentMethod->code,
+                        'category' => $order->paymentMethod->payment_type,
+                    ] : null,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status,
+                    'paid_at' => $order->paid_at?->toIso8601String(),
+                    'expired_at' => $order->expired_at?->toIso8601String(),
+                    'store_id' => $order->store_id,
+                    'notes' => $order->notes,
+                    'created_at' => $order->created_at->toIso8601String(),
+                    'updated_at' => $order->updated_at->toIso8601String(),
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product' => $item->product ? [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'image_url' => $item->product->image_url,
+                                'price' => $item->product->price,
+                            ] : null,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                            'sub_total' => $item->sub_total,
+                        ];
+                    }),
+                ];
+            });
+
             return ApiResponse::success([
-                'orders' => $orders->items(),
+                'orders' => $formattedOrders->values()->all(),
                 'pagination' => [
                     'current_page' => $orders->currentPage(),
                     'last_page' => $orders->lastPage(),

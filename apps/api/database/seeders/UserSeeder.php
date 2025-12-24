@@ -37,11 +37,11 @@ class UserSeeder extends Seeder
             'last_login_date' => now(),
         ]);
 
-		$stores = Store::all();
+        // $stores = Store::all();
 
-		$staffUser->staff()->create([
-			'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
-		]);
+        // $staffUser->staff()->create([
+        // 	'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
+        // ]);
 
         // Customer User 1
         $customerUser1 = User::create([
@@ -54,9 +54,9 @@ class UserSeeder extends Seeder
             'last_login_date' => now(),
         ]);
 
-		$customerUser1->customer()->create([
-			'point' => 0,
-		]);
+        $customerUser1->customer()->create([
+            'point' => 0,
+        ]);
 
         // Customer User 2
         $customerUser2 = User::create([
@@ -69,8 +69,8 @@ class UserSeeder extends Seeder
             'last_login_date' => now(),
         ]);
 
-		$customerUser1->customer()->create([
-			'point' => 0,
-		]);
+        $customerUser1->customer()->create([
+            'point' => 0,
+        ]);
     }
 }

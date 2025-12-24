@@ -15,9 +15,9 @@ class DatabaseSeeder extends Seeder
 
 
         $this->call([
-            UserSeeder::class,
-            StoreSeeder::class,
-            StaffSeeder::class,
+            StoreSeeder::class,           // Run store seeder first
+            UserSeeder::class,            // Then users (staff users need stores)
+            StaffSeeder::class,           // Additional staff
             ProductCategorySeeder::class,
             ProductSeeder::class,
             VoucherSeeder::class,
@@ -25,8 +25,6 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             AddressSeeder::class,
             OrderSeeder::class,
-
-
         ]);
 
 

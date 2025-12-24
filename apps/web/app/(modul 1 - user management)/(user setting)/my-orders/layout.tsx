@@ -13,8 +13,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@workspace/ui/components/popover";
-import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ReactNode, useState, useCallback } from "react";
 
 const menuinOrder = [
   {
@@ -46,8 +46,39 @@ const menuinOrder = [
 export default function MyOrdersLayout({ children }: { children: ReactNode }) {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [open, setOpen] = useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const handleSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set("search", value);
+      } else {
+        params.delete("search");
+      }
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [pathname, router, searchParams]
+  );
+
+  const handleDateSelect = useCallback(
+    (selectedDate: Date | undefined) => {
+      setDate(selectedDate);
+      setOpen(false);
+      
+      const params = new URLSearchParams(searchParams.toString());
+      if (selectedDate) {
+        params.set("date", selectedDate.toISOString());
+      } else {
+        params.delete("date");
+      }
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [pathname, router, searchParams]
+  );
 
   return (
     <>
@@ -58,7 +89,16 @@ export default function MyOrdersLayout({ children }: { children: ReactNode }) {
           <InputGroupAddon>
             <Icon icon="lucide:search" />
           </InputGroupAddon>
-          <InputGroupInput placeholder="Cari Pesananmu disini" />
+          <InputGroupInput
+            placeholder="Cari Pesananmu disini"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch(searchValue);
+              }
+            }}
+          />
         </InputGroup>
 
         <Popover open={open} onOpenChange={setOpen}>
@@ -73,10 +113,7 @@ export default function MyOrdersLayout({ children }: { children: ReactNode }) {
               mode="single"
               selected={date}
               captionLayout="dropdown"
-              onSelect={(date) => {
-                setDate(date);
-                setOpen(false);
-              }}
+              onSelect={handleDateSelect}
             />
           </PopoverContent>
         </Popover>
