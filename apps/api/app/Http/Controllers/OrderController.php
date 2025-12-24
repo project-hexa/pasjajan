@@ -145,10 +145,32 @@ class OrderController extends Controller
             $user = request()->user();
             $customer = $user->customer;
 
-            $order = Order::with(['items', 'paymentMethod', 'store'])
+            $order = Order::with(['items.product', 'paymentMethod', 'store'])
                 ->where('code', $code)
                 ->where('customer_id', $customer->id) // Ownership check
                 ->firstOrFail();
+
+            // Auto-update jika order sudah expired tapi status belum diupdate
+            if (in_array($order->payment_status, ['pending', 'unpaid']) && $order->status === 'pending') {
+                $isExpired = false;
+
+                // Check berdasarkan expired_at
+                if ($order->expired_at && now()->gt($order->expired_at)) {
+                    $isExpired = true;
+                }
+                // Fallback: jika tidak ada expired_at, cek created_at > 1 jam
+                elseif (!$order->expired_at && now()->subHour()->gt($order->created_at)) {
+                    $isExpired = true;
+                }
+
+                if ($isExpired) {
+                    $order->update([
+                        'status' => 'cancelled',
+                        'payment_status' => 'expired',
+                    ]);
+                    $order->refresh(); // Reload data setelah update
+                }
+            }
 
             return ApiResponse::success([
                 'order' => [
@@ -184,6 +206,12 @@ class OrderController extends Controller
                     'items' => $order->items->map(function ($item) {
                         return [
                             'product_id' => $item->product_id,
+                            'product' => $item->product ? [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'price' => $item->product->price,
+                                'image_url' => $item->product->image_url,
+                            ] : null,
                             'price' => $item->price,
                             'quantity' => $item->quantity,
                             'sub_total' => $item->sub_total,
