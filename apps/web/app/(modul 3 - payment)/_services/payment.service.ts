@@ -17,7 +17,7 @@ export const paymentService = {
                     "/payment/process",
                     payload,
                     {
-                        withAuth: true,
+                        // Don't use withAuth: true - uses next/headers which only works server-side
                         defaultErrorMessage: "Gagal memproses pembayaran!",
                     },
                 ),
@@ -33,7 +33,7 @@ export const paymentService = {
                     "/payment/check-status",
                     { order_code: orderCode },
                     {
-                        withAuth: true,
+                        // Don't use withAuth: true - uses next/headers which only works server-side
                         defaultErrorMessage: "Gagal mengecek status pembayaran!",
                     },
                 ),

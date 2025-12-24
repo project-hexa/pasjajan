@@ -43,6 +43,9 @@ interface Product {
 
 function CheckoutPageContent() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate; // Always keep ref updated
+
   const searchParams = useSearchParams();
   const rawOrderCode = searchParams.get("order");
   const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
@@ -73,7 +76,7 @@ function CheckoutPageContent() {
 
         if (!orderCode) {
           alert("Order code tidak ditemukan!");
-          navigate.push("/cart");
+          navigateRef.current.push("/cart");
           return;
         }
 
@@ -81,7 +84,7 @@ function CheckoutPageContent() {
 
         if (!orderResult.ok || !orderResult.data?.order) {
           alert("Order tidak ditemukan!");
-          navigate.push("/cart");
+          navigateRef.current.push("/cart");
           return;
         }
 
@@ -144,14 +147,14 @@ function CheckoutPageContent() {
       } catch (error) {
         console.error("Error loading order data:", error);
         alert("Gagal memuat data order!");
-        navigate.push("/cart");
+        navigateRef.current.push("/cart");
       } finally {
         setLoading(false);
       }
     };
 
     loadOrderData();
-  }, [orderCode, navigate]);
+  }, [orderCode]); // Removed navigate from dependencies - using ref instead
 
   const productTotal = orderData?.sub_total || 0;
   const shipping = orderData?.shipping_fee || 10000;

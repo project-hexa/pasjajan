@@ -28,7 +28,9 @@ export const orderService = {
         await handleApiResponse<OrderResponse>(
             async () =>
                 await handleApiRequest.get<OrderResponse>(`/orders/${orderCode}`, {
-                    withAuth: true,
+                    // Don't use withAuth: true because it uses getApiWithAuth() which relies on
+                    // next/headers (server-side only). Since payment page is a client component,
+                    // we use the default api instance which has interceptor that adds token from js-cookie.
                     defaultErrorMessage: "Gagal memuat data order!",
                 }),
         ),
@@ -51,8 +53,19 @@ export const orderService = {
         await handleApiResponse<ProductsResponse>(
             async () =>
                 await handleApiRequest.get<ProductsResponse>("/products", {
-                    withAuth: true,
+                    // Don't use withAuth here either - same reason as getOrder
                     defaultErrorMessage: "Gagal memuat data produk!",
+                }),
+        ),
+
+    /**
+     * Get payment receipt for an order
+     */
+    getPaymentReceipt: async (orderCode: string) =>
+        await handleApiResponse<{ receipt: unknown }>(
+            async () =>
+                await handleApiRequest.get<{ receipt: unknown }>(`/orders/${orderCode}/receipt`, {
+                    defaultErrorMessage: "Gagal mengunduh bukti transaksi!",
                 }),
         ),
 };

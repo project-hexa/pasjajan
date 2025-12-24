@@ -58,7 +58,7 @@ export interface Order {
     admin_fee: number;
     grand_total: number;
     payment_method?: PaymentMethod;
-    payment_instructions?: string;
+    payment_instructions?: string | Record<string, unknown>;
     status: OrderStatus;
     payment_status: PaymentStatus;
     paid_at?: string;

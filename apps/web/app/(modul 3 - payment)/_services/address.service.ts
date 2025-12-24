@@ -27,7 +27,7 @@ export const addressService = {
             async () =>
                 await handleApiRequest.get<UserProfileResponse>("/user/profile", {
                     params: { email },
-                    withAuth: true,
+                    // Don't use withAuth: true - uses next/headers which only works server-side
                     defaultErrorMessage: "Gagal memuat alamat pengguna!",
                 }),
         ),

@@ -96,6 +96,9 @@ const DetailRow: React.FC<{
 
 function WaitingPageContent() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate; // Always keep ref updated
+
   const searchParams = useSearchParams();
   const rawOrderCode = searchParams.get("order");
   const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
@@ -128,7 +131,7 @@ function WaitingPageContent() {
         ) {
           setIsRedirecting(true);
           localStorage.removeItem("payment_data");
-          navigate.replace(`/payment/success?order=${parsed.order_code}`);
+          navigateRef.current.replace(`/payment/success?order=${parsed.order_code}`);
           return;
         }
 
@@ -143,13 +146,13 @@ function WaitingPageContent() {
 
             if (status === "paid" || status === "settlement" || status === "capture") {
               setIsRedirecting(true);
-              navigate.replace(`/payment/success?order=${orderCode}`);
+              navigateRef.current.replace(`/payment/success?order=${orderCode}`);
               return;
             }
 
             if (status === "expired" || status === "failed" || status === "cancelled") {
               setIsRedirecting(true);
-              navigate.replace(`/payment/failed?order=${orderCode}`);
+              navigateRef.current.replace(`/payment/failed?order=${orderCode}`);
               return;
             }
 
@@ -158,8 +161,25 @@ function WaitingPageContent() {
 
             if (expiredAt && now > expiredAt) {
               setIsRedirecting(true);
-              navigate.replace(`/payment/failed?order=${orderCode}`);
+              navigateRef.current.replace(`/payment/failed?order=${orderCode}`);
               return;
+            }
+
+            // Extract payment instructions data
+            const instructions = order.payment_instructions;
+            let qrCodeUrl: string | undefined;
+            let vaNumber: string | undefined;
+            let paymentCode: string | undefined;
+            let companyCode: string | undefined;
+            let deeplink: string | undefined;
+
+            if (typeof instructions === "object" && instructions !== null) {
+              const instr = instructions as Record<string, unknown>;
+              qrCodeUrl = instr.qr_code_url ? String(instr.qr_code_url) : undefined;
+              vaNumber = instr.va_number ? String(instr.va_number) : undefined;
+              paymentCode = instr.payment_code ? String(instr.payment_code) : undefined;
+              companyCode = instr.company_code ? String(instr.company_code) : undefined;
+              deeplink = instr.deeplink ? String(instr.deeplink) : undefined;
             }
 
             setPaymentData({
@@ -168,26 +188,31 @@ function WaitingPageContent() {
               payment_status: order.payment_status,
               grand_total: String(order.grand_total),
               expired_at: order.expired_at || undefined,
+              qr_code_url: qrCodeUrl,
+              va_number: vaNumber,
+              payment_code: paymentCode,
+              company_code: companyCode,
+              deeplink: deeplink,
             });
           } else {
             alert("Order tidak ditemukan!");
-            navigate.push("/");
+            navigateRef.current.push("/");
           }
         } catch (error) {
           console.error("Error fetching order:", error);
           alert("Gagal memuat data order!");
-          navigate.push("/");
+          navigateRef.current.push("/");
         }
         setLoading(false);
       } else {
         alert("Data pembayaran tidak ditemukan!");
-        navigate.push("/");
+        navigateRef.current.push("/");
         setLoading(false);
       }
     };
 
     loadPaymentData();
-  }, [navigate, orderCode]);
+  }, [orderCode]); // Removed navigate from dependencies - using ref instead
 
   useEffect(() => {
     const effectiveOrderCode = paymentData?.order_code || orderCode;
@@ -204,7 +229,7 @@ function WaitingPageContent() {
           if (status === "paid" || status === "settlement" || status === "capture") {
             setIsRedirecting(true);
             localStorage.removeItem("payment_data");
-            navigate.replace(`/payment/success?order=${effectiveOrderCode}`);
+            navigateRef.current.replace(`/payment/success?order=${effectiveOrderCode}`);
             return;
           }
 
@@ -223,15 +248,15 @@ function WaitingPageContent() {
     checkStatus();
     const interval = setInterval(checkStatus, 5000);
     return () => clearInterval(interval);
-  }, [orderCode, paymentData?.order_code, navigate, isExpired, isRedirecting]);
+  }, [orderCode, paymentData?.order_code, isExpired, isRedirecting]); // Removed navigate
 
   useEffect(() => {
     if ((isExpired || paymentStatus === "expired") && !isRedirecting) {
       setIsRedirecting(true);
       localStorage.removeItem("payment_data");
-      navigate.replace(`/payment/failed?order=${orderCode}`);
+      navigateRef.current.replace(`/payment/failed?order=${orderCode}`);
     }
-  }, [isExpired, paymentStatus, navigate, orderCode, isRedirecting]);
+  }, [isExpired, paymentStatus, orderCode, isRedirecting]); // Removed navigate
 
   const handleExpired = () => {
     setIsExpired(true);
@@ -316,7 +341,7 @@ function WaitingPageContent() {
                   <Icon icon="lucide:shopping-cart" width={16} height={16} />
                   Belanja Lagi
                 </button>
-                <button onClick={() => navigate.push("/orders")} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
+                <button onClick={() => navigate.push(`/payment/detail?order_code=${paymentData.order_code}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
                   <Icon icon="lucide:package" width={16} height={16} />
                   Lihat Pesanan
                 </button>
@@ -352,7 +377,7 @@ function WaitingPageContent() {
                   <Icon icon="lucide:shopping-cart" width={16} height={16} />
                   Belanja Lagi
                 </button>
-                <button onClick={() => navigate.push("/orders")} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
+                <button onClick={() => navigate.push(`/payment/detail?order_code=${paymentData.order_code}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
                   <Icon icon="lucide:package" width={16} height={16} />
                   Lihat Pesanan
                 </button>
@@ -378,7 +403,7 @@ function WaitingPageContent() {
                     <Icon icon="lucide:shopping-cart" width={16} height={16} />
                     Belanja Lagi
                   </button>
-                  <button onClick={() => navigate.push("/orders")} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
+                  <button onClick={() => navigate.push(`/payment/detail?order_code=${paymentData.order_code}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-2.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
                     <Icon icon="lucide:package" width={16} height={16} />
                     Lihat Pesanan
                   </button>

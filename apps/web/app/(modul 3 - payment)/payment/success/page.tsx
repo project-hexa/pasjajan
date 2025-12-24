@@ -39,6 +39,9 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
 
 function SuccessPageContent() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate;
+
   const searchParams = useSearchParams();
   const rawOrderCode = searchParams.get("order");
   const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
@@ -50,34 +53,34 @@ function SuccessPageContent() {
 
   useEffect(() => {
     const validateAndFetchOrder = async () => {
-      if (!orderCode) { navigate.push("/"); return; }
+      if (!orderCode) { navigateRef.current.push("/"); return; }
 
       try {
         const result = await orderService.getOrder(orderCode);
-        if (!result.ok || !result.data?.order) { alert("Order tidak ditemukan!"); navigate.push("/"); return; }
+        if (!result.ok || !result.data?.order) { alert("Order tidak ditemukan!"); navigateRef.current.push("/"); return; }
 
         const order = result.data.order;
         const paymentStatus = order.payment_status;
 
         if (paymentStatus === "pending") {
           const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
-          if (expiredAt && Date.now() > expiredAt) { setIsRedirecting(true); navigate.replace(`/payment/failed?order=${orderCode}`); return; }
-          else { setIsRedirecting(true); navigate.replace(`/payment/waiting?order=${orderCode}`); return; }
+          if (expiredAt && Date.now() > expiredAt) { setIsRedirecting(true); navigateRef.current.replace(`/payment/failed?order=${orderCode}`); return; }
+          else { setIsRedirecting(true); navigateRef.current.replace(`/payment/waiting?order=${orderCode}`); return; }
         }
 
         if (paymentStatus === "expired" || paymentStatus === "failed" || paymentStatus === "cancelled") {
-          setIsRedirecting(true); navigate.replace(`/payment/failed?order=${orderCode}`); return;
+          setIsRedirecting(true); navigateRef.current.replace(`/payment/failed?order=${orderCode}`); return;
         }
 
         const paymentDataStr = localStorage.getItem("payment_data");
         const paymentData = paymentDataStr ? JSON.parse(paymentDataStr) : null;
         setOrderData({ ...order, payment_method: order.payment_method || paymentData?.payment_method });
-      } catch (error) { console.error("Error fetching order:", error); alert("Gagal memuat data order!"); navigate.push("/"); }
+      } catch (error) { console.error("Error fetching order:", error); alert("Gagal memuat data order!"); navigateRef.current.push("/"); }
       finally { setLoading(false); }
     };
 
     validateAndFetchOrder();
-  }, [orderCode, navigate]);
+  }, [orderCode]); // Removed navigate - using ref instead
 
   if (loading || isRedirecting) return <div className="flex min-h-screen items-center justify-center"><p>Mengalihkan...</p></div>;
   if (!orderData) return null;

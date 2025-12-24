@@ -122,16 +122,16 @@ export function OrderCard({ order, onBuyAgain }: OrderCardProps) {
               <Button
                 variant="outline"
                 onClick={() => {
-                  // Jika sudah punya payment instructions (Midtrans transaction created), arahkan ke waiting page
+                  // Jika sudah punya payment_method atau payment_instructions (transaksi sudah dibuat), arahkan ke waiting page
                   // Jika belum, arahkan ke payment page untuk pilih metode
-                  if (order.payment_instructions) {
+                  if (order.payment_method || order.payment_instructions) {
                     router.push(`/payment/waiting?order=${order.code}`);
                   } else {
                     router.push(`/payment?order=${order.code}`);
                   }
                 }}
               >
-                {order.payment_instructions ? "Lanjutkan Pembayaran" : "Bayar Sekarang"}
+                {(order.payment_method || order.payment_instructions) ? "Lanjutkan Pembayaran" : "Bayar Sekarang"}
               </Button>
             )}
           {order.status === "completed" && onBuyAgain && (

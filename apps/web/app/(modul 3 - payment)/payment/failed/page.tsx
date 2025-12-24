@@ -39,6 +39,9 @@ const DetailRow: React.FC<{ label: string; value: string; isCopyable?: boolean; 
 
 function FailedPageContent() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate;
+
   const searchParams = useSearchParams();
   const rawOrderCode = searchParams.get("order");
   const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
@@ -51,7 +54,7 @@ function FailedPageContent() {
 
   useEffect(() => {
     const validateAndLoadData = async () => {
-      if (!orderCode) { navigate.push("/cart"); return; }
+      if (!orderCode) { navigateRef.current.push("/cart"); return; }
 
       try {
         const result = await orderService.getOrder(orderCode);
@@ -61,13 +64,13 @@ function FailedPageContent() {
         const paymentStatus = order.payment_status;
 
         if (paymentStatus === "paid" || paymentStatus === "settlement" || paymentStatus === "capture") {
-          setIsRedirecting(true); navigate.replace(`/payment/success?order=${orderCode}`); return;
+          setIsRedirecting(true); navigateRef.current.replace(`/payment/success?order=${orderCode}`); return;
         }
 
         if (paymentStatus === "pending") {
           const expiredAt = order.expired_at ? new Date(order.expired_at).getTime() : null;
           if (expiredAt && Date.now() > expiredAt) { /* show failed page */ }
-          else { setIsRedirecting(true); navigate.replace(`/payment/waiting?order=${orderCode}`); return; }
+          else { setIsRedirecting(true); navigateRef.current.replace(`/payment/waiting?order=${orderCode}`); return; }
         }
 
         setPaymentData({
@@ -81,7 +84,7 @@ function FailedPageContent() {
     };
 
     validateAndLoadData();
-  }, [orderCode, navigate]);
+  }, [orderCode]); // Removed navigate - using ref instead
 
   if (loading || isRedirecting) return <div className="flex min-h-screen items-center justify-center"><p>Mengalihkan...</p></div>;
   if (orderNotFound) return (
