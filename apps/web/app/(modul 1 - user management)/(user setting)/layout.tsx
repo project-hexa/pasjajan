@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   Avatar,
   AvatarFallback,
@@ -15,15 +15,15 @@ import {
 import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
 import { usePathname } from "next/navigation";
-import { useNavigate } from "@/hooks/useNavigate";
 import { ReactNode, useEffect, useState } from "react";
+import { useUserStore } from "../_stores/useUserStore";
 
 export default function UserSettingLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const { user } = useAuthStore();
+  const { user } = useUserStore();
   const pathname = usePathname();
   const navigate = useNavigate();
   const [accountTrigger, setAccountTrigger] = useState<boolean>(false);

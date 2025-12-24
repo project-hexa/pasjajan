@@ -1,8 +1,8 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
+import { useNavigate } from "@/hooks/useNavigate";
 import { registerSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -28,10 +28,16 @@ import {
 import { Label } from "@workspace/ui/components/label";
 import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { authService } from "../_services/auth.service";
+import Cookies from "js-cookie";
+
+const cookiesOptions: Cookies.CookieAttributes = {
+  path: "/",
+  secure: process.env.NODE_ENV === "production",
+};
 
 export const RegisterForm = () => {
   const registerForm = useForm<z.infer<typeof registerSchema>>({
@@ -45,7 +51,6 @@ export const RegisterForm = () => {
       password_confirmation: "",
     },
   });
-  const { register } = useAuthStore();
   const navigate = useNavigate();
   const phone = registerForm.watch("phone_number");
 
@@ -65,15 +70,15 @@ export const RegisterForm = () => {
       : "+62" + data.phone_number;
     data.phone_number = phone_number;
 
-    // console.log(data)
-    // return;
-
-    const result = await register(data);
+    const result = await authService.register(data);
 
     if (result.ok) {
       toast.success(result.message, {
         toasterId: "global",
       });
+
+      Cookies.set("verificationStep", "email-sent", cookiesOptions);
+      Cookies.set("pendingEmail", data.email, cookiesOptions);
 
       navigate.push("/send-otp");
     } else {
