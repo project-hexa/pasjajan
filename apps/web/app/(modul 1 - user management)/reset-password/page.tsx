@@ -1,22 +1,21 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
+import { useNavigate } from "@/hooks/useNavigate";
 import { resetPasswordSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import { Field, FieldError, FieldLabel } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
-import { useNavigate } from "@/hooks/useNavigate";
+import { toast } from "@workspace/ui/components/sonner";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import { toast } from "@workspace/ui/components/sonner";
+import { authService } from "../_services/auth.service";
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const { resetPassword } = useAuthStore();
 
   const resetPassForm = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
@@ -37,7 +36,7 @@ export default function ForgotPasswordPage() {
   }, [resetPassForm, navigate]);
 
   const handleSubmit = async (data: z.infer<typeof resetPasswordSchema>) => {
-    const result = await resetPassword(data);
+    const result = await authService.resetPassword(data);
 
     if (result.ok) {
       toast.success(result.message, {

@@ -77,12 +77,13 @@ class BaseController extends Controller
 		return response()->json($response, $code);
 	}
 
-	public function sendFailResponse(string $message, array $errors = [], $code=400): JsonResponse
+	public function sendFailResponse(string $message, array $errors = [], $code=400, string $description=""): JsonResponse
 	{
 		$response = [
 			'success' => false,
 			'status' => $code,
 			'message' => $message,
+            'description' => $description
 		];
 
 		if (!empty($errors)) {

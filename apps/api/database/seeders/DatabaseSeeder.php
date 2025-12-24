@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             CustomerSeeder::class,
             AddressSeeder::class,
             OrderSeeder::class,
+            DeliverySeeder::class,
+            DeliveryOrderSeeder::class,
 
 
         ]);

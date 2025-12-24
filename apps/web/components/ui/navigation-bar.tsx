@@ -1,25 +1,18 @@
 "use client";
 
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
+import { useNavigate } from "@/hooks/useNavigate";
 import { Button } from "@workspace/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { Icon } from "@workspace/ui/components/icon";
 import { Separator } from "@workspace/ui/components/separator";
 import Image from "next/image";
 import Link from "next/link";
-import { useNavigate } from "@/hooks/useNavigate";
-import { Logout } from "../../app/(modul 1 - user management)/_components/logout";
 import { Cart } from "./cart";
 import { Search } from "./search";
+import { UserDropdown } from "./user-dropdown";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
-  const { user, isLoggedIn } = useAuthStore();
+  const { isLoggedIn } = useUserStore();
 
   return (
     <header className={`bg-primary h-20 w-full border-2 ${className}`}>
@@ -71,25 +64,7 @@ export const Navbar = ({ className }: { className?: string }) => {
               </Button>
             </div>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={"ghost"} className="text-primary-foreground">
-                  {user?.full_name}
-                  <Icon icon="lucide:user" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-primary">
-                <DropdownMenuItem onClick={() => navigate.push("/profile")}>
-                  <Icon icon="lucide:settings" /> Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Icon icon={"ic:outline-discount"} /> Transaksi & Poin
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Logout />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserDropdown />
           )}
         </div>
       </nav>

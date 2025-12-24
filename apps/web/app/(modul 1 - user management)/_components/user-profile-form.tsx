@@ -1,8 +1,6 @@
 "use client";
 
-import { editProfileSchema } from "@/lib/schema/user-profile.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { useUserStore } from "@/stores/useUserStore";
+import { editProfileSchema } from "@/lib/schema/user.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Avatar,
@@ -36,17 +34,18 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { userService } from "../_services/user.service";
+import { useUserStore } from "../_stores/useUserStore";
 
 export const UserProfileForm = () => {
   const [editingFields, setEditingFields] = useState<
     Set<keyof z.infer<typeof editProfileSchema>>
   >(new Set());
 
-  const { user } = useAuthStore();
-  const { editProfile } = useUserStore();
+  const { user } = useUserStore();
 
-  const profileForm = useForm<Partial<z.infer<typeof editProfileSchema>>>({
-    resolver: zodResolver(editProfileSchema.partial()),
+  const profileForm = useForm<z.infer<typeof editProfileSchema>>({
+    resolver: zodResolver(editProfileSchema),
     mode: "onChange",
     defaultValues: {
       email_before: "",
@@ -67,13 +66,7 @@ export const UserProfileForm = () => {
       email: user.email,
       phone_number: user.phone_number,
       gender: user.gender ? user.gender : null,
-      birth_date: user.birth_date
-        ? {
-            day: user.birth_date && new Date(user.birth_date).getDate(),
-            month: user.birth_date && new Date(user.birth_date).getMonth() + 1,
-            year: user.birth_date && new Date(user.birth_date).getFullYear(),
-          }
-        : null,
+      birth_date: user.birth_date ? user.birth_date : null,
     });
   }, [user, profileForm]);
 
@@ -93,9 +86,7 @@ export const UserProfileForm = () => {
     profileForm.resetField(field);
   };
 
-  const handleSubmit = async (
-    data: Partial<z.infer<typeof editProfileSchema>>,
-  ) => {
+  const handleSubmit = async (data: z.infer<typeof editProfileSchema>) => {
     const dirtyFields = profileForm.formState.dirtyFields;
     const payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
       birth_date?: string;
@@ -132,7 +123,7 @@ export const UserProfileForm = () => {
       }
     });
 
-    const result = await editProfile(payload);
+    const result = await userService.editUserProfile(payload);
 
     if (result.ok) {
       toast.success(result.message, {

@@ -1,7 +1,7 @@
 "use client";
 
+import { useNavigate } from "@/hooks/useNavigate";
 import { verifyOTPSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -15,15 +15,15 @@ import {
 import { Icon } from "@workspace/ui/components/icon";
 import { InputOTP, InputOTPSlot } from "@workspace/ui/components/input-otp";
 import { toast } from "@workspace/ui/components/sonner";
-import { useNavigate } from "@/hooks/useNavigate";
+import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
-import Cookies from "js-cookie";
+import { authService } from "../_services/auth.service";
+import { useUserStore } from "../_stores/useUserStore";
 
 export default function OTPPage() {
   const navigate = useNavigate();
-  const { verifyOTP, sendOTP } = useAuthStore();
   const [emailForOTP, setEmailForOTP] = useState<string>("");
   const otpForm = useForm<z.infer<typeof verifyOTPSchema>>({
     resolver: zodResolver(verifyOTPSchema),
@@ -37,15 +37,20 @@ export default function OTPPage() {
   const [canResend, setCanResend] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
   const [isMaxAttempt, setIsMaxAttempt] = useState(false);
+  const { setUser, setIsLoggedIn } = useUserStore();
 
   useEffect(() => {
-    const email = Cookies.get("pendingEmail") || "";
+    const email =
+      Cookies.get("pendingEmail") || Cookies.get("emailForResetOTP") || "";
     setEmailForOTP(email);
     otpForm.setValue("email", email);
   }, [otpForm]);
 
   const handleOnSubmit = async (data: z.infer<typeof verifyOTPSchema>) => {
-    const result = await verifyOTP({ email: emailForOTP, otp: data.otp });
+    const result = await authService.verifyOTP({
+      email: emailForOTP,
+      otp: data.otp,
+    });
 
     if (result.ok) {
       toast.success(result.message, {
@@ -54,6 +59,9 @@ export default function OTPPage() {
 
       Cookies.remove("OTP_attempt_count");
       Cookies.remove("OTP_expires_at");
+      setUser(result.data?.user_data);
+      setIsLoggedIn(true);
+
       navigate.push("/");
     } else {
       toast.error(result.message, {
@@ -74,11 +82,14 @@ export default function OTPPage() {
   const handleResendOTP = async () => {
     setIsResending(true);
 
-    const result = await sendOTP({ email: emailForOTP });
+    const result = await authService.sendOTP({
+      email: emailForOTP,
+      context: "register",
+    });
 
     if (result.ok) {
       toast.success(result.message, { toasterId: "global" });
-      otpForm.resetField("otp")
+      otpForm.resetField("otp");
 
       const newAttemptCount = attemptCount + 1;
       setAttemptCount(newAttemptCount);

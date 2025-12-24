@@ -1,7 +1,6 @@
 "use client";
 
 import { sendOTPSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -20,6 +19,7 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Cookies from "js-cookie";
 import z from "zod";
+import { authService } from "../_services/auth.service";
 
 export default function VerificationCodePage() {
   const verifCodeForm = useForm<z.infer<typeof sendOTPSchema>>({
@@ -28,7 +28,6 @@ export default function VerificationCodePage() {
       email: "",
     },
   });
-  const { sendOTP } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +36,10 @@ export default function VerificationCodePage() {
   }, [verifCodeForm]);
 
   const handleSubmit = async (data: z.infer<typeof sendOTPSchema>) => {
-    const result = await sendOTP({ email: data.email });
+    const result = await authService.sendOTP({
+      email: data.email,
+      context: "register",
+    });
 
     if (result.ok) {
       toast.success(result.message, {

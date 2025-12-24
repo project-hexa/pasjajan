@@ -6,11 +6,13 @@ interface AnalyticCardProps {
   growth?: string;
   value: string;
   description?: string;
+  subDescription?: string;
   className?: string;
 }
 
 export default function AnalyticCard(props: AnalyticCardProps) {
-  const { title, growth, value, description, className } = props;
+  const { title, growth, value, description, subDescription, className } =
+    props;
 
   const positiveGrowth = growth?.startsWith("+");
 
@@ -35,7 +37,10 @@ export default function AnalyticCard(props: AnalyticCardProps) {
         )}
       </div>
       <div className="text-2xl font-semibold">{value}</div>
-      <p>{description}</p>
+      <div className="leading-sm">
+        <p>{description}</p>
+        {subDescription && <p>{subDescription}</p>}
+      </div>
     </div>
   );
 }

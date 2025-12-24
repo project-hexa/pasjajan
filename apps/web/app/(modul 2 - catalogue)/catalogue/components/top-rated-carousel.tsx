@@ -103,7 +103,7 @@ export function TopRatedCarousel({ restaurants, showHeading = true }: TopRatedCa
       {showHeading && (
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-[26px] font-semibold text-[#33363F]">Resto Top Rating</h2>
+            <h2 className="text-[26px] font-semibold text-[#33363F]">Cabang Pilihan</h2>
           </div>
         </div>
       )}
