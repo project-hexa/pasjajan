@@ -1,30 +1,29 @@
-import { editProfileSchema } from "@/lib/schema/user-profile.schema";
-import { handleStore } from "@/lib/utils/handle-store";
-import { userService } from "@/app/(modul 1 - user management)/_services/user.service";
-import z from "zod";
+import { User } from "@/types/user";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface UserStore {
-  editProfile: (
-    payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
-      birth_date?: string;
-    },
-  ) => Promise<ActionResult>;
-  getUserByID: (id: User["id"]) => Promise<ActionResult<{ users: User }>>;
-  getUserByRole: (role: User["role"]) => Promise<ActionResult<{ users: User }>>;
+  user: User | null;
+  isLoggedIn: boolean;
+  setUser: (user: User) => void;
+  setIsLoggedIn: (state: boolean) => void;
 }
 
-export const useUserStore = create<UserStore>()(() => ({
-  editProfile: async (payload) =>
-    await handleStore(async () => {
-      await userService.editUserProfile(payload);
-    }, "Profile Berhasil diubah!"),
-  getUserByID: async (id) =>
-    await handleStore<{ users: User }>(
-      async () => await userService.getUserByID(id),
-    ),
-  getUserByRole: async (role) =>
-    await handleStore<{ users: User }>(
-      async () => await userService.getUserByRole(role),
-    ),
-}));
+export const useUserStore = create<UserStore>()(
+  persist(
+    (set) => ({
+      user: null,
+      isLoggedIn: false,
+      setUser: (user) => set({ user }),
+      setIsLoggedIn: (state) => set({ isLoggedIn: state }),
+    }),
+    {
+      name: "user-store",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        isLoggedIn: state.isLoggedIn,
+      }),
+    },
+  ),
+);

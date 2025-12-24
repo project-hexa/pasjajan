@@ -1,7 +1,5 @@
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { addAddressSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -39,6 +37,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
+import { addAddressSchema } from "@/lib/schema/user.schema";
+import { useUserStore } from "../_stores/useUserStore";
 
 const MapsPicker = dynamic(
   () => import("@/components/maps-picker").then((mod) => mod.MapsPicker),
@@ -76,7 +76,7 @@ export const AddAddress = ({
     useState<LocationCoords | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
 
-  const { user } = useAuthStore();
+  const { user } = useUserStore();
   const {
     query,
     results,

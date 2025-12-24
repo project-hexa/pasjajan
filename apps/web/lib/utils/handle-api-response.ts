@@ -1,4 +1,4 @@
-export const handleStore = async <T = undefined>(
+export const handleApiResponse = async <T = undefined>(
   tryFnc: () => Promise<T>,
   successMessage?: string,
   defaultErrorMessage = "Terjadi Kesalahan",
@@ -17,6 +17,7 @@ export const handleStore = async <T = undefined>(
     return {
       ok: false,
       message: err?.message ?? defaultErrorMessage,
+      data: undefined,
       description: err?.description,
       errors: err?.errors,
       status: err?.status,

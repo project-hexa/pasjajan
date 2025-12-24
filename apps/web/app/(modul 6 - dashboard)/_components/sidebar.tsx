@@ -1,8 +1,8 @@
 "use client";
 
+import { UserDropdown } from "@/components/ui/user-dropdown";
 import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -82,17 +82,17 @@ export function Sidebar() {
           {navigation.map((item) => (
             <li key={item.name}>
               <div className="relative flex items-center gap-2 px-4 py-2">
-                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
+                <div className="h-5 w-5 animate-pulse rounded bg-gray-200" />
                 <span className="text-gray-400">{item.name}</span>
               </div>
             </li>
           ))}
         </ul>
         <div className="flex items-center gap-4 px-4">
-          <div className="h-8 w-8 flex-shrink-0 rounded-lg bg-gray-200 animate-pulse" />
+          <div className="h-8 w-8 flex-shrink-0 animate-pulse rounded-lg bg-gray-200" />
           <div className="min-w-0 flex-1">
-            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1" />
-            <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+            <div className="mb-1 h-4 w-24 animate-pulse rounded bg-gray-200" />
+            <div className="h-3 w-32 animate-pulse rounded bg-gray-200" />
           </div>
         </div>
       </aside>
@@ -128,21 +128,7 @@ export function Sidebar() {
           </li>
         ))}
       </ul>
-      <div className="flex items-center gap-4 px-4">
-        <Image
-          src="https://dummyimage.com/120x120/000/fff&text=A"
-          width={32}
-          height={32}
-          alt="Dashboard Image"
-          className="h-8 w-8 flex-shrink-0 rounded-lg"
-        />
-        <div className="min-w-0 flex-1">
-          <h3 className="line-clamp-1 font-medium">Admin PasJajan</h3>
-          <span className="line-clamp-1 text-sm text-gray-500">
-            admin@pasjajan.com
-          </span>
-        </div>
-      </div>
+      <UserDropdown />
     </aside>
   );
 }

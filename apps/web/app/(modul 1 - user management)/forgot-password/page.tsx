@@ -16,8 +16,8 @@ import { Input } from "@workspace/ui/components/input";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import Cookies from "js-cookie";
-import { useAuthStore } from "@/app/(modul 1 - user management)/_stores/useAuthStore";
 import { toast } from "@workspace/ui/components/sonner";
+import { authService } from "../_services/auth.service";
 
 export default function ForgotPasswordPage() {
   const forgotPassForm = useForm<z.infer<typeof forgotPasswordSchema>>({
@@ -27,10 +27,8 @@ export default function ForgotPasswordPage() {
     },
   });
   const navigate = useNavigate();
-  const { sendOTP } = useAuthStore();
-
   const handleSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
-    const result = await sendOTP({
+    const result = await authService.sendOTP({
       email: data.email,
       context: "forgot_password",
     });
