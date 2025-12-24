@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { orderService } from "@/lib/services/orderService";
 import { OrderCard } from "@/components/orders/OrderCard";
@@ -8,18 +8,14 @@ import { OrderEmptyState } from "@/components/orders/OrderEmptyState";
 import { OrderListSkeleton } from "@/components/orders/OrderLoadingSkeleton";
 import type { Order } from "@/types/order.types";
 
-export default function StatusPage() {
+function StatusContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   
   const searchQuery = searchParams.get("search") || undefined;
 
-  useEffect(() => {
-    fetchOrders();
-  }, [searchQuery]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       // Show pending and processing orders
@@ -34,7 +30,11 @@ export default function StatusPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   if (loading) {
     return <OrderListSkeleton />;
@@ -50,5 +50,13 @@ export default function StatusPage() {
         <OrderCard key={order.id} order={order} />
       ))}
     </div>
+  );
+}
+
+export default function StatusPage() {
+  return (
+    <Suspense fallback={<OrderListSkeleton />}>
+      <StatusContent />
+    </Suspense>
   );
 }

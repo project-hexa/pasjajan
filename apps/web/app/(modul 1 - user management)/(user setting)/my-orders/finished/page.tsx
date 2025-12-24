@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { orderService } from "@/lib/services/orderService";
 import { OrderCard } from "@/components/orders/OrderCard";
@@ -8,18 +8,14 @@ import { OrderEmptyState } from "@/components/orders/OrderEmptyState";
 import { OrderListSkeleton } from "@/components/orders/OrderLoadingSkeleton";
 import type { Order } from "@/types/order.types";
 
-export default function FinishedPage() {
+function FinishedContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   
   const searchQuery = searchParams.get("search") || undefined;
 
-  useEffect(() => {
-    fetchOrders();
-  }, [searchQuery]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const response = await orderService.getOrders({
@@ -33,7 +29,11 @@ export default function FinishedPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const handleBuyAgain = async (order: Order) => {
     // TODO: Implement buy again functionality
@@ -54,5 +54,13 @@ export default function FinishedPage() {
         <OrderCard key={order.id} order={order} onBuyAgain={handleBuyAgain} />
       ))}
     </div>
+  );
+}
+
+export default function FinishedPage() {
+  return (
+    <Suspense fallback={<OrderListSkeleton />}>
+      <FinishedContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { Calendar } from "@workspace/ui/components/calendar";
 import { Icon } from "@workspace/ui/components/icon";
@@ -43,7 +44,7 @@ const menuinOrder = [
   },
 ];
 
-export default function MyOrdersLayout({ children }: { children: ReactNode }) {
+function SearchAndFilterBar() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [open, setOpen] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState("");
@@ -81,55 +82,81 @@ export default function MyOrdersLayout({ children }: { children: ReactNode }) {
   );
 
   return (
+    <div className="flex w-max items-center gap-4">
+      <InputGroup>
+        <InputGroupAddon>
+          <Icon icon="lucide:search" />
+        </InputGroupAddon>
+        <InputGroupInput
+          placeholder="Cari Pesananmu disini"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch(searchValue);
+            }
+          }}
+        />
+      </InputGroup>
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant={"outline"}>
+            <Icon icon="solar:calendar-outline" />
+            {date ? date.toLocaleDateString() : "Pilih Tanggal Pesanan"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            captionLayout="dropdown"
+            onSelect={handleDateSelect}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function SearchBarSkeleton() {
+  return (
+    <div className="flex w-max items-center gap-4">
+      <div className="h-10 w-64 animate-pulse rounded-md bg-muted"></div>
+      <div className="h-10 w-48 animate-pulse rounded-md bg-muted"></div>
+    </div>
+  );
+}
+
+function NavigationTabs() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  return (
+    <div className="flex items-center gap-4 overflow-x-auto">
+      {menuinOrder.map((menu, i) => (
+        <Button
+          key={i}
+          onClick={() => router.push(menu.link)}
+          variant={pathname === menu.link ? "secondary" : "outline"}
+        >
+          {menu.label}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
+export default function MyOrdersLayout({ children }: { children: ReactNode }) {
+  return (
     <>
       <h1 className="text-2xl font-bold">Riwayat Pesanan</h1>
 
-      <div className="flex w-max items-center gap-4">
-        <InputGroup>
-          <InputGroupAddon>
-            <Icon icon="lucide:search" />
-          </InputGroupAddon>
-          <InputGroupInput
-            placeholder="Cari Pesananmu disini"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch(searchValue);
-              }
-            }}
-          />
-        </InputGroup>
+      <Suspense fallback={<SearchBarSkeleton />}>
+        <SearchAndFilterBar />
+      </Suspense>
 
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button variant={"outline"}>
-              <Icon icon="solar:calendar-outline" />
-              {date ? date.toLocaleDateString() : "Pilih Tanggal Pesanan"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              captionLayout="dropdown"
-              onSelect={handleDateSelect}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div className="flex items-center gap-4 overflow-x-auto">
-        {menuinOrder.map((menu, i) => (
-          <Button
-            key={i}
-            onClick={() => router.push(menu.link)}
-            variant={pathname === menu.link ? "secondary" : "outline"}
-          >
-            {menu.label}
-          </Button>
-        ))}
-      </div>
+      <NavigationTabs />
 
       {children}
     </>
