@@ -90,21 +90,31 @@ class MidtransService
                 'gross_amount' => (int) $order->grand_total,
             ],
             'customer_details' => [
-                'first_name' => $order->customer_name ?? 'Customer',
-                'email' => $order->customer_email,
-                'phone' => $order->customer_phone ?? $order->shipping_recipient_phone,
+                // Data pembeli (customer)
+                'first_name' => $order->customer_name ?: 'Customer',
+                'email' => $order->customer_email ?: 'customer@example.com',
+                'phone' => $order->customer_phone ?: '08000000000',
+                // Alamat pembeli (billing = sama dengan shipping untuk saat ini)
                 'billing_address' => [
-                    'first_name' => $order->customer_name ?? 'Customer',
-                    'phone' => $order->customer_phone ?? $order->shipping_recipient_phone,
-                    'address' => $order->shipping_address,
+                    'first_name' => $order->customer_name ?: 'Customer',
+                    'email' => $order->customer_email ?: 'customer@example.com',
+                    'phone' => $order->customer_phone ?: '08000000000',
+                    'address' => $order->shipping_address ?: 'Alamat tidak tersedia',
                 ],
+                // Alamat pengiriman (bisa berbeda dari pembeli)
                 'shipping_address' => [
-                    'first_name' => $order->shipping_recipient_name ?? $order->customer_name ?? 'Customer',
-                    'phone' => $order->shipping_recipient_phone,
-                    'address' => $order->shipping_address,
+                    'first_name' => $order->shipping_recipient_name ?: $order->customer_name ?: 'Customer',
+                    'email' => $order->customer_email ?: 'customer@example.com',
+                    'phone' => $order->shipping_recipient_phone ?: $order->customer_phone ?: '08000000000',
+                    'address' => $order->shipping_address ?: 'Alamat tidak tersedia',
                 ],
             ],
             'item_details' => $this->buildItemDetails($order),
+            // Custom expiry: 1 jam untuk semua metode pembayaran
+            'custom_expiry' => [
+                'expiry_duration' => 60,
+                'unit' => 'minute',
+            ],
         ];
 
         // Add payment-specific parameters
