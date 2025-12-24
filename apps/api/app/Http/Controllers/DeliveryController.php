@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Shipment;
 use App\Models\ShipmentReview;
 use App\Models\ShipmentMethod;
+use App\Models\ShipmentStatusLog;
 use Illuminate\Support\Facades\Validator;
 
 class DeliveryController extends Controller
@@ -70,7 +71,8 @@ class DeliveryController extends Controller
         $shipment = Shipment::with([
             'statusLogs' => function ($query) {
                 $query->orderBy('created_at', 'desc');
-            }
+            },
+            'review' // Added Eager Load
         ])->where('order_id', $order_id)->first();
 
         if (!$shipment) {
@@ -84,9 +86,12 @@ class DeliveryController extends Controller
             'success' => true,
             'data' => [
                 'shipment_id' => $shipment->id,
+                'customer_user_id' => $shipment->order->customer->user_id ?? null, // Added for Access Control
                 'status_utama' => $shipment->completion_status,
                 'kurir' => $shipment->courier_name ?? 'Kurir PasJajan',
                 'kurir_phone' => $shipment->courier_phone ?? null,
+                'rating' => $shipment->review->rating ?? null, // Added for Logic
+                'review_comment' => $shipment->review->comment ?? null, // Added for Logic
                 'proof_image' => $shipment->proof_image ? asset('storage/' . $shipment->proof_image) : null,
                 'timeline' => $shipment->statusLogs->map(function ($log) {
                     return [
@@ -120,7 +125,7 @@ class DeliveryController extends Controller
         }
 
         // 2. Validasi Status Saat Ini
-        $allowedStatusesToConfirm = ['DIKIRIM', 'DIKEMAS']; // Allow DIKEMAS for testing flexibility if needed
+        $allowedStatusesToConfirm = ['DIKIRIM', 'DIKEMAS', 'SAMPAI_TUJUAN']; // Allow DIKEMAS for testing flexibility if needed
         if (!in_array($shipment->completion_status, $allowedStatusesToConfirm)) {
             return response()->json([
                 'success' => false,
@@ -129,14 +134,14 @@ class DeliveryController extends Controller
         }
 
         // 3. Update Status
-        $shipment->completion_status = 'TERIMA_PESANAN';
+        $shipment->completion_status = 'PESANAN_SELESAI';
         $shipment->save();
 
         // 4. Catat Log
-        \App\Models\ShipmentStatusLog::create([
+        ShipmentStatusLog::create([
             'shipment_id' => $shipment->id,
-            'status_name' => 'TERIMA_PESANAN',
-            'note' => 'Diterima dan dikonfirmasi oleh customer'
+            'status_name' => 'PESANAN_SELESAI',
+            'note' => 'Pesanan diterima oleh pelanggan'
         ]);
 
         // 5. Update status Order utama
@@ -148,7 +153,7 @@ class DeliveryController extends Controller
             'success' => true,
             'message' => 'Pesanan berhasil dikonfirmasi diterima.',
             'data' => [
-                'status' => 'TERIMA_PESANAN',
+                'status' => 'PESANAN_SELESAI',
                 'can_review' => true
             ]
         ]);
@@ -187,20 +192,26 @@ class DeliveryController extends Controller
             ], 400);
         }
 
-        // 4. Cek Duplicate Review
-        if (ShipmentReview::where('shipment_id', $shipment->id)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah memberikan ulasan untuk pengiriman ini.'
-            ], 400);
-        }
+        // 4. Simpan atau Update Review
+        ShipmentReview::updateOrCreate(
+            ['shipment_id' => $shipment->id],
+            [
+                'rating' => $request->rating,
+                'comment' => $request->review ?? $request->comment,
+                'review_date' => now('Asia/Jakarta')
+            ]
+        );
 
-        // 5. Simpan Review
-        ShipmentReview::create([
+        // 5. Update timestamp Shipment agar Dashboard Admin tahu ada aktivitas baru
+        $shipment->completion_status = 'PESANAN_SELESAI';
+        $shipment->save();
+        $shipment->touch();
+
+        // 6. Catat Log Status
+        ShipmentStatusLog::create([
             'shipment_id' => $shipment->id,
-            'rating' => $request->rating,
-            'comment' => $request->comment,
-            'review_date' => now('Asia/Jakarta')
+            'status_name' => 'PESANAN_SELESAI',
+            'note' => 'Pesanan selesai (Ulasan diterima)'
         ]);
 
         return response()->json([
@@ -315,20 +326,22 @@ class DeliveryController extends Controller
     {
         // 1. Validasi
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:DIKEMAS,DIKIRIM,TERIMA_PESANAN,PESANAN_SELESAI,DIBATALKAN',
+            'status' => 'required|string|in:DIKEMAS,MENUNGGU_KURIR,DIKIRIM,SAMPAI_TUJUAN,TERIMA_PESANAN,PESANAN_SELESAI,DIBATALKAN,GAGAL',
             'proof_image' => 'nullable|image|max:2048', // Max 2MB
-            'note' => 'nullable|string'
+            'note' => 'nullable|string',
+            'courier_name' => 'required_if:status,DIKIRIM|nullable|string|max:255',
+            'courier_phone' => 'required_if:status,DIKIRIM|nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Logic force note if status is DIBATALKAN
-        if ($request->status === 'DIBATALKAN' && empty($request->note)) {
+        // Logic force note if status is DIBATALKAN or GAGAL
+        if (($request->status === 'DIBATALKAN' || $request->status === 'GAGAL') && empty($request->note)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Alasan pembatalan (note) wajib diisi jika status DIBATALKAN.'
+                'message' => 'Alasan (note) wajib diisi jika status DIBATALKAN atau GAGAL.'
             ], 422);
         }
 
@@ -343,12 +356,16 @@ class DeliveryController extends Controller
             $shipment->proof_image = $path;
         }
 
-        // 3. Update Status
+        // 3. Update Status & Courier Info
         $shipment->completion_status = $request->status;
+        if ($request->status === 'DIKIRIM') {
+            $shipment->courier_name = $request->courier_name;
+            $shipment->courier_phone = $request->courier_phone;
+        }
         $shipment->save();
 
         // 4. Catat Log
-        \App\Models\ShipmentStatusLog::create([
+        ShipmentStatusLog::create([
             'shipment_id' => $shipment->id,
             'status_name' => $request->status,
             'note' => $request->note ?? 'Update status by Admin'
@@ -404,7 +421,7 @@ class DeliveryController extends Controller
         $shipment->save();
 
         // Log aktivitas
-        \App\Models\ShipmentStatusLog::create([
+        ShipmentStatusLog::create([
             'shipment_id' => $shipment->id,
             'status_name' => $shipment->completion_status,
             'note' => 'Update info kurir: ' . $request->courier_name
@@ -429,9 +446,13 @@ class DeliveryController extends Controller
         $status = $request->query('status');
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
-        $courierName = $request->query('courier_name'); // Filter by Courier
-
-        $query = Shipment::with(['order.customer.user', 'order.store']) // Load Order info
+        $courierName = $request->query('courier_name'); // Filter        // Query
+        $query = Shipment::with([
+            'order.customer.user',
+            'order.store',
+            'order.paymentMethod', // Added eager loading
+            'review'
+        ]) // Load Order info & Review
             ->orderBy('created_at', 'desc');
 
         if ($status) {
@@ -456,6 +477,7 @@ class DeliveryController extends Controller
         $data = $shipments->map(function ($shipment) {
             return [
                 'id' => $shipment->id,
+                'order_id' => $shipment->order_id, // Added for Update Action
                 'tracking_no' => 'SHP-' . $shipment->id, // Virtual Tracking No
                 'order_code' => $shipment->order->code ?? 'N/A',
                 'customer_name' => $shipment->order->customer->user->full_name ?? 'Guest',
@@ -464,7 +486,10 @@ class DeliveryController extends Controller
                 'courier_name' => $shipment->courier_name ?? 'Belum Ditugaskan',
                 'courier_phone' => $shipment->courier_phone ?? '-',
                 'cost' => $shipment->cost ?? 0,
-                'last_updated' => $shipment->updated_at->format('Y-m-d H:i'),
+                'last_updated' => $shipment->updated_at->setTimezone('Asia/Jakarta')->format('Y-m-d H:i'),
+                'payment_method' => $shipment->order->paymentMethod->method_name ?? ($shipment->order->payment_method_id ? "ID: {$shipment->order->payment_method_id} (Invalid)" : "-"),
+                'rating' => $shipment->review->rating ?? null,
+                'review_comment' => $shipment->review->comment ?? null,
                 'proof_image' => $shipment->proof_image ? asset('storage/' . $shipment->proof_image) : null,
             ];
         });
