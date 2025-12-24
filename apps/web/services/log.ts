@@ -1,5 +1,5 @@
 import { logSchema } from "@/lib/schema/log.schema";
-import { api, createServerApi } from "@/lib/utils/axios";
+import { api, getApiWithAuth } from "@/lib/utils/axios";
 
 interface LogParams {
   email?: string;
@@ -46,7 +46,7 @@ export const getLogsServer = async ({
   page,
   perPage,
 }: LogParams) => {
-  const serverApi = await createServerApi();
+  const serverApi = await getApiWithAuth();
   const params: Record<string, string> = {};
 
   if (email) params.email = email;
