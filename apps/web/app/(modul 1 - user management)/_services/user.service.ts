@@ -1,25 +1,40 @@
 import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
+import { handleApiResponse } from "@/lib/utils/handle-api-response";
+import { User } from "@/types/user";
 import z from "zod";
-import Cookies from "js-cookie";
 
 export const userService = {
   getUserProfile: async (email: string) =>
-    await handleApiRequest.get("/user/profile", { params: { email } }),
+    await handleApiResponse(
+      async () =>
+        await handleApiRequest.get("/user/profile", {
+          params: { email },
+          withAuth: true,
+        }),
+    ),
   editUserProfile: async (
     payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
       birth_date?: string;
     },
   ) =>
-    await handleApiRequest.patch("/user/change-profile", payload, {
-      defaultErrorMessage: "Profile Gagal diubah!",
+    await handleApiResponse(
+      async () =>
+        await handleApiRequest.patch("/user/change-profile", payload, {
+          defaultErrorMessage: "Profile Gagal diubah!",
+          withAuth: true,
+        }),
+    ),
+  getUserByID: async (id: User["id"]) =>
+    await handleApiRequest.get("/admin/users", {
+      params: { id },
+      withAuth: true,
     }),
-  getUserByID: async (id: User["id"]): Promise<{users: User}> =>
-    await handleApiRequest.get("/admin/users", { params: { id } }),
-  getUserByRole: async (role: User["role"]): Promise<{users: User}> => {
-    const token = Cookies.get("token") ?? "";
-    return await handleApiRequest.get<{users: User}>(`/admin/users/${role}`, {
-      data: { token },
-    });
-  },
+  getUserByRole: async (role: User["role"]) =>
+    await handleApiResponse<{ users: User }>(
+      async () =>
+        await handleApiRequest.get<{ users: User }>(`/admin/users/${role}`, {
+          withAuth: true,
+        }),
+    ),
 };
