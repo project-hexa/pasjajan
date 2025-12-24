@@ -28,7 +28,23 @@ class UserController extends BaseController
 		}
 
 		// Ambil data seluruh user dengan difilter berdasarkan rolenya
-		$users = User::where('role', Str::ucfirst($role))->get();
+		$role = Str::ucfirst($role);
+
+		// Jika rolenya customer, maka
+		// Ambil total ordernya juga
+		if ($role == 'Customer') {
+			$users = User::where('role', $role)
+				->with('customer')
+				->get()
+				->map(function ($user) {
+					$user->total_order = $user->customer
+						? $user->customer->orders()->count()
+						: 0;
+					return $user;
+				});
+		} else {
+			$users = User::where('role', $role)->get();
+		}
 
 		$result['users'] = $users;
 
