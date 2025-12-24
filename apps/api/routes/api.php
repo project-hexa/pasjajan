@@ -1,13 +1,12 @@
 <?php
 
-use App\Http\Controllers\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\PaymentController;
@@ -18,7 +17,7 @@ use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\VoucherController;
-
+use App\Http\Controllers\TestController;
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
