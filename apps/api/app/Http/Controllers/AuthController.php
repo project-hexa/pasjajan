@@ -38,7 +38,7 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             return $this->sendFailResponse(
                 'Validasi login gagal.',
-                ['errors' => $validator->errors()],
+                $validator->errors()->toArray(),
                 422
             );
         }
