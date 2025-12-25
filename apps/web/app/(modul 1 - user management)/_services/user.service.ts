@@ -14,16 +14,24 @@ export const userService = {
         }),
     ),
   editUserProfile: async (
+    email_before: string,
     payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
       birth_date?: string;
     },
   ) =>
     await handleApiResponse(
       async () =>
-        await handleApiRequest.patch("/user/change-profile", payload, {
-          defaultErrorMessage: "Profile Gagal diubah!",
-          withAuth: true,
-        }),
+        await handleApiRequest.patch(
+          "/user/change-profile",
+          {
+            email_before,
+            ...payload,
+          },
+          {
+            defaultErrorMessage: "Profile Gagal diubah!",
+            withAuth: true,
+          },
+        ),
     ),
   getUserByID: async (id: User["id"]) =>
     await handleApiRequest.get("/admin/users", {
