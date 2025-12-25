@@ -1,6 +1,11 @@
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
 import Image from "next/image";
 import { RegisterForm } from "../_components/register-form";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Register",
+};
 
 export default function RegisterPage() {
   return (
@@ -12,7 +17,7 @@ export default function RegisterPage() {
               <div className="flex flex-col items-center gap-5 text-white">
                 <h1 className="text-4xl font-bold">Selamat datang</h1>
                 <div className="flex flex-col items-center gap-5">
-                  <Image src="/logo.png" alt="Logo" width={128} height={128} />
+                  <Image src="/img/logo.png" alt="Logo" width={128} height={128} />
                   <div className="flex flex-col items-center">
                     <h2 className="text-2xl font-bold">Pasjajan</h2>
                     <p className="text-sm">Belanja cepat dan Mudah</p>
