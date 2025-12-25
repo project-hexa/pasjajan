@@ -38,7 +38,7 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             return $this->sendFailResponse(
                 'Validasi login gagal.',
-                ['errors' => $validator->errors()],
+                $validator->errors()->toArray(),
                 422
             );
         }
@@ -148,9 +148,9 @@ class AuthController extends BaseController
 
         if ($validator->fails()) {
             return $this->sendFailResponse(
-                'Email/No Hp sudah terdaftar!',
-                code: 422,
-                description: "Silahkan gunakan Email/No hp lain."
+                'Validasi register gagal.',
+                $validator->errors()->toArray(),
+                code: 422
             );
         }
 
@@ -232,7 +232,7 @@ class AuthController extends BaseController
 
         // Jika validasi gagal, maka
         if ($validator->fails()) {
-            $errors['validation_errors'] = $validator->errors();
+            $errors['validation_errors'] = $validator->errors()->toArray();
 
             return $this->sendFailResponse("Validasi lupa password gagal.", $errors, 422);
         }
@@ -287,7 +287,7 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             return $this->sendFailResponse(
                 'Validasi OTP gagal.',
-                ['errors' => $validator->errors()],
+                $validator->errors(),
                 422
             );
         }
@@ -357,6 +357,7 @@ class AuthController extends BaseController
 
             return $this->sendFailResponse(
                 'Gagal mengirim OTP.',
+                ['error' => $e->getMessage()],
                 code: 500
             );
         }
@@ -381,7 +382,7 @@ class AuthController extends BaseController
         if ($validator->fails()) {
             return $this->sendFailResponse(
                 'Validasi verifikasi gagal.',
-                ['errors' => $validator->errors()],
+                $validator->errors()->toArray(),
                 422
             );
         }

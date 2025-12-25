@@ -23,7 +23,7 @@ php artisan env:decrypt
 - Agar fitur **Midtrans**, **Kirim Email (OTP)**, dan **Login Google** dapat berjalan dengan baik, pastikan variabel-variabel berikut sudah ditambahkan ke file `.env` Anda (nilai credential bisa didapat dari file `.env.encrypted`):
     - **Midtrans**: `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_IS_SANITIZED`, `MIDTRANS_IS_3DS`
     - **Google OAuth**: `GOOGLE_CLIENT_ID`
-    - **Email SMTP**: `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`
+    - **Email Resend**: `MAIL_MAILER`, `MAIL_SCHEME`, `MAIL_ENCRYPTION`, `MAIL_FROM_ADDRESS`, `MAIL_FROM_NAME`, `RESEND_API_KEY` (Untuk variabel `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME` & `MAIL_PASSWORD`, harap biarkan saja dikomentar, jangan di uncomment)
 - Variabel lain seperti appkey, db bisa disesuaikan sendiri
 
 - Untuk info lebih lanjut tentang enkripsi-deskripsi file environment, lihat: [Enkripsi file environtment](https://laravel.com/docs/12.x/configuration#encrypting-environment-files)
