@@ -22,7 +22,7 @@ export const Navbar = ({ className }: { className?: string }) => {
           className="flex flex-col items-center text-xs font-bold text-white md:text-sm"
         >
           <Image
-            src={"/logo.png"}
+            src={"/img/logo.png"}
             alt="logo"
             width={64}
             height={64}
