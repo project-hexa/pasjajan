@@ -376,7 +376,7 @@ function WaitingPageContent() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header
-        logoSrc="/images/pasjajan2.png"
+        logoSrc="/img/pasjajan2.png"
         logoAlt="PasJajan Logo"
         userName={user?.full_name}
         userInitials={user?.full_name

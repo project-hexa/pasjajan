@@ -371,7 +371,7 @@ function CheckoutPageContent() {
     <div className="min-h-screen bg-gray-50">
       {/* HEADER */}
       <Header
-        logoSrc="/images/pasjajan2.png"
+        logoSrc="/img/pasjajan2.png"
         logoAlt="PasJajan Logo"
         userName={user?.full_name}
         userInitials={user?.full_name

@@ -32,7 +32,7 @@ export default function AllOrderPage() {
         <Item>
           <ItemMedia>
             <Image
-              src="/images/Screenshot 2025-10-25 190505.png"
+              src="/img/catalogue/Screenshot 2025-10-25 190505.png"
               alt="produk"
               width={32}
               height={32}

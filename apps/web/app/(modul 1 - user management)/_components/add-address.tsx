@@ -1,3 +1,5 @@
+"use client"
+
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { zodResolver } from "@hookform/resolvers/zod";

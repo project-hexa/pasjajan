@@ -11,7 +11,7 @@ export default function LoginPage() {
             <div className="bg-primary relative flex flex-1 items-center justify-center max-sm:hidden">
               <div className="flex flex-col items-center gap-5 text-white">
                 <div className="flex flex-col items-center gap-5">
-                  <Image src="/logo.png" alt="Logo" width={200} height={200} />
+                  <Image src="/img/logo.png" alt="Logo" width={200} height={200} />
                   <h2 className="text-4xl font-bold text-center">Pasjajan</h2>
                 </div>
               </div>
