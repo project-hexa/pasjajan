@@ -10,7 +10,7 @@ export default function HomeLayout({
   return (
     <>
       <Navbar className="sticky top-0 z-50" />
-      <main className="overflow-y-auto">
+      <main className="flex-1 overflow-y-auto -mt-10">
         {children}
       </main>
       <BottomBar />
