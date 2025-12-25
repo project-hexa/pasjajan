@@ -16,9 +16,9 @@ export const SideBanner = () => {
           <Image
             src="/img/logo.png"
             alt="Logo"
-            width={128}
-            height={128}
-            className="aspect-square"
+            width={172}
+            height={172}
+            className="aspect-auto"
             priority
           />
           <div className="flex flex-col text-center">
