@@ -242,7 +242,7 @@ export const AddAddress = ({
                 {initialMapLocation && (
                   <MapsPicker
                     initialPosition={initialMapLocation}
-                    onLocationChange={async (coords) => {
+                    onLocationChange={async (coords: LocationCoords) => {
                       const address = await reverseGeocode(
                         coords.lat,
                         coords.lng,
