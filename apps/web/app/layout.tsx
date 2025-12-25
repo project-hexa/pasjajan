@@ -14,6 +14,7 @@ const fontSans = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || ""),
   title: {
     default: "PasJajan - SmartMart",
     template: "%s | PasJajan",
@@ -24,7 +25,6 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
   },
-  manifest: "/manifest.json",
   openGraph: {
     title: "PasJajan - SmartMart",
     description: "Solusi Belanja Kelontong dalam Genggaman.",
@@ -47,8 +47,6 @@ export const metadata: Metadata = {
     description: "Solusi Belanja Kelontong dalam Genggaman.",
     images: ["/og-image.png"],
   },
-  robots: "index, follow",
-  themeColor: "#1E8F59",
 };
 
 export default function RootLayout({
