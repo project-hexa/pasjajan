@@ -9,7 +9,7 @@ import { Icon } from "@workspace/ui/components/icon";
 
 export default function HomePage() {
   return (
-    <div className="min-h-[calc(100vh-80px)] border-r">
+    <div className="min-h-[calc(100vh-80px)] border">
       <Empty>
         <EmptyHeader>
           <EmptyMedia variant="icon">
