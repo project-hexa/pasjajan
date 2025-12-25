@@ -1,9 +1,6 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
-import { useNavigate } from "@/hooks/useNavigate";
-import { registerSchema } from "@/lib/schema/auth.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import {
   ButtonGroup,
@@ -26,68 +23,12 @@ import {
   InputGroupTextarea,
 } from "@workspace/ui/components/input-group";
 import { Label } from "@workspace/ui/components/label";
-import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
-import { authService } from "../_services/auth.service";
-import Cookies from "js-cookie";
-
-const cookiesOptions: Cookies.CookieAttributes = {
-  path: "/",
-  secure: process.env.NODE_ENV === "production",
-};
+import { Controller } from "react-hook-form";
+import { useRegister } from "../_hooks/useRegister";
 
 export const RegisterForm = () => {
-  const registerForm = useForm<z.infer<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      full_name: "",
-      email: "",
-      phone_number: "",
-      address: "",
-      password: "",
-      password_confirmation: "",
-    },
-  });
-  const navigate = useNavigate();
-  const phone = registerForm.watch("phone_number");
-
-  useEffect(() => {
-    if (phone.startsWith("+62")) {
-      registerForm.setValue("phone_number", phone.slice(3));
-    }
-
-    if (phone.startsWith("0")) {
-      registerForm.setValue("phone_number", phone.slice(1));
-    }
-  }, [phone, registerForm]);
-
-  const handleOnSubmit = async (data: z.infer<typeof registerSchema>) => {
-    const phone_number = data.phone_number.startsWith("0")
-      ? "+62" + data.phone_number.slice(1)
-      : "+62" + data.phone_number;
-    data.phone_number = phone_number;
-
-    const result = await authService.register(data);
-
-    if (result.ok) {
-      toast.success(result.message, {
-        toasterId: "global",
-      });
-
-      Cookies.set("verificationStep", "email-sent", cookiesOptions);
-      Cookies.set("pendingEmail", data.email, cookiesOptions);
-
-      navigate.push("/send-otp");
-    } else {
-      toast.error(result.message, {
-        description: result.description,
-        toasterId: "global",
-      });
-    }
-  };
+  const { registerForm, handleOnSubmit } = useRegister();
 
   return (
     <form
