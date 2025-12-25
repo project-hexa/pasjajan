@@ -1,3 +1,4 @@
+import { StoreProvider } from "@/components/store-provider";
 import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -61,6 +62,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
+        <StoreProvider />
         <NextTopLoader color={"#d92"} showSpinner={false} />
         {children}
         <Toaster
