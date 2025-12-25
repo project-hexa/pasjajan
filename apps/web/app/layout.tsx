@@ -47,7 +47,6 @@ export const metadata: Metadata = {
     description: "Solusi Belanja Kelontong dalam Genggaman.",
     images: ["/og-image.png"],
   },
-  themeColor: "#1E8F59",
 };
 
 export default function RootLayout({
