@@ -33,6 +33,7 @@ export const Logout = () => {
 
       Cookies.remove("token")
       setIsLoggedIn(false);
+      Cookies.remove("token")
 
       if (role === "admin") navigate.push("/login/admin");
       navigate.push("/login");
