@@ -15,7 +15,7 @@ export default function HomePage() {
           <EmptyMedia variant="icon">
             <Icon icon="iconoir:info-empty" />
           </EmptyMedia>
-          <EmptyTitle>In Development!</EmptyTitle>
+          <EmptyTitle data-testid="title-in-development">In Development!</EmptyTitle>
           <EmptyDescription>Waiting for Production Ready!</EmptyDescription>
         </EmptyHeader>
       </Empty>
