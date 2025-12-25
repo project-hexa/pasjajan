@@ -1,9 +1,9 @@
 import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -14,10 +14,40 @@ const fontSans = Poppins({
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Pasjajan - SmartMart",
-    template: "Pasjajan | %s",
+    default: "PasJajan - SmartMart",
+    template: "%s | PasJajan",
   },
-  description: "Aplikasi kasir untuk usaha makanan dan minuman.",
+  description:
+    "Aplikasi kasir modern untuk usaha makanan dan minuman. Kelola transaksi, stok, dan laporan dengan mudah dan aman.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "PasJajan - SmartMart",
+    description: "Aplikasi kasir modern untuk usaha makanan dan minuman.",
+    url: process.env.NEXT_PUBLIC_APP_URL,
+    siteName: "PasJajan",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PasJajan - SmartMart",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PasJajan - SmartMart",
+    description: "Aplikasi kasir modern untuk usaha makanan dan minuman.",
+    images: ["/og-image.png"],
+  },
+  robots: "index, follow",
+  themeColor: "#1E8F59",
 };
 
 export default function RootLayout({
