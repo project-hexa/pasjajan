@@ -45,15 +45,15 @@ class BaseController extends Controller
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors = $validator->errors()->toArray();
 
 			$data['errors'] = $errors;
+		} else {
+			// Jika validasi berhasil, maka
+			// Ambil inputan user yang telah divalidasi
+			$data['result'] = $validator->validated();
 		}
-
-		// Jika validasi berhasil, maka
-		// Ambil inputan user yang telah divalidasi
-		$data['result'] = $validator->validated();
-
+		
 		return $data;
 	}
 
