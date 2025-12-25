@@ -1,7 +1,7 @@
 import { LoginForm } from "@/app/(modul 1 - user management)/_components/login-form";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";
-import { SideBanner } from "../../_components/side-banner";
 import { Metadata } from "next";
+import { SideBanner } from "../../_components/side-banner";
 
 export const metadata: Metadata = {
   title: "Login - Admin",
