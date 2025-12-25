@@ -1,10 +1,10 @@
+import { StoreProvider } from "@/components/store-provider";
 import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { StoreProvider } from "@/components/store-provider";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -14,6 +14,7 @@ const fontSans = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || ""),
   title: {
     default: "PasJajan - SmartMart",
     template: "%s | PasJajan",
