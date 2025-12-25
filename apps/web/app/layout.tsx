@@ -14,7 +14,9 @@ const fontSans = Poppins({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || ""),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ),
   title: {
     default: "PasJajan - SmartMart",
     template: "%s | PasJajan",
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "PasJajan - SmartMart",
     description: "Solusi Belanja Kelontong dalam Genggaman.",
-    url: process.env.NEXT_PUBLIC_APP_URL,
+    url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     siteName: "PasJajan",
     images: [
       {
