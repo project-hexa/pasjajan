@@ -38,7 +38,7 @@ export default function UserSettingLayout({
   }, [accountPage]);
 
   return (
-    <div className="bg-primary flex min-h-[calc(100vh-306px)]">
+    <div className="bg-primary flex min-h-[calc(100vh-306px)] mt-10">
       <div className="flex w-80 flex-col gap-8 p-5 pr-0">
         <div className="from-background/20 text-primary-foreground flex items-center justify-start gap-5 rounded-full bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60% p-1 font-bold">
           <Avatar>
