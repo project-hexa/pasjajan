@@ -24,7 +24,6 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
   },
-  manifest: "/manifest.json",
   openGraph: {
     title: "PasJajan - SmartMart",
     description: "Solusi Belanja Kelontong dalam Genggaman.",
@@ -47,7 +46,6 @@ export const metadata: Metadata = {
     description: "Solusi Belanja Kelontong dalam Genggaman.",
     images: ["/og-image.png"],
   },
-  robots: "index, follow",
   themeColor: "#1E8F59",
 };
 
