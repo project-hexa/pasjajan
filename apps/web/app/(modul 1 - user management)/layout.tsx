@@ -24,7 +24,7 @@ export default function AuthLayout({
   return (
     <>
       <Navbar className="sticky top-0 z-50" />
-      <main className="overflow-y-auto -mt-10">
+      <main className="overflow-y-auto -mt-10 overflow-x-hidden">
         {children}
         <Footer />
       </main>
