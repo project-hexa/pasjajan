@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | PasJajan",
   },
   description:
-    "Aplikasi kasir modern untuk usaha makanan dan minuman. Kelola transaksi, stok, dan laporan dengan mudah dan aman.",
+    "PasJajan hadir sebagai aplikasi digital commerce revolusioner, menjembatani kenyamanan toko kelontong modern favorit pelanggan dengan kecepatan dan kepraktisan teknologi digital.",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-icon.png",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   openGraph: {
     title: "PasJajan - SmartMart",
-    description: "Aplikasi kasir modern untuk usaha makanan dan minuman.",
+    description: "Solusi Belanja Kelontong dalam Genggaman.",
     url: process.env.NEXT_PUBLIC_APP_URL,
     siteName: "PasJajan",
     images: [
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PasJajan - SmartMart",
-    description: "Aplikasi kasir modern untuk usaha makanan dan minuman.",
+    description: "Solusi Belanja Kelontong dalam Genggaman.",
     images: ["/og-image.png"],
   },
   robots: "index, follow",
