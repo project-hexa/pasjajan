@@ -1,3 +1,5 @@
+"use client"
+
 import { verifyOTPSchema } from "@/lib/schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
