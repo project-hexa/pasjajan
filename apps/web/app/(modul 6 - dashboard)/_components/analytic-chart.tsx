@@ -40,7 +40,7 @@ export function AnalyticChart({ label, data, className }: AnalyticChartProps) {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
-          tickFormatter={(value: number[]) => value.slice(0, 3)}
+          tickFormatter={(value) => value.slice(0, 3)}
         />
         <YAxis
           dataKey="value"
