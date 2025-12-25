@@ -345,7 +345,7 @@ export default function TrackingPage() {
       <Footer />
 
       {/* CSS for slide-in animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes slide-in {
           from {
             transform: translateX(100%);
