@@ -13,7 +13,14 @@ export const SideBanner = () => {
           <h1 className="font-bold md:text-2xl lg:text-4xl">Selamat datang</h1>
         )}
         <div className="flex flex-col items-center gap-5">
-          <Image src="/img/logo.png" alt="Logo" width={128} height={128} />
+          <Image
+            src="/img/logo.png"
+            alt="Logo"
+            width={128}
+            height={128}
+            className="aspect-square"
+            priority
+          />
           <div className="flex flex-col text-center">
             <h2 className="text-2xl font-bold">Pasjajan</h2>
             {pathname !== "/login/admin" && (
