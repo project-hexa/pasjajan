@@ -39,19 +39,11 @@ class UserSeeder extends Seeder
             'last_login_date' => now(),
         ]);
 
-<<<<<<< HEAD
-        // $stores = Store::all();
-
-        // $staffUser->staff()->create([
-        // 	'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
-        // ]);
-=======
         $stores = Store::all();
 
         $staffUser->staff()->create([
             'store_id' => $stores->isNotEmpty() ? $stores->random()->id : null,
         ]);
->>>>>>> origin/dev
 
         // Customer User 1
         $customerUser1 = User::create([
@@ -81,11 +73,7 @@ class UserSeeder extends Seeder
             'last_login_date' => now(),
         ]);
 
-<<<<<<< HEAD
-        $customerUser1->customer()->create([
-=======
         $customerUser2->customer()->create([
->>>>>>> origin/dev
             'point' => 0,
         ]);
     }
