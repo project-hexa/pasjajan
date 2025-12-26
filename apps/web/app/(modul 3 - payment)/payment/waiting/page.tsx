@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from "next/navigation";
 import { useNavigate } from "@/hooks/useNavigate";
+import { toast } from "@workspace/ui/components/sonner";
 import { PaymentInstructionsModal } from "@/components/PaymentInstructionsModal";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -195,17 +196,17 @@ function WaitingPageContent() {
               deeplink: deeplink,
             });
           } else {
-            alert("Order tidak ditemukan!");
+            toast.error("Order tidak ditemukan!", { toasterId: "global" });
             navigateRef.current.push("/");
           }
         } catch (error) {
           console.error("Error fetching order:", error);
-          alert("Gagal memuat data order!");
+          toast.error("Gagal memuat data order!", { toasterId: "global" });
           navigateRef.current.push("/");
         }
         setLoading(false);
       } else {
-        alert("Data pembayaran tidak ditemukan!");
+        toast.error("Data pembayaran tidak ditemukan!", { toasterId: "global" });
         navigateRef.current.push("/");
         setLoading(false);
       }

@@ -13,6 +13,7 @@ import {
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner"
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog, { Address } from "@/components/AddressDialog";
@@ -75,7 +76,7 @@ function CheckoutPageContent() {
         }
 
         if (!orderCode) {
-          alert("Order code tidak ditemukan!");
+          toast.error("Order code tidak ditemukan!", { toasterId: "global" });
           navigateRef.current.push("/cart");
           return;
         }
@@ -83,7 +84,7 @@ function CheckoutPageContent() {
         const orderResult = await orderService.getOrder(orderCode);
 
         if (!orderResult.ok || !orderResult.data?.order) {
-          alert("Order tidak ditemukan!");
+          toast.error("Order tidak ditemukan!", { toasterId: "global" });
           navigateRef.current.push("/cart");
           return;
         }
@@ -146,7 +147,7 @@ function CheckoutPageContent() {
         }
       } catch (error) {
         console.error("Error loading order data:", error);
-        alert("Gagal memuat data order!");
+        toast.error("Gagal memuat data order!", { toasterId: "global" });
         navigateRef.current.push("/cart");
       } finally {
         setLoading(false);
@@ -220,12 +221,12 @@ function CheckoutPageContent() {
     if (isProcessing) return;
 
     if (!payChoice.option) {
-      alert("Silakan pilih metode pembayaran terlebih dahulu!");
+      toast.warning("Silakan pilih metode pembayaran terlebih dahulu!", { toasterId: "global" });
       return;
     }
 
     if (!orderCode) {
-      alert("Order code tidak ditemukan!");
+      toast.error("Order code tidak ditemukan!", { toasterId: "global" });
       return;
     }
 
@@ -242,7 +243,7 @@ function CheckoutPageContent() {
       });
 
       if (!result.ok) {
-        alert(result.message || "Gagal memproses pembayaran!");
+        toast.error(result.message || "Gagal memproses pembayaran!", { toasterId: "global" });
         setIsProcessing(false);
         return;
       }
@@ -251,8 +252,9 @@ function CheckoutPageContent() {
       navigate.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
-      alert(
+      toast.error(
         "Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.",
+        { toasterId: "global" }
       );
       setIsProcessing(false);
     }
