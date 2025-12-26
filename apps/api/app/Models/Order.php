@@ -191,6 +191,11 @@ class Order extends Model
         return $this->belongsTo(Customer::class);
     }
 
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class);
+    }
+
 
     public function orderItems(): HasMany
     {
