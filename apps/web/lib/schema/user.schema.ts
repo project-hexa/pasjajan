@@ -108,13 +108,12 @@ export const editProfileSchema = userSchema
     full_name: true,
     phone_number: true,
   })
-  .partial()
   .extend({
-    email_before: emailSchema,
-    token,
     gender: userSchema.shape.gender.nullable().optional(),
     birth_date: userSchema.shape.birth_date.nullable().optional(),
-  });
+    avatar: z.string().nullable().optional(),
+  })
+  .partial();
 
 export const editUserSchema = userSchema
   .pick({

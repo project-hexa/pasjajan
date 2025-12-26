@@ -58,7 +58,7 @@ export const UserDropdown = () => {
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="bg-primary"
+        className="bg-primary text-primary-foreground"
         side={dashboardPath ? "top" : "bottom"}
       >
         {user?.role === "Admin" && (

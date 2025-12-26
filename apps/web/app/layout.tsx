@@ -1,9 +1,10 @@
+import { StoreProvider } from "@/components/store-provider";
 import { Toaster } from "@workspace/ui/components/sonner";
 import "@workspace/ui/globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -13,11 +14,41 @@ const fontSans = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ),
   title: {
-    absolute: "Pasjajan - SmartMart",
-    template: "Pasjajan | %s",
+    default: "PasJajan - SmartMart",
+    template: "%s | PasJajan",
   },
-  description: "Aplikasi kasir untuk usaha makanan dan minuman.",
+  description:
+    "PasJajan hadir sebagai aplikasi digital commerce revolusioner, menjembatani kenyamanan toko kelontong modern favorit pelanggan dengan kecepatan dan kepraktisan teknologi digital.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    title: "PasJajan - SmartMart",
+    description: "Solusi Belanja Kelontong dalam Genggaman.",
+    url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    siteName: "PasJajan",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PasJajan - SmartMart",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PasJajan - SmartMart",
+    description: "Solusi Belanja Kelontong dalam Genggaman.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +62,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`font-sans ${fontSans.variable} min-h-svh w-full overflow-y-auto antialiased`}
       >
+        <StoreProvider />
         <NextTopLoader color={"#d92"} showSpinner={false} />
         {children}
         <Toaster

@@ -58,7 +58,7 @@ export default function VerificationCodePage() {
       <Card className="flex flex-col overflow-hidden max-lg:px-5 max-sm:mx-5 max-sm:-mt-40 md:w-2/3 md:border-2 md:border-black lg:w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
           <Image
-            src="/icon-email-verif-code.svg"
+            src="/img/icon-email-verif-code.svg"
             className="max-sm:size-32"
             alt="Verification Code"
             width={250}

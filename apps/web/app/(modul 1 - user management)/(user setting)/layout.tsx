@@ -38,9 +38,9 @@ export default function UserSettingLayout({
   }, [accountPage]);
 
   return (
-    <div className="bg-primary flex min-h-[calc(100vh-306px)]">
+    <div className="bg-primary mt-10 flex min-h-[calc(100vh-306px)]">
       <div className="flex w-80 flex-col gap-8 p-5 pr-0">
-        <div className="from-background/20 text-primary-foreground flex items-center justify-start gap-5 rounded-full bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60% p-1 font-bold">
+        <div className="from-background/20 text-primary-foreground flex items-center justify-start gap-5 rounded-full bg-linear-to-r from-0% via-transparent via-40% to-transparent to-60% p-1 font-bold">
           <Avatar>
             <AvatarFallback>{`${user?.full_name?.charAt(0) ?? "U"}${user?.full_name?.split(" ")[1]?.charAt(0) ?? ""}`}</AvatarFallback>
             <AvatarImage
@@ -58,7 +58,7 @@ export default function UserSettingLayout({
               "flex flex-col justify-start rounded-4xl px-2 py-4 transition-all",
               accountPage
                 ? "bg-background text-primary rounded-r-none"
-                : "from-background/20 w-3/4 bg-gradient-to-l from-0% via-transparent via-40% to-transparent to-60%",
+                : "from-background/20 w-3/4 bg-linear-to-l from-0% via-transparent via-40% to-transparent to-60%",
               accountTrigger && "bg-background text-primary",
             )}
           >
@@ -114,7 +114,7 @@ export default function UserSettingLayout({
                 "w-3/4 justify-start gap-5 rounded-full p-1",
                 pathname === btnMenu.link
                   ? "border-primary bg-card text-primary"
-                  : "from-background/20 bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60%",
+                  : "from-background/20 bg-linear-to-r from-0% via-transparent via-40% to-transparent to-60%",
               )}
               onClick={() => navigate.push(btnMenu.link)}
             >

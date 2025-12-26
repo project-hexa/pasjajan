@@ -31,7 +31,9 @@ export const Logout = () => {
         toasterId: "global",
       });
 
+      Cookies.remove("token")
       setIsLoggedIn(false);
+      Cookies.remove("token")
 
       if (role === "admin") navigate.push("/login/admin");
       navigate.push("/login");

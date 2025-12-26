@@ -1,3 +1,5 @@
+"use client"
+
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -242,7 +244,7 @@ export const AddAddress = ({
                 {initialMapLocation && (
                   <MapsPicker
                     initialPosition={initialMapLocation}
-                    onLocationChange={async (coords) => {
+                    onLocationChange={async (coords: LocationCoords) => {
                       const address = await reverseGeocode(
                         coords.lat,
                         coords.lng,
