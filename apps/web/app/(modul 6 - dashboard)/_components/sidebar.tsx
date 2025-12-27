@@ -5,6 +5,7 @@ import { cn } from "@workspace/ui/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const navigation = [
   {
@@ -43,6 +44,11 @@ const navigation = [
     icon: "lucide:tag",
   },
   {
+    name: "Voucher",
+    href: "/dashboard/vouchers",
+    icon: "lucide:ticket",
+  },
+  {
     name: "Produk",
     href: "/dashboard/products",
     icon: "icon-park-outline:ad-product",
@@ -56,18 +62,48 @@ const navigation = [
 
 export function Sidebar() {
   const pathName = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render skeleton during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <aside className="sticky top-[100px] flex h-[calc(100vh-116px)] flex-col gap-4 rounded-3xl bg-[#F7FFFB] py-8">
+        <h2 className="px-4 text-nowrap">Dashboard Summary</h2>
+        <ul className="flex-1">
+          {navigation.map((item) => (
+            <li key={item.name}>
+              <div className="relative flex items-center gap-2 px-4 py-2">
+                <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />
+                <span className="text-gray-400">{item.name}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center gap-4 px-4">
+          <div className="h-8 w-8 flex-shrink-0 rounded-lg bg-gray-200 animate-pulse" />
+          <div className="min-w-0 flex-1">
+            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-1" />
+            <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
-    <aside suppressHydrationWarning className="sticky top-[100px] flex h-[calc(100vh-116px)] flex-col gap-4 rounded-3xl bg-[#F7FFFB] py-8 z-50 shadow-sm">
+    <aside className="sticky top-[100px] flex h-[calc(100vh-116px)] flex-col gap-4 rounded-3xl bg-[#F7FFFB] py-8">
       <h2 className="px-4 text-nowrap">Dashboard Summary</h2>
-      <ul suppressHydrationWarning className="flex-1 overflow-y-auto pb-4 mb-2">
+      <ul className="flex-1">
         {navigation.map((item) => (
           <li key={item.name}>
             <Link
               href={item.href}
-              suppressHydrationWarning
               className={cn(
-                "relative flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC] z-10",
+                "relative flex items-center gap-2 px-4 py-2 transition-all duration-200 hover:bg-[#B9DCCC]",
                 {
                   "bg-[#B9DCCC]": pathName === item.href,
                 },

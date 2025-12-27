@@ -22,6 +22,8 @@ import {
   PaginationPrevious,
 } from "@workspace/ui/components/pagination";
 import { Icon } from "@workspace/ui/components/icon";
+import { getBranches as getBranchesService } from "@/services/branches";
+import { AxiosError } from "axios";
 
 interface Branch {
   id: string;
@@ -61,80 +63,32 @@ export default function BranchManagementPage() {
     const fetchBranches = async () => {
       try {
         setLoading(true);
-
-        // Mock Data Override
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const formattedBranches = [
-          {
-            id: "1",
-            name: "Cabang Pusat",
-            address: "Jl. Sudirman No. 1",
-            income: "Rp 150.000.000",
-            contact: "081234567890",
-            status: "active",
-            code: "PST",
-            latitude: -6.1,
-            longitude: 106.8,
-          },
-          {
-            id: "2",
-            name: "Cabang Jakarta Barat",
-            address: "Jl. Panjang No. 10",
-            income: "Rp 80.000.000",
-            contact: "081298765432",
-            status: "active",
-            code: "JKB",
-            latitude: -6.2,
-            longitude: 106.7,
-          },
-          {
-            id: "3",
-            name: "Cabang Bandung",
-            address: "Jl. Asia Afrika",
-            income: "Rp 95.000.000",
-            contact: "0811223344",
-            status: "active",
-            code: "BDG",
-            latitude: -6.9,
-            longitude: 107.6,
-          },
-        ];
-
-        /*
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/branches`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Gagal mengambil data cabang");
-        }
-
-        const responseData = await response.json();
+        const responseData = await getBranchesService();
         console.log("API Response:", responseData);
 
         // Get branches from the nested data.branches
-        let branchesData: ApiBranch[] = (responseData.data?.branches as ApiBranch[]) || [];
-        
+        let branchesData: ApiBranch[] =
+          (responseData.data?.branches as ApiBranch[]) || [];
+
         // Sort branches by created_at (newest first) or by ID if created_at is not available
         branchesData = [...branchesData].sort((a, b) => {
           // Try to sort by created_at if available
           if (a.created_at && b.created_at) {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
           }
           // Fallback to ID if created_at is not available
           return parseInt(String(b.id || "0")) - parseInt(String(a.id || "0"));
         });
-        
+
         // Transform the API response to match our Branch interface
         const formattedBranches: Branch[] = branchesData.map((branch) => ({
-          id: (branch.id !== undefined && branch.id !== null) ? String(branch.id) : "",
+          id:
+            branch.id !== undefined && branch.id !== null
+              ? String(branch.id)
+              : "",
           name: branch.name || "Nama tidak tersedia",
           address: branch.address || "Alamat tidak tersedia",
           income: branch.penghasilan ?? "Rp 0",
@@ -144,12 +98,15 @@ export default function BranchManagementPage() {
           latitude: branch.latitude,
           longitude: branch.longitude,
         }));
-        */
 
-        setBranches(formattedBranches as any);
+        setBranches(formattedBranches);
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+      } catch (err: unknown) {
+        const axiosErr = err as AxiosError<{ message?: string }>;
+        const message =
+          axiosErr?.response?.data?.message ||
+          (err instanceof Error ? err.message : "An error occurred");
+        setError(message);
         console.error("Error fetching branches:", err);
       } finally {
         setLoading(false);

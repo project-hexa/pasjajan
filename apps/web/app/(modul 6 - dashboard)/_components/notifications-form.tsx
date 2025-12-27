@@ -15,7 +15,7 @@ import {
 import { Input } from "@workspace/ui/components/input";
 import { Textarea } from "@workspace/ui/components/textarea";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
 import { useNotificationsStore } from "@/stores/useNotificationsStore";
 
@@ -35,21 +35,24 @@ export default function NotificationsForm() {
         title: values.title,
         body: values.body,
       });
-      toast.success("Notifikasi berhasil dikirim!");
+      toast.success("Notifikasi berhasil dikirim!", { toasterId: "global" });
       form.reset();
       triggerRefresh();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Gagal mengirim notifikasi",
+        {
+          toasterId: "global",
+        },
       );
     }
   }
 
   return (
-    <Form {...(form as any)}>
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
-          control={form.control as any}
+          control={form.control}
           name="title"
           render={({ field }) => (
             <FormItem>
@@ -66,7 +69,7 @@ export default function NotificationsForm() {
           )}
         />
         <FormField
-          control={form.control as any}
+          control={form.control}
           name="body"
           render={({ field }) => (
             <FormItem>

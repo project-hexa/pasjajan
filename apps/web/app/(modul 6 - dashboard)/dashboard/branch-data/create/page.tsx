@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@workspace/ui/components/card";
 import { BranchForm } from "../_components/branch-form";
+import { createBranch as createBranchService } from "@/services/branches";
+import { AxiosError } from "axios";
 
 type BranchFormValues = {
   code: string;
@@ -20,33 +22,24 @@ export default function CreateBranchPage() {
   const onSubmit = async (data: BranchFormValues) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/branches`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_TEMPORARY_AUTH_TOKEN}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          code: data.code,
-          name: data.name,
-          address: data.address,
-          phone_number: data.phone_number,
-          status: data.status,
-          is_active: true,
-        }),
+      const response = await createBranchService({
+        code: data.code,
+        name: data.name,
+        address: data.address,
+        phone_number: data.phone_number,
+        status: data.status,
+        is_active: true,
       });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Gagal menambahkan cabang');
+      if (response.status < 200 || response.status >= 300) {
+        const responseData = response.data as { message?: string } | undefined;
+        throw new Error(responseData?.message || 'Gagal menambahkan cabang');
       }
 
       router.push('/dashboard/branch-data');
     } catch (error: unknown) {
       console.error("Error creating branch:", error);
-      const message = error instanceof Error ? error.message : "Terjadi kesalahan saat menambahkan cabang";
+      const axiosErr = error as AxiosError<{ message?: string }>;
+      const message = axiosErr?.response?.data?.message || (error instanceof Error ? error.message : "Terjadi kesalahan saat menambahkan cabang");
       alert(message);
     } finally {
       setIsLoading(false);

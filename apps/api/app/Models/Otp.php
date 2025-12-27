@@ -13,7 +13,6 @@ class Otp extends Model
 		'otp',
 		'expires_at',
 		'attempt_count',
-		'is_verified',
 	];
 
 	public function user(): BelongsTo

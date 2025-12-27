@@ -220,6 +220,7 @@
   .toaster-close-btn > svg {
     width: 16px;
     height: 16px;
+    @apply text-muted-foreground;
   }
 }
 
