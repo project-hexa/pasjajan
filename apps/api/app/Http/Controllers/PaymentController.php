@@ -7,12 +7,16 @@ use App\Http\Requests\ProcessPaymentRequest;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Notification;
+use App\Models\Voucher;
+use App\Models\CustomerVoucher;
+use App\Models\HistoryPoint;
 use App\Services\MidtransService;
 use App\Mail\NotificationMail;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -119,6 +123,52 @@ class PaymentController extends Controller
                 );
             }
 
+            // === APPLY VOUCHER IF PROVIDED ===
+            $customerVoucher = null;
+            if ($request->voucher_id) {
+                // Check voucher is valid and available
+                $voucher = Voucher::available()->find($request->voucher_id);
+                if (!$voucher) {
+                    return ApiResponse::error('Voucher tidak valid atau sudah expired', 400);
+                }
+
+                // Check customer owns this voucher and hasn't used it
+                $customerVoucher = CustomerVoucher::where('customer_id', $customer->id)
+                    ->where('voucher_id', $voucher->id)
+                    ->where('is_used', false)
+                    ->first();
+
+                if (!$customerVoucher) {
+                    return ApiResponse::error('Voucher tidak ditemukan atau sudah digunakan', 400);
+                }
+
+                // Check order doesn't already have a voucher
+                if ($order->voucher_id) {
+                    return ApiResponse::error('Order sudah memiliki voucher', 400);
+                }
+
+                // Calculate new totals with voucher
+                $discount = (float) $voucher->discount_value;
+                $newGrandTotal = ($order->sub_total + $order->shipping_fee + $order->admin_fee) - $discount;
+                if ($newGrandTotal < 0) $newGrandTotal = 0;
+
+                // Update order with voucher
+                $order->update([
+                    'voucher_id' => $voucher->id,
+                    'discount' => $discount,
+                    'grand_total' => $newGrandTotal,
+                ]);
+
+                // Refresh order to get updated values
+                $order->refresh();
+
+                Log::info("Voucher applied to order {$order->code}", [
+                    'voucher_id' => $voucher->id,
+                    'discount' => $discount,
+                    'new_grand_total' => $newGrandTotal,
+                ]);
+            }
+
             // Create payment via Midtrans Core API
             $result = $this->midtransService->createCoreTransaction($order, $paymentMethod->code);
 
@@ -139,7 +189,7 @@ class PaymentController extends Controller
                 'payment_status' => 'pending',
                 'expired_at' => now()->addHours(1), // Set expire time saat payment process
             ];
-            
+
             // Update shipping address jika dikirim
             if ($request->shipping_address) {
                 $updateData['shipping_address'] = $request->shipping_address;
@@ -150,8 +200,17 @@ class PaymentController extends Controller
             if ($request->shipping_recipient_phone) {
                 $updateData['shipping_recipient_phone'] = $request->shipping_recipient_phone;
             }
-            
+
             $order->update($updateData);
+
+            // Mark voucher as used (after successful payment creation)
+            if ($customerVoucher) {
+                $customerVoucher->update([
+                    'is_used' => true,
+                    'used_at' => now(),
+                ]);
+                Log::info("Voucher marked as used", ['customer_voucher_id' => $customerVoucher->id]);
+            }
 
 
             // Kirim notifikasi pending payment ke customer
@@ -236,6 +295,9 @@ class PaymentController extends Controller
 
             // Check if order is expired
             if ($order->isExpired() && $order->payment_status !== 'paid') {
+                // Restore voucher sebelum update status
+                $this->restoreVoucherIfUsed($order);
+
                 $order->update([
                     'status' => 'cancelled',
                     'payment_status' => 'expired'
@@ -277,11 +339,17 @@ class PaymentController extends Controller
                 if ($paymentStatus === 'paid' && !$order->paid_at) {
                     $updateData['paid_at'] = now();
                     $updateData['status'] = 'confirmed'; // Auto confirm after payment
+
+                    // Give points to customer (1 point per Rp 1.000)
+                    $this->awardPointsToCustomer($order);
                 }
 
-                // Handle expired from Midtrans
-                if ($paymentStatus === 'expired') {
+                // Handle expired or failed from Midtrans - restore voucher
+                if (in_array($paymentStatus, ['expired', 'failed'])) {
                     $updateData['status'] = 'cancelled';
+
+                    // Restore voucher jika ada
+                    $this->restoreVoucherIfUsed($order);
                 }
 
                 $order->update($updateData);
@@ -375,6 +443,90 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
                 'order_code' => $order->code,
             ]);
+        }
+    }
+
+    /**
+     * Restore voucher jika order di-cancel atau expired
+     * Mengembalikan voucher ke status belum terpakai
+     * 
+     * @param Order $order
+     * @return void
+     */
+    private function restoreVoucherIfUsed(Order $order): void
+    {
+        if (!$order->voucher_id) {
+            return;
+        }
+
+        try {
+            $customerVoucher = CustomerVoucher::where('customer_id', $order->customer_id)
+                ->where('voucher_id', $order->voucher_id)
+                ->where('is_used', true)
+                ->first();
+
+            if ($customerVoucher) {
+                $customerVoucher->update([
+                    'is_used' => false,
+                    'used_at' => null,
+                ]);
+
+                Log::info("Voucher restored for cancelled/expired order", [
+                    'order_code' => $order->code,
+                    'voucher_id' => $order->voucher_id,
+                    'customer_voucher_id' => $customerVoucher->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to restore voucher for order {$order->code}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Award points to customer based on transaction amount
+     * 1 point per Rp 1.000
+     * 
+     * @param Order $order
+     * @return void
+     */
+    private function awardPointsToCustomer(Order $order): void
+    {
+        try {
+            $order->load('customer');
+            $customer = $order->customer;
+
+            if (!$customer) {
+                Log::warning("Cannot award points: customer not found for order {$order->code}");
+                return;
+            }
+
+            // Calculate points: 1 point per Rp 1.000
+            $pointsEarned = (int) floor($order->grand_total / 1000);
+
+            if ($pointsEarned <= 0) {
+                return;
+            }
+
+            // Add points to customer
+            $customer->point += $pointsEarned;
+            $customer->save();
+
+            // Create history point record
+            HistoryPoint::create([
+                'customer_id' => $customer->id,
+                'type' => 'Masuk',
+                'notes' => "Poin dari transaksi #{$order->code}",
+                'total_point' => $pointsEarned,
+            ]);
+
+            Log::info("Points awarded to customer", [
+                'order_code' => $order->code,
+                'customer_id' => $customer->id,
+                'points_earned' => $pointsEarned,
+                'new_balance' => $customer->point,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to award points for order {$order->code}: " . $e->getMessage());
         }
     }
 }
