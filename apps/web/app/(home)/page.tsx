@@ -1,36 +1,14 @@
 "use client";
 import { Button } from "@workspace/ui/components/button";
-import { ButtonGroup } from "@workspace/ui/components/button-group";
 import { Card, CardContent, CardHeader } from "@workspace/ui/components/card";
 import { Separator } from "@workspace/ui/components/separator";
 import Link from "next/link";
-import { useState } from "react";
 
 export default function HomePage() {
-  const [count, setCount] = useState<number>(0);
-  const handleClickMinus = () => setCount(count - 1);
-  const handleClickPlus = () => setCount(count + 1);
-
   return (
     <div className="min-h-[calc(100vh-80px)] border">
-      <div className="flex flex-col items-center justify-center gap-5">
+      <div className="flex flex-col items-center justify-center gap-5 pt-5">
         <h1 className="text-2xl font-bold">Setup Proyek Pasjajan-Mart</h1>
-        <Card>
-          <CardContent>
-            <div className="flex flex-col items-center gap-2">
-              <span>Test Button dengan Count</span>
-              <span>Count: {count}</span>
-              <ButtonGroup>
-                <Button onClick={handleClickMinus} variant={"outline"}>
-                  -
-                </Button>
-                <Button onClick={handleClickPlus} variant={"outline"}>
-                  +
-                </Button>
-              </ButtonGroup>
-            </div>
-          </CardContent>
-        </Card>
         <Card className="max-w-1/2">
           <CardContent>
             <div className="flex flex-col items-center gap-2">
@@ -95,18 +73,27 @@ export default function HomePage() {
                 <Separator />
                 <CardContent>
                   <div className="flex flex-wrap gap-2 pt-6">
-                    <Link href="/delivery/123/rating">
-                      <Button variant={"secondary"}>/delivery/123/rating</Button>
-                    </Link>
-                    <Link href="/delivery/123/tracking">
-                      <Button variant={"secondary"}>/delivery/123/tracking</Button>
+                    <Link href="/cart">
+                      <Button variant={"secondary"}>/cart</Button>
                     </Link>
                     <Link href="/catalogue">
                       <Button variant={"secondary"}>/catalogue</Button>
                     </Link>
+
+                    <Link href="/delivery/123/rating">
+                      <Button variant={"secondary"}>
+                        /delivery/123/rating
+                      </Button>
+                    </Link>
+                    <Link href="/delivery/123/tracking">
+                      <Button variant={"secondary"}>
+                        /delivery/123/tracking
+                      </Button>
+                    </Link>
                   </div>
                   <p className="text-muted-foreground mt-2">
-                    Folder: app/(delivery)/[deliveryId]/rating dan app/(delivery)/[deliveryId]/tracking
+                    Folder: app/(delivery)/[deliveryId]/rating dan
+                    app/(delivery)/[deliveryId]/tracking
                   </p>
                 </CardContent>
               </Card>
@@ -125,26 +112,6 @@ export default function HomePage() {
               </div>
               <p className="text-muted-foreground">
                 ini ada di folder app/employee/[[...employee]]/
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="max-w-1/2">
-          <CardContent>
-            <div className="flex flex-col items-center gap-2">
-              <p>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit
-                optio unde earum, ducimus corporis minima numquam odio dolores
-                praesentium ipsa explicabo corrupti illum facilis, tenetur
-                maiores officia porro. At non nulla asperiores fugiat
-                repellendus sunt nam dolores nesciunt, assumenda, nihil ullam
-                saepe, quam est! Ea id saepe iusto modi quasi, nobis nemo iste
-                explicabo nulla molestiae ab totam itaque laboriosam recusandae?
-                Dicta aliquam dolorum itaque velit assumenda deleniti nesciunt,
-                beatae modi praesentium quibusdam rerum, dignissimos reiciendis?
-                Fugit perferendis nisi animi nostrum libero tempora, quo quos
-                quaerat rerum suscipit numquam sit accusantium unde deserunt
-                fugiat, minima quidem excepturi quae! Reprehenderit, magni!
               </p>
             </div>
           </CardContent>
