@@ -3,7 +3,7 @@
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent
+  ChartTooltipContent,
 } from "@workspace/ui/components/chart";
 import { cn } from "@workspace/ui/lib/utils";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -31,6 +31,7 @@ export function AnalyticChart({ label, data, className }: AnalyticChartProps) {
         margin={{
           left: 12,
           right: 12,
+          top: 12,
         }}
       >
         <CartesianGrid />

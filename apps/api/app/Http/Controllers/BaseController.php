@@ -45,15 +45,15 @@ class BaseController extends Controller
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors = $validator->errors()->toArray();
 
 			$data['errors'] = $errors;
+		} else {
+			// Jika validasi berhasil, maka
+			// Ambil inputan user yang telah divalidasi
+			$data['result'] = $validator->validated();
 		}
-
-		// Jika validasi berhasil, maka
-		// Ambil inputan user yang telah divalidasi
-		$data['result'] = $validator->validated();
-
+		
 		return $data;
 	}
 
@@ -77,18 +77,42 @@ class BaseController extends Controller
 		return response()->json($response, $code);
 	}
 
-	public function sendFailResponse(string $message, array $errors = [], $code=400): JsonResponse
+	public function sendFailResponse(string $message, array $errors = [], $code=400, string $description=""): JsonResponse
 	{
 		$response = [
 			'success' => false,
 			'status' => $code,
 			'message' => $message,
+            'description' => $description
 		];
 
 		if (!empty($errors)) {
-			$response['errors'] = $errors;
+			if (!empty($description)) {
+				$response['description'] = $description . ', ' . $this->flattenErrors($errors);
+			} else {
+				$response['description'] = $this->flattenErrors($errors);
+			}
 		}
 
 		return response()->json($response, $code);
+	}
+
+	private function flattenErrors($errors): string
+	{
+		$result = [];
+
+		if ($errors instanceof MessageBag) {
+			$errors = $errors->all();
+		}
+
+		if (is_array($errors)) {
+			foreach ($errors as $error) {
+				$result[] = $this->flattenErrors($error); // recurse
+			}
+		} else {
+			$result[] = $errors; // single string
+		}
+
+		return implode(', ', $result);
 	}
 }

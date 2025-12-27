@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -14,29 +14,29 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
 import { toast } from "@workspace/ui/components/sonner";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
 import Cookies from "js-cookie";
+import { authService } from "../_services/auth.service";
+import { useUserStore } from "../_stores/useUserStore";
 
 export const Logout = () => {
-  const { logout } = useAuthStore();
-  const router = useRouter();
-  const token = Cookies.get("token");
+  const navigate = useNavigate();
+  const role = Cookies.get("token");
+  const { setIsLoggedIn } = useUserStore();
 
-  const logoutForm = useForm({
-    defaultValues: {
-      token: token || "",
-    },
-  });
-
-  const handleClick = async (data: { token: string }) => {
-    const result = await logout(data.token);
+  const handleClick = async () => {
+    const result = await authService.logout();
 
     if (result.ok) {
       toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/login");
+
+      Cookies.remove("token")
+      setIsLoggedIn(false);
+      Cookies.remove("token")
+
+      if (role === "admin") navigate.push("/login/admin");
+      navigate.push("/login");
     } else {
       toast.error(result.message, {
         toasterId: "global",
@@ -59,23 +59,9 @@ export const Logout = () => {
         </AlertDialogHeader>
         <AlertDialogFooter className="!justify-center gap-20">
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <form id="logout" onSubmit={logoutForm.handleSubmit(handleClick)}>
-            <Button
-              variant={"destructive"}
-              form="logout"
-              disabled={logoutForm.formState.isSubmitting}
-            >
-              {logoutForm.formState.isSubmitting ? (
-                <Icon
-                  icon={"lucide:loader-circle"}
-                  width={24}
-                  className="animate-spin"
-                />
-              ) : (
-                "Keluar"
-              )}
-            </Button>
-          </form>
+          <Button variant={"destructive"} onClick={handleClick}>
+            Keluar
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -1,9 +1,6 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
-import { loginSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import {
@@ -14,40 +11,12 @@ import {
 } from "@workspace/ui/components/field";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
-import { toast } from "@workspace/ui/components/sonner";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
+import { Controller } from "react-hook-form";
+import { useLogin } from "../_hooks/useLogin";
 
 export const LoginForm = () => {
-  const { login } = useAuthStore();
-  const router = useRouter();
-
-  const loginForm = useForm<z.infer<typeof loginSchema>>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-      role: "Customer",
-    },
-  });
-
-  const handleOnSubmit = async (data: z.infer<typeof loginSchema>) => {
-    const result = await login(data);
-
-    if (result?.ok) {
-      toast.success("Berhasil Masuk!", {
-        toasterId: "global",
-      });
-      router.push("/");
-    } else {
-      toast.error(result.message, {
-        toasterId: "global",
-      });
-    }
-  };
+  const { loginForm, handleOnSubmit } = useLogin();
 
   return (
     <form
@@ -110,6 +79,7 @@ export const LoginForm = () => {
             <Link href="/register">
               <Button
                 variant="link"
+                type="button"
                 disabled={loginForm.formState.isSubmitting}
               >
                 Daftar
@@ -133,13 +103,20 @@ export const LoginForm = () => {
             />
 
             <Link href="/forgot-password">
-              <Button variant="link">Lupa Password?</Button>
+              <Button variant="link" type="button">
+                Lupa Password?
+              </Button>
             </Link>
           </div>
           <p className="text-muted-foreground text-sm">
             atau masuk menggunakan:
           </p>
-          <Button variant={"ghost"} size="icon" className="size-14">
+          <Button
+            type="button"
+            variant={"ghost"}
+            size="icon"
+            className="size-14"
+          >
             <Icon icon="devicon:google" width="32" />
           </Button>
         </div>

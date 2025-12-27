@@ -2,11 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\PaymentController;
@@ -17,7 +17,7 @@ use App\Http\Controllers\reportSalesController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\VoucherController;
-
+use App\Http\Controllers\TestController;
 use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
@@ -102,8 +102,8 @@ Route::controller(AuthController::class)->group(function () {
 	Route::post('/auth/verify-otp', 'verifyOtp');
 
 	// Membungkus route yang memerlukan verifikasi otp ke dalam route group yang sudah diterapkan middleware EnsureOtpIsVerified
-    Route::post('/auth/register', 'registerPost');
-    Route::post('/auth/forgot-password', 'forgotPassword');
+	Route::post('/auth/register', 'registerPost');
+	Route::post('/auth/forgot-password', 'forgotPassword');
 
 	// Membungkus route yang memerlukan akses dari user yang terautentifikasi ke dalam route group yang sudah diterapkan middleware dengan auth dari sanctum
 	Route::middleware('auth:sanctum')->group(function () {
@@ -151,22 +151,37 @@ Route::middleware('auth:sanctum')->group(function () {
 		// --- List Kurir & Cek Ongkir ---
 		Route::get('/delivery/methods', 'getDeliveryMethods');
 		Route::post('/delivery/check-cost', 'checkShippingCost');
-		Route::get('/delivery/methods', 'getDeliveryMethods');
-		Route::post('/delivery/check-cost', 'checkShippingCost');
+		Route::post('/delivery/estimate', 'estimateDeliveryTime');
 
 		// --- Get Status Pengiriman ---
 		Route::get('/delivery/{order_id}/tracking', 'getTracking');
 		// --- Get Status Pengiriman ---
+		// --- Get Status Pengiriman ---
 		Route::get('/delivery/{order_id}/tracking', 'getTracking');
+		Route::post('/delivery/{order_id}/confirm', 'confirmDelivery');
 
 		// --- Kirim Ulasan ---
-		Route::post('/delivery/{order_id}/review', 'submitReview');
 		// --- Kirim Ulasan ---
+		Route::get('/delivery/{order_id}/review', 'getReview');
 		Route::post('/delivery/{order_id}/review', 'submitReview');
+
+		// --- Admin: Update Status & Validasi ---
+		Route::post('/admin/delivery/{order_id}/update', 'updateStatus');
+		Route::post('/admin/delivery/{order_id}/assign', 'assignCourier');
+		Route::get('/admin/deliveries', 'getDeliveriesForAdmin');
 	});
 
 
 
+
+
+	// Notifications (Accessible by all authenticated users)
+	Route::controller(NotificationController::class)->group(function () {
+		Route::get('/notifications', 'index');
+		Route::get('/notifications/metrics', 'metrics');
+		Route::post('/notifications/send', 'send');
+		Route::get('/notifications/{id}', 'show');
+	});
 
 	Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 		Route::get('/reports/sales', [reportSalesController::class, 'reportSales'])->name('reports.sales');
@@ -194,11 +209,7 @@ Route::middleware('auth:sanctum')->group(function () {
 		// Activity Logs
 		Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
-		// Notifications
-		Route::get('/notifications/metrics', [NotificationController::class, 'metrics'])->name('notifications.metrics');
-		Route::post('/notifications/send', [NotificationController::class, 'send'])->middleware('cors')->name('notifications.send');
-		Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-		Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+
 	});
 });
 
@@ -261,3 +272,4 @@ Route::prefix('cart')->group(function () {
 	Route::delete('/{cartId}', [CartController::class, 'remove']);
 	Route::post('/clear', [CartController::class, 'clear']);
 });
+

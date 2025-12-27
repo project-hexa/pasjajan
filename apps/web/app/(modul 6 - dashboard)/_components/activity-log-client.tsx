@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useState, useEffect, useTransition, useMemo } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
@@ -32,7 +33,7 @@ interface ActivityLogClientProps {
 export default function ActivityLogClient({
   initialData,
 }: ActivityLogClientProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
@@ -62,13 +63,13 @@ export default function ActivityLogClient({
         params.set("page", "1");
 
         startTransition(() => {
-          router.push(`?${params.toString()}`);
+          navigate.push(`?${params.toString()}`);
         });
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchParams, router]);
+  }, [searchQuery, searchParams, navigate]);
 
   const handleFromDateChange = (date: Date | undefined) => {
     setFromDate(date);
@@ -82,7 +83,7 @@ export default function ActivityLogClient({
     params.set("page", "1");
 
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      navigate.push(`?${params.toString()}`);
     });
   };
 
@@ -98,7 +99,7 @@ export default function ActivityLogClient({
     params.set("page", "1");
 
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      navigate.push(`?${params.toString()}`);
     });
   };
 
@@ -107,7 +108,7 @@ export default function ActivityLogClient({
     params.set("page", page.toString());
 
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      navigate.push(`?${params.toString()}`);
     });
   };
 

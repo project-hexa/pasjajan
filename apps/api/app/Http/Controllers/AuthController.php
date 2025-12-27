@@ -29,120 +29,139 @@ class AuthController extends BaseController
 
     public function loginPost(Request $request): JsonResponse
     {
-        // Menetapkan aturan (rules) validasi login
-        $rules = [
-            'user_identity' => [
-                'required',
-                Rule::anyOf([
-                    ['string', 'email'],
-                    ['string', 'numeric'],
-                ]),
-            ],
+        $validator = $this->makeValidator($request->all(), [
+            'user_identity' => 'required|string',
             'password' => 'required|string',
-        ];
+            "role" => 'required|in:Admin,Staff,Customer'
+        ]);
 
-        // Validasi inputan user berdasarkan aturan validasi login yang telah ditetapkan sebelumnya
-        $validator = $this->makeValidator($request->all(), $rules);
-
-        // Jika validasi gagal, maka
         if ($validator->fails()) {
-            $errors['validation_errors'] = $validator->errors();
-
-            return $this->sendFailResponse("Validasi login gagal.", $errors, 422);
+            return $this->sendFailResponse(
+                'Validasi login gagal.',
+                $validator->errors()->toArray(),
+                422
+            );
         }
 
-        // Jika validasi berhasil, maka
-        // Ambil data credentials (inputan) milik user yang sudah divalidasi
-        $credentials = $validator->validated();
+        $data = $validator->validated();
 
-        // Mengidentifikasi jenis inputan 'identitas user' yang dimasukkan user, apakah email atau nomor telp
-        $userIdentityIs = '';
-        if (Str::contains($credentials['user_identity'], '@')) {
-            $userIdentityIs = 'email';
-        } else if (Str::is('8*', $credentials['user_identity'])) {
-            $userIdentityIs = 'phone_number';
-            $credentials['user_identity'] = Str::start($credentials['user_identity'], '+62');
+        // Tentukan tipe identitas
+        if (filter_var($data['user_identity'], FILTER_VALIDATE_EMAIL)) {
+            $field = 'email';
+        } elseif (preg_match('/^8\d+$/', $data['user_identity'])) {
+            $field = 'phone_number';
+            $data['user_identity'] = '+62' . $data['user_identity'];
+        } else {
+            return $this->sendFailResponse(
+                'Identitas harus berupa email atau nomor HP yang valid.',
+                code: 422
+            );
         }
 
-        // Cari user yang sesuai dengan email/phone_number hasil inputan user
-        $user = User::where($userIdentityIs, $credentials['user_identity'])->first();
+        $user = User::where($field, $data['user_identity'])->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user['password'])) {
-            // Jika tidak sesuai
-            //return response()->json(["ok" => false, "status" => 400]);
-            return $this->sendFailResponse("$userIdentityIs atau password anda salah. Login gagal.", code: 401);
+        if (!$user) {
+            return $this->sendFailResponse(
+                'Email/No HP belum terdaftar!',
+                code: 401,
+                description: "Silahkan Daftar terlebih dahulu."
+            );
         }
 
-        // Jika sesuai
-        // Hapus token auth sebelumnya milik user terkait, jika ada
+        if (!$user || !Hash::check($data['password'], $user->password)) {
+            return $this->sendFailResponse(
+                'Email/No HP atau password salah!',
+                code: 401,
+                description: "Silahkan cek kembali credential anda."
+            );
+        }
+
+        if(!$user->email_verified_at){
+            return $this->sendFailResponse(
+                "Email/No HP belum diverifikasi!",
+                [
+                    "email_verified" => false
+                ],
+                401,
+                "Silahkan Verifikasi Email terlebih dahulu."
+            );
+        }
+
+        // Validasi role HANYA jika yang login adalah Admin
+        if($data['role'] === "Admin" && $user->role !== "Admin"){
+            return $this->sendFailResponse(
+                "Akses Ditolak!",
+                code: 401,
+                description: "Anda bukan admin!."
+            );
+        }
+
+        // Validasi role HANYA jika yang login adalah Staff
+        if($data['role'] === "Staff" && $user->role !== "Staff"){
+            return $this->sendFailResponse(
+                "Akses Ditolak!",
+                code: 401,
+                description: "Anda bukan staff!."
+            );
+        }
+
         $user->tokens()->delete();
 
-        // Muat entitas role terkait jika ada
-        switch ($user['role']) {
-            case 'Customer':
-            case 'Staff':
-                $user = $user->load($user['role']);
-                break;
-            default:
-                break;
+        if (in_array($user->role, ['Customer', 'Staff'])) {
+            $user->load($user->role);
         }
 
-        // Membuat token auth untuk user
-        $result['token'] = $user->createToken('auth_token')->plainTextToken;
-        $result['user_data'] = new UserResource($user);
+        $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Log activity
-        $this->logActivity('LOGIN', "User {$user->full_name} berhasil login", $user->id);
+        $this->logActivity(
+            'LOGIN',
+            "User {$user->full_name} berhasil login",
+            $user->id
+        );
 
-        //return response()->json(["ok" => true, "token" => $token, "status" => 200]);
-        return $this->sendSuccessResponse("User berhasil login.", $result);
+        return $this->sendSuccessResponse('Login berhasil.', [
+            'token' => $token,
+            'user_data' => new UserResource($user),
+        ]);
     }
+
 
     public function registerPost(Request $request): JsonResponse
     {
-        // Cek apakah inputan no HP sudah menggunakan format +62, jika belum maka tambahkan +62 didepannya
         $request->merge([
-            'phone_number' => !Str::startsWith($request->input('phone_number'), '+62') ? Str::start($request->input('phone_number'), '+62') : $request->input('phone_number'),
+            'phone_number' => Str::startsWith($request->phone_number, '+62')
+                ? $request->phone_number
+                : '+62' . $request->phone_number,
         ]);
 
-        // Menetapkan aturan (rules) validasi register
-        $rules = [
+        $validator = $this->makeValidator($request->all(), [
             'full_name' => 'required|string',
-            'phone_number' => 'required|string|string|unique:users,phone_number',
+            'phone_number' => 'required|string|unique:users,phone_number',
             'address' => 'required|string',
-            'email' => 'required|string|email|unique:users,email',
+            'email' => 'required|email|unique:users,email',
             'password' => [
                 'required',
-                'string',
-                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
                 'confirmed',
+                Password::min(8)->letters()->mixedCase()->numbers()->symbols(),
             ],
-            'password_confirmation' => 'required',
-        ];
+        ]);
 
-        // Validasi inputan user berdasarkan aturan validasi register yang telah ditetapkan sebelumnya
-        $validator = $this->makeValidator($request->all(), $rules);
-
-        // Jika validasi gagal, maka
-        if (User::where("email", $request->email)->exists()) {
-            return $this->sendFailResponse("Email Sudah digunakan!", code: 422);
+        if ($validator->fails()) {
+            return $this->sendFailResponse(
+                'Validasi register gagal.',
+                $validator->errors()->toArray(),
+                code: 422
+            );
         }
 
-        if (User::where("phone_number", $request->phone_number)->exists()) {
-            return $this->sendFailResponse("No telepon Sudah digunakan!", code: 422);
-        }
+        $customer = $this->createCustomer($validator->validated());
 
-        // Jika validasi berhasil maka
-        // Ambil seluruh data inputan milik user
-        $data = $validator->validated();
-
-        // Lalu masukkan data inputan user ke database
-        $customer = $this->createCustomer($data);
-
-        $result['email'] = $customer->email;
-
-        return $this->sendSuccessResponse("User berhasil register.", $result);
+        return $this->sendSuccessResponse(
+            'Registrasi berhasil.',
+            ['email' => $customer->user->email]
+        );
     }
+
 
     public function loginViaGoogle(Request $request): JsonResponse
     {
@@ -177,7 +196,7 @@ class AuthController extends BaseController
 
         $result = [
             'token' => $token,
-            'user_data'  => new UserResource($user->load($user['role'])),
+            'user_data' => new UserResource($user->load($user['role'])),
         ];
 
         return $this->sendSuccessResponse('User berhasil login via google.', $result);
@@ -213,7 +232,7 @@ class AuthController extends BaseController
 
         // Jika validasi gagal, maka
         if ($validator->fails()) {
-            $errors['validation_errors'] = $validator->errors();
+            $errors['validation_errors'] = $validator->errors()->toArray();
 
             return $this->sendFailResponse("Validasi lupa password gagal.", $errors, 422);
         }
@@ -250,152 +269,159 @@ class AuthController extends BaseController
 
     public function sendOtp(Request $request): JsonResponse
     {
-        // Cari tahu apakah inputan user adalah nomor HP atau email
-        $input_type = '';
-        if ($request->has('phone_number')) {
-            $input_type = 'phone_number';
-        } else if ($request->has('email')) {
-            $input_type = 'email';
+        $type = $request->has('email') ? 'email' : ($request->has('phone_number') ? 'phone_number' : null);
+        $context = $request->input('context', 'register');
+
+        if (!$type) {
+            return $this->sendFailResponse(
+                'Email atau nomor HP wajib diisi.',
+                code: 422
+            );
         }
 
-        // Menetapkan aturan (rules) validasi kirim otp
-        $rules = [
-            $input_type => 'required|' . ($input_type == 'email' ? $input_type : 'numeric'),
-        ];
+        $validator = $this->makeValidator($request->all(), [
+            $type => $type === 'email' ? 'required|email' : 'required|string',
+            'context' => 'sometimes|in:register,forgot_password',
+        ]);
 
-        // Validasi inputan user berdasarkan aturan validasi kirim otp yang telah ditetapkan sebelumnya
-        $validator = $this->makeValidator($request->all(), $rules);
-
-        // Jika validasi gagal, maka
         if ($validator->fails()) {
-            $errors['validation_errors'] = $validator->errors();
-
-            return $this->sendFailResponse("Validasi kirim OTP gagal.", $errors, 422);
+            return $this->sendFailResponse(
+                'Validasi OTP gagal.',
+                $validator->errors(),
+                422
+            );
         }
 
-        // Jika validasi berhasil maka
-        // Ambil data inputan user yang sudah divalidasi
         $data = $validator->validated();
+        $user = User::where($type, $data[$type])->first();
 
-        // Mencari user dengan email yang sama dengan email inputan user
-        $user = User::where($input_type, $data[$input_type])->first();
-
-        if (!$user) {
-            return $this->sendFailResponse("User dengan $input_type tersebut tidak terdaftar.", code: 404);
-        }
-
-        $otp = $user ? Otp::where('user_id', $user['id'])->first() : Otp::where($input_type, $data[$input_type])->first();
-        $emailAddress = null;
-        $expiringTime = 1; // Dalam hitungan menit
-
-        // Jika otp tidak ditemukan, maka
-        if (!$otp) {
-            $otp = $this->createOtp($expiringTime, user: $user);
-            $emailAddress = $user['email'];
-        } else {
-            // Jika otp ditemukan, cek attempt count
-            if ($otp['attempt_count'] >= 3) {
-                return $this->sendFailResponse("OTP telah dikirim lebih dari tiga kali. Harap hubungi admin. Jika masih ada kendala.");
+        if ($context === 'register') {
+            // Untuk registrasi: email/hp TIDAK BOLEH sudah terdaftar DAN terverifikasi
+            if ($user && $user->email_verified_at !== null) {
+                return $this->sendFailResponse(
+                    'Email/No HP sudah terdaftar dan terverifikasi.',
+                    code: 409
+                );
             }
 
-            // Update OTP dengan expiring time yang lebih lama
-            $expiringTime = (($otp['attempt_count'] * 2) + 1);
-            $otp = $this->updateOtp($expiringTime, user: $user);
-            $emailAddress = $user['email'];
+            if ($user && $user->email_verified_at === null) {
+                $otp = Otp::where('user_id', $user->id)->first();
+                $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+                $otp = $otp
+                    ? $this->updateOtp($expire, $user)
+                    : $this->createOtp($expire, $user);
+            } else {
+                // User belum terdaftar sama sekali (registrasi pertama kali)
+                $otp = Otp::where($type, $data[$type])->first();
+                $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+                $otp = $otp
+                    ? $this->updateOtp($expire, null, $data[$type])
+                    : $this->createOtp($expire, null, $data[$type]);
+            }
+        } else {
+            // Untuk lupa password: email/hp HARUS sudah terdaftar
+            if (!$user) {
+                return $this->sendFailResponse(
+                    'Email/No HP tidak terdaftar.',
+                    code: 404
+                );
+            }
+
+            if ($user->email_verified_at === null) {
+                return $this->sendFailResponse(
+                    'Email belum terverifikasi. Silakan verifikasi email terlebih dahulu.',
+                    code: 403
+                );
+            }
+
+            $otp = Otp::where('user_id', $user->id)->first();
+            $expire = $otp ? (($otp->attempt_count * 2) + 1) : 1;
+
+            $otp = $otp
+                ? $this->updateOtp($expire, $user)
+                : $this->createOtp($expire, $user);
         }
 
-        // Tetapkan isi konten pada badan email/chat/sms
-        $content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam " . $expiringTime . " menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
+        $content = "Terima kasih telah mendaftar di PasJajan. Berikut adalah kode OTP anda: $otp->otp. Ini adalah kode rahasia Anda untuk PasJajan. Kode akan hangus dalam " . $expire . " menit. Demi keamanan, jangan berikan kode ini ke orang lain.";
 
-        if ($input_type == 'email') {
-            // Mengirim otp ke alamat email milik user terkait
-            Mail::raw($content, function ($message) use ($emailAddress) {
-                $message->to($emailAddress)->subject('Your OTP Code');
+        try {
+            $email = $context === 'register' ? $data[$type] : $user->email;
+
+            Mail::raw($content, function ($msg) use ($email) {
+                $msg->to($email)->subject('Kode OTP');
             });
-        } else if ($input_type == 'phone_number') {
-            $curl = curl_init();
-            curl_setopt_array($curl, [
-                CURLOPT_URL => "https://api.fonnte.com/send",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => [
-                    'target' => $user->phone_number,
-                    'message' => $content,
-                ],
-                CURLOPT_HTTPHEADER => [
-                    "Authorization: " . env('FONNTE_TOKEN')
-                ],
-            ]);
+        } catch (\Throwable $e) {
+            \Log::error('OTP email failed', ['error' => $e->getMessage()]);
 
-            $response = curl_exec($curl);
-            curl_close($curl);
+            return $this->sendFailResponse(
+                'Gagal mengirim OTP.',
+                ['error' => $e->getMessage()],
+                code: 500
+            );
         }
 
-        //$result['user_id'] = $user['id'];
-        $result['attempt_count'] = $otp->attempt_count;
-        $result['expired_at'] = $otp->expires_at;
-
-        return $this->sendSuccessResponse("Berhasil mengirim OTP. Silahkan cek $input_type Anda.", $result);
+        return $this->sendSuccessResponse(
+            'OTP berhasil dikirim.',
+            [
+                'expired_at' => $otp->expires_at,
+                'attempt_count' => $otp->attempt_count,
+            ]
+        );
     }
+
 
     public function verifyOtp(Request $request): JsonResponse
     {
-        // Menetapkan aturan (rules) validasi verifikasi otp
-        $rules = [
+        $validator = $this->makeValidator($request->all(), [
             'email' => 'required|email',
             'otp' => 'required|digits:6',
-        ];
-
-        // Validasi inputan user berdasarkan aturan validasi kirim otp yang telah ditetapkan sebelumnya
-        $validator = $this->makeValidator($request->all(), $rules);
-
-        // Jika validasi gagal, maka
-        if ($validator->fails()) {
-            $errors['validation_errors'] = $validator->errors();
-
-            return $this->sendFailResponse("Validasi verifikasi gagal.", $errors, 422);
-        }
-
-        // Jika validasi berhasil, maka
-        // Ambil data inputan user yang sudah divalidasi
-        $data = $validator->validated();
-
-        // Mencari user dengan email yang sama dengan email inputan user
-        $user = User::where('email', $data['email'])->first();
-        $otp = null;
-
-        // Jika user tidak ditemukan, maka
-        if (!$user) {
-            // Mencari apakah otp dengan email dari user itu sesuai atau tidak dengan otp inputan user, berikut mengecek apakah otp tsb sudah kadaluarsa atau belum
-            $otp = Otp::where('email', $data['email'])
-                ->where('otp', $data['otp'])
-                ->where('expires_at', '>=', now())
-                ->first();
-        } else {
-            // Jika user ditemukan, maka
-            // Mencari apakah otp milik user sesuai atau tidak dengan otp inputan user, berikut mengecek apakah otp tsb sudah kadaluarsa atau belum
-            $otp = Otp::where('user_id', $user['id'])
-                ->where('otp', $data['otp'])
-                ->where('expires_at', '>=', now())
-                ->first();
-        }
-
-        // Jika otp tidak sesuai & kadaluarsa, maka
-        if (!$otp) {
-            return $this->sendFailResponse("OTP salah atau sudah expired. Verifikasi OTP gagal.", code: 401);
-        }
-
-        $user->update([
-            'email_verified_at' => now(),
         ]);
 
-        $result['token'] = $user->createToken('auth_token')->plainTextToken;
-        $result['user_data'] = new UserResource($user);
+        if ($validator->fails()) {
+            return $this->sendFailResponse(
+                'Validasi verifikasi gagal.',
+                $validator->errors()->toArray(),
+                422
+            );
+        }
 
+        $data = $validator->validated();
+
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user) {
+            return $this->sendFailResponse(
+                'User tidak ditemukan.',
+                code: 404
+            );
+        }
+
+        $otp = Otp::where('user_id', $user->id)
+            ->where('otp', $data['otp'])
+            ->where('expires_at', '>=', now())
+            ->first();
+
+        if (!$otp) {
+            return $this->sendFailResponse(
+                'OTP salah atau kadaluarsa.',
+                code: 401
+            );
+        }
+
+        $user->update(['email_verified_at' => now()]);
         $otp->delete();
 
-        return $this->sendSuccessResponse("Verifikasi OTP berhasil.", $result);
+        return $this->sendSuccessResponse(
+            'OTP terverifikasi.',
+            [
+                'token' => $user->createToken('auth_token')->plainTextToken,
+                'user_data' => new UserResource($user),
+            ]
+        );
     }
+
 
     // Method private custom buatan sendiri khusus untuk AuthController
     // Method untuk memasukkan data inputan user ke database
@@ -430,27 +456,26 @@ class AuthController extends BaseController
     }
 
     // Method untuk memasukkan data inputan otp dari user ke database
-    private function createOtp(int $expiringTime, User $user = null, string $email = null): Otp
+    private function createOtp(int $expiringTime, User $user = null, string $identifier = null): Otp
     {
         // Membuat otp, berikut bentuk hash & waktu kadaluarsanya
         $otp = rand(100000, 999999);
         //$hashedOtp = Hash::make($otp);
         $expiresAt = now()->addMinutes($expiringTime);
 
-        // Jika data user tidak ditemukan, maka
-        if (!$user) {
-            // Memasukkan (insert) data otp (tanpa data user) ke database
+        if (!$user && $identifier) {
+        // Untuk registrasi (user belum ada)
             return Otp::create([
-                'email' => $email,
+                'email' => $identifier, // Bisa email atau phone_number
                 'otp' => $otp,
                 'expires_at' => $expiresAt,
                 'attempt_count' => 1,
             ]);
         }
 
-        // Memasukkan (insert) data otp ke database
+        // Untuk forgot password (user sudah ada)
         return Otp::create([
-            'user_id' => $user['id'],
+            'user_id' => $user->id,
             'otp' => $otp,
             'expires_at' => $expiresAt,
             'attempt_count' => 1,
@@ -458,7 +483,7 @@ class AuthController extends BaseController
     }
 
     // Method untuk mengubah data otp milik user di database
-    private function updateOtp(int $expiringTime, User $user = null, string $email = null): Otp
+    private function updateOtp(int $expiringTime, User $user = null, string $identifier = null): Otp
     {
         // Membuat kode otp, berikut bentuk hash & waktu kadaluarsanya
         $otp_code = rand(100000, 999999);
@@ -466,7 +491,7 @@ class AuthController extends BaseController
         $otp = null;
 
         // Jika data user tidak ditemukan, maka
-        if (!$user) {
+        if (!$user && $identifier) {
             // Mencari otp milik user di database
             $otp = Otp::where('email', $email)->first();
         } else {

@@ -1,7 +1,6 @@
 "use client";
 
 import { sendOTPSchema } from "@/lib/schema/auth.schema";
-import { useAuthStore } from "@/stores/useAuthStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -15,11 +14,12 @@ import { Icon } from "@workspace/ui/components/icon";
 import { Input } from "@workspace/ui/components/input";
 import { toast } from "@workspace/ui/components/sonner";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@/hooks/useNavigate";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Cookies from "js-cookie";
 import z from "zod";
+import { authService } from "../_services/auth.service";
 
 export default function VerificationCodePage() {
   const verifCodeForm = useForm<z.infer<typeof sendOTPSchema>>({
@@ -28,8 +28,7 @@ export default function VerificationCodePage() {
       email: "",
     },
   });
-  const { sendOTP } = useAuthStore();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const email = Cookies.get("pendingEmail") || "";
@@ -37,13 +36,16 @@ export default function VerificationCodePage() {
   }, [verifCodeForm]);
 
   const handleSubmit = async (data: z.infer<typeof sendOTPSchema>) => {
-    const result = await sendOTP({ email: data.email });
+    const result = await authService.sendOTP({
+      email: data.email,
+      context: "register",
+    });
 
     if (result.ok) {
       toast.success(result.message, {
         toasterId: "global",
       });
-      router.push("/one-time-password");
+      navigate.push("/one-time-password");
     } else {
       toast.error(result.message, {
         toasterId: "global",
@@ -56,7 +58,7 @@ export default function VerificationCodePage() {
       <Card className="flex flex-col overflow-hidden max-lg:px-5 max-sm:mx-5 max-sm:-mt-40 md:w-2/3 md:border-2 md:border-black lg:w-1/2">
         <CardContent className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 p-0">
           <Image
-            src="/icon-email-verif-code.svg"
+            src="/img/icon-email-verif-code.svg"
             className="max-sm:size-32"
             alt="Verification Code"
             width={250}

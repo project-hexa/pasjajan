@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthStore } from "@/stores/useAuthStore";
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import {
@@ -11,9 +10,10 @@ import {
 } from "@workspace/ui/components/card";
 import { AddAddress } from "../../_components/add-address";
 import { useState } from "react";
+import { useUserStore } from "../../_stores/useUserStore";
 
 export default function ProfilePage() {
-  const { user } = useAuthStore();
+  const { user } = useUserStore();
   const [openAddAddressDialog, setOpenAddAddressDialog] =
     useState<boolean>(false);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "@/hooks/useNavigate";
 import {
   Avatar,
   AvatarFallback,
@@ -14,17 +14,18 @@ import {
 } from "@workspace/ui/components/collapsible";
 import { Icon } from "@workspace/ui/components/icon";
 import { cn } from "@workspace/ui/lib/utils";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
+import { useUserStore } from "../_stores/useUserStore";
 
 export default function UserSettingLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  const { user } = useAuthStore();
+  const { user } = useUserStore();
   const pathname = usePathname();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [accountTrigger, setAccountTrigger] = useState<boolean>(false);
   const accountPage = pathname === "/profile" || pathname === "/address";
 
@@ -37,9 +38,9 @@ export default function UserSettingLayout({
   }, [accountPage]);
 
   return (
-    <div className="bg-primary flex min-h-[calc(100vh-306px)]">
+    <div className="bg-primary mt-10 flex min-h-[calc(100vh-306px)]">
       <div className="flex w-80 flex-col gap-8 p-5 pr-0">
-        <div className="from-background/20 text-primary-foreground flex items-center justify-start gap-5 rounded-full bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60% p-1 font-bold">
+        <div className="from-background/20 text-primary-foreground flex items-center justify-start gap-5 rounded-full bg-linear-to-r from-0% via-transparent via-40% to-transparent to-60% p-1 font-bold">
           <Avatar>
             <AvatarFallback>{`${user?.full_name?.charAt(0) ?? "U"}${user?.full_name?.split(" ")[1]?.charAt(0) ?? ""}`}</AvatarFallback>
             <AvatarImage
@@ -57,7 +58,7 @@ export default function UserSettingLayout({
               "flex flex-col justify-start rounded-4xl px-2 py-4 transition-all",
               accountPage
                 ? "bg-background text-primary rounded-r-none"
-                : "from-background/20 w-3/4 bg-gradient-to-l from-0% via-transparent via-40% to-transparent to-60%",
+                : "from-background/20 w-3/4 bg-linear-to-l from-0% via-transparent via-40% to-transparent to-60%",
               accountTrigger && "bg-background text-primary",
             )}
           >
@@ -77,7 +78,7 @@ export default function UserSettingLayout({
                   "w-full justify-start rounded-full px-2",
                   pathname === "/profile" && "border-primary bg-card",
                 )}
-                onClick={() => router.push("/profile")}
+                onClick={() => navigate.push("/profile")}
               >
                 Profile
               </Button>
@@ -87,7 +88,7 @@ export default function UserSettingLayout({
                   "w-full justify-start rounded-full px-2",
                   pathname === "/address" && "border-primary bg-card",
                 )}
-                onClick={() => router.push("/address")}
+                onClick={() => navigate.push("/address")}
               >
                 Alamat
               </Button>
@@ -113,9 +114,9 @@ export default function UserSettingLayout({
                 "w-3/4 justify-start gap-5 rounded-full p-1",
                 pathname === btnMenu.link
                   ? "border-primary bg-card text-primary"
-                  : "from-background/20 bg-gradient-to-r from-0% via-transparent via-40% to-transparent to-60%",
+                  : "from-background/20 bg-linear-to-r from-0% via-transparent via-40% to-transparent to-60%",
               )}
-              onClick={() => router.push(btnMenu.link)}
+              onClick={() => navigate.push(btnMenu.link)}
             >
               <Icon icon={btnMenu.icon} className="text-3xl" />
               <span>{btnMenu.label}</span>

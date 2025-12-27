@@ -22,8 +22,7 @@ const branchSchema = z.object({
   address: z.string().min(10, "Alamat minimal 10 karakter"),
   phone_number: z.string().min(10, "Nomor telepon minimal 10 karakter"),
   status: z.enum(["Active", "Inactive"], {
-    required_error: "Status harus dipilih",
-    invalid_type_error: "Status harus berupa 'Active' atau 'Inactive'"
+    message: "Status harus berupa 'Active' atau 'Inactive'",
   }),
 });
 
@@ -39,10 +38,17 @@ interface EditBranchFormProps {
   initialData?: Partial<BranchFormValues>;
   onSubmit: (data: BranchFormValues) => void;
   isLoading: boolean;
-  onStatusChange?: (newStatus: "Active" | "Inactive") => Promise<boolean> | boolean;
+  onStatusChange?: (
+    newStatus: "Active" | "Inactive",
+  ) => Promise<boolean> | boolean;
 }
 
-export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChange }: EditBranchFormProps) {
+export function EditBranchForm({
+  initialData,
+  onSubmit,
+  isLoading,
+  onStatusChange,
+}: EditBranchFormProps) {
   const {
     register,
     handleSubmit,
@@ -79,20 +85,23 @@ export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChang
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-4">
         {/* Status */}
-        <input type="hidden" {...register('status')} />
+        <input type="hidden" {...register("status")} />
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label className="text-right pl-6">Status</Label>
+          <Label className="pl-6 text-right">Status</Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Select
               value={status}
               onValueChange={async (val) => {
                 const newStatus = val as "Active" | "Inactive";
                 try {
-                  if (typeof onStatusChange === 'function') {
+                  if (typeof onStatusChange === "function") {
                     const ok = await onStatusChange(newStatus);
                     if (!ok) return;
                   }
-                  setValue('status', newStatus, { shouldDirty: true, shouldTouch: true });
+                  setValue("status", newStatus, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  });
                 } catch {
                   // ignore
                 }
@@ -108,79 +117,92 @@ export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChang
               </SelectContent>
             </Select>
             {errors.status && (
-              <p className="text-sm text-red-500 mt-1">{errors.status.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.status.message}
+              </p>
             )}
           </div>
         </div>
 
         {/* Kode Cabang */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="code" className="text-right pl-6">Kode Cabang</Label>
+          <Label htmlFor="code" className="pl-6 text-right">
+            Kode Cabang
+          </Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Input
               id="code"
               placeholder="Contoh: JKT001"
-              className={errors.code ? 'border-red-500' : ''}
-              {...register('code')}
+              className={errors.code ? "border-red-500" : ""}
+              {...register("code")}
             />
             {errors.code && (
-              <p className="text-sm text-red-500 mt-1">{errors.code.message}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.code.message}</p>
             )}
           </div>
         </div>
 
         {/* Nama Cabang */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right pl-6">Nama Cabang</Label>
+          <Label htmlFor="name" className="pl-6 text-right">
+            Nama Cabang
+          </Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Input
               id="name"
               placeholder="Masukkan nama cabang"
               {...register("name")}
-              className={errors.name ? 'border-red-500' : ''}
+              className={errors.name ? "border-red-500" : ""}
             />
             {errors.name && (
-              <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
+              <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
             )}
           </div>
         </div>
 
         {/* Alamat Cabang */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="address" className="text-right pl-6">Alamat Cabang</Label>
+          <Label htmlFor="address" className="pl-6 text-right">
+            Alamat Cabang
+          </Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Textarea
               id="address"
               placeholder="Masukkan alamat lengkap cabang"
               rows={3}
               {...register("address")}
-              className={errors.address ? 'border-red-500' : ''}
+              className={errors.address ? "border-red-500" : ""}
             />
             {errors.address && (
-              <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.address.message}
+              </p>
             )}
           </div>
         </div>
 
         {/* Nomor Telepon */}
         <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="phone_number" className="text-right pl-6">Nomor Telepon</Label>
+          <Label htmlFor="phone_number" className="pl-6 text-right">
+            Nomor Telepon
+          </Label>
           <div className="col-span-3 -ml-2 pr-6">
             <Input
               id="phone_number"
               placeholder="Contoh: 0211234567"
-              className={errors.phone_number ? 'border-red-500' : ''}
-              {...register('phone_number')}
+              className={errors.phone_number ? "border-red-500" : ""}
+              {...register("phone_number")}
             />
             {errors.phone_number && (
-              <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {errors.phone_number.message}
+              </p>
             )}
           </div>
         </div>
-
       </div>
 
-      <div className="flex justify-end space-x-4 pt-4 -ml-2 pr-6">
+      <div className="-ml-2 flex justify-end space-x-4 pt-4 pr-6">
         <Button
           type="button"
           variant="outline"
@@ -189,9 +211,9 @@ export function EditBranchForm({ initialData, onSubmit, isLoading, onStatusChang
         >
           Batal
         </Button>
-        <Button 
-          type="submit" 
-          className="bg-[#1E8F59] hover:bg-[#166E45] text-white"
+        <Button
+          type="submit"
+          className="bg-[#1E8F59] text-white hover:bg-[#166E45]"
           disabled={isLoading}
         >
           {isLoading ? "Menyimpan..." : "Simpan Perubahan"}

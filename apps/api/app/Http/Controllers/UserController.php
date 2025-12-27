@@ -28,7 +28,23 @@ class UserController extends BaseController
 		}
 
 		// Ambil data seluruh user dengan difilter berdasarkan rolenya
-		$users = User::where('role', Str::ucfirst($role))->get();
+		$role = Str::ucfirst($role);
+
+		// Jika rolenya customer, maka
+		// Ambil total ordernya juga
+		if ($role == 'Customer') {
+			$users = User::where('role', $role)
+				->with('customer')
+				->get()
+				->map(function ($user) {
+					$user->total_order = $user->customer
+						? $user->customer->orders()->count()
+						: 0;
+					return $user;
+				});
+		} else {
+			$users = User::where('role', $role)->get();
+		}
 
 		$result['users'] = $users;
 
@@ -219,7 +235,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
 		}
@@ -260,7 +276,7 @@ class UserController extends BaseController
 		$rules = [
 			'email_before' => 'required|exists:App\Models\User,email|string|email',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
-			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string|numeric',
+			'phone_number' => 'nullable|unique:App\Models\User,phone_number|string',
 			'full_name' => 'nullable|string',
 			'birth_date' => 'nullable|date',
 			'gender' => 'nullable|string',
@@ -272,7 +288,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi ganti profile gagal.", $errors, 422);
 		}
@@ -330,7 +346,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi tambah alamat gagal.", $errors, 422);
 		}
@@ -389,7 +405,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi ganti alamat gagal.", $errors, 422);
 		}
@@ -451,7 +467,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi hapus alamat gagal.", $errors, 422);
 		}
@@ -545,7 +561,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
 		}
@@ -587,7 +603,7 @@ class UserController extends BaseController
 
 		// Jika validasi gagal, maka
 		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors();
+			$errors['validation_errors'] = $validator->errors()->toArray();
 
 			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
 		}
