@@ -25,6 +25,7 @@ class ProcessPaymentRequest extends FormRequest
             'shipping_address' => 'nullable|string|max:500',
             'shipping_recipient_name' => 'nullable|string|max:100',
             'shipping_recipient_phone' => 'nullable|string|max:20',
+            'voucher_id' => 'nullable|integer',
         ];
     }
 
