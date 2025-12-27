@@ -9,14 +9,15 @@ import {
 } from "@workspace/ui/components/dialog";
 import { Button } from "@workspace/ui/components/button";
 import { Icon } from "@workspace/ui/components/icon";
+import { voucherService, CustomerVoucher } from "@/app/(modul 3 - payment)/_services/voucher.service";
 
 export type VoucherChoice = {
-  id: string;
+  id: number;
+  voucher_id: number;
   title: string;
   subtitle?: string;
   expires?: string;
-  kind: "free_shipping" | "percent" | "flat";
-  value?: number;
+  discount_value: number;
   code?: string;
 };
 
@@ -26,76 +27,12 @@ type Props = {
   onApply: (v: VoucherChoice | null) => void;
 };
 
-const VOUCHERS: VoucherChoice[] = [
-  {
-    id: "v1",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "free_shipping",
-    code: "ONGKIRFREE",
-  },
-  {
-    id: "v2",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "free_shipping",
-    code: "ONGKIRFREE2",
-  },
-  {
-    id: "v3",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "free_shipping",
-    code: "ONGKIRFREE3",
-  },
-  {
-    id: "v4",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "free_shipping",
-    code: "ONGKIRFREE4",
-  },
-  {
-    id: "v5",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "percent",
-    value: 10,
-    code: "HEMAT10",
-  },
-  {
-    id: "v6",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "percent",
-    value: 10,
-    code: "HEMAT10B",
-  },
-  {
-    id: "v7",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "percent",
-    value: 20,
-    code: "HEMAT20",
-  },
-  {
-    id: "v8",
-    title: "Gratis Ongkir",
-    subtitle: "Minimal Belanja 100RB",
-    expires: "S/D: 30-12-2025",
-    kind: "percent",
-    value: 20,
-    code: "HEMAT20B",
-  },
-];
+const currency = (n: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 // Voucher ticket card component
 function VoucherTicket({
@@ -107,18 +44,13 @@ function VoucherTicket({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const isShipping = voucher.kind === "free_shipping";
-  const bgColor = isShipping ? "bg-red-500" : "bg-yellow-400";
-  const badgeText = isShipping ? "Free" : `${voucher.value}%`;
-  const badgeBg = isShipping ? "bg-yellow-400 text-red-600" : "bg-red-500 text-white";
-
   return (
     <button
       onClick={onSelect}
       className="flex w-full overflow-hidden border border-gray-200 bg-white text-left transition-all hover:shadow-md h-[80px]"
     >
       {/* Colored ticket part with torn edge */}
-      <div className={`relative ${bgColor} w-[68px] flex-shrink-0 flex flex-col items-center justify-center`}>
+      <div className="relative bg-yellow-400 w-[68px] flex-shrink-0 flex flex-col items-center justify-center">
         {/* Torn edge - white semicircles cutting into colored section from left */}
         <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-evenly">
           <div className="w-2 h-4 bg-white rounded-r-full" />
@@ -128,16 +60,16 @@ function VoucherTicket({
         </div>
         
         {/* Badge */}
-        <div className={`${badgeBg} text-[10px] font-bold px-2 py-0.5 rounded-full mb-1`}>
-          {badgeText}
+        <div className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">
+          Diskon
         </div>
         
         {/* Icon */}
         <Icon 
-          icon={isShipping ? "lucide:truck" : "lucide:shopping-cart"} 
+          icon="lucide:ticket" 
           width={24} 
           height={24} 
-          className={isShipping ? "text-yellow-400" : "text-red-600"}
+          className="text-red-600"
         />
       </div>
 
@@ -167,10 +99,51 @@ export default function VoucherDialog({ trigger, onApply, current }: Props) {
   const [selected, setSelected] = React.useState<VoucherChoice | null>(
     current ?? null
   );
+  const [vouchers, setVouchers] = React.useState<VoucherChoice[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setSelected(current ?? null);
   }, [current]);
+
+  // Fetch vouchers when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      const fetchVouchers = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const result = await voucherService.getCustomerVouchers();
+          
+          if (result.ok && result.data) {
+            // Filter only unused vouchers and transform to VoucherChoice
+            const availableVouchers: VoucherChoice[] = (result.data as CustomerVoucher[])
+              .filter((cv) => !cv.is_used)
+              .map((cv) => ({
+                id: cv.id,
+                voucher_id: cv.voucher.id,
+                title: cv.voucher.name,
+                subtitle: cv.voucher.description || `Diskon ${currency(parseFloat(cv.voucher.discount_value))}`,
+                expires: `S/D: ${new Date(cv.voucher.end_date).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })}`,
+                discount_value: parseFloat(cv.voucher.discount_value),
+                code: cv.voucher.code,
+              }));
+            setVouchers(availableVouchers);
+          } else {
+            setError(result.message || "Gagal memuat voucher");
+          }
+        } catch (err) {
+          console.error("Error fetching vouchers:", err);
+          setError("Gagal memuat voucher");
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchVouchers();
+    }
+  }, [open]);
 
   const confirm = () => {
     onApply(selected ?? null);
@@ -201,23 +174,41 @@ export default function VoucherDialog({ trigger, onApply, current }: Props) {
 
           {/* BODY - Voucher Grid */}
           <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
-            <div className="grid grid-cols-2 gap-3">
-              {VOUCHERS.map((v) => (
-                <VoucherTicket
-                  key={v.id}
-                  voucher={v}
-                  isSelected={selected?.id === v.id}
-                  onSelect={() => setSelected(selected?.id === v.id ? null : v)}
-                />
-              ))}
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <Icon icon="lucide:loader-2" width={32} height={32} className="animate-spin text-emerald-600" />
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <Icon icon="lucide:alert-circle" width={48} height={48} className="mb-2 text-red-400" />
+                <p>{error}</p>
+              </div>
+            ) : vouchers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <Icon icon="lucide:ticket" width={48} height={48} className="mb-2 text-gray-400" />
+                <p>Belum ada voucher yang tersedia</p>
+                <p className="text-sm text-gray-400 mt-1">Tukarkan poin Anda untuk mendapatkan voucher</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {vouchers.map((v) => (
+                  <VoucherTicket
+                    key={v.id}
+                    voucher={v}
+                    isSelected={selected?.id === v.id}
+                    onSelect={() => setSelected(selected?.id === v.id ? null : v)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* FOOTER */}
           <div className="h-[60px] bg-emerald-800 flex justify-end items-center px-5">
             <Button
               onClick={confirm}
-              className="min-w-[90px] bg-yellow-400 text-slate-900 hover:bg-yellow-300 font-semibold"
+              disabled={loading}
+              className="min-w-[90px] bg-yellow-400 text-slate-900 hover:bg-yellow-300 font-semibold disabled:opacity-50"
             >
               OK
             </Button>

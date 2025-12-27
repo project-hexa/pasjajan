@@ -42,6 +42,13 @@ export interface OrderItem {
     sub_total: number;
 }
 
+export interface VoucherInfo {
+    id: number;
+    code: string;
+    name: string;
+    discount_value: number | string;
+}
+
 export interface Order {
     id: number;
     code: string;
@@ -65,6 +72,7 @@ export interface Order {
     expired_at?: string;
     store_id?: number;
     store_name?: string;
+    voucher?: VoucherInfo | null;
     notes?: string;
     created_at: string;
     updated_at?: string;

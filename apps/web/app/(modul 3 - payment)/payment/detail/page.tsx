@@ -23,7 +23,7 @@ function OrderDetailPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!orderCode) { router.push("/orders"); return; }
+    if (!orderCode) { router.push("/my-orders/all"); return; }
 
     const fetchOrder = async () => {
       try {
@@ -156,7 +156,7 @@ function OrderDetailPageContent() {
                 const companyCode = instr.company_code ? String(instr.company_code) : null;
                 const vaNumber = instr.va_number ? String(instr.va_number) : null;
                 const paymentCode = instr.payment_code ? String(instr.payment_code) : null;
-                
+
                 return (
                   <div className="mt-2 space-y-1">
                     {companyCode && (

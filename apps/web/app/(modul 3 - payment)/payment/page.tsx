@@ -13,6 +13,7 @@ import {
 
 import { Badge } from "@workspace/ui/components/badge";
 import { Icon } from "@workspace/ui/components/icon";
+import { toast } from "@workspace/ui/components/sonner"
 
 import PaymentMethodDialog from "@/components/PaymentMethodDialog";
 import AddressDialog, { Address } from "@/components/AddressDialog";
@@ -75,7 +76,7 @@ function CheckoutPageContent() {
         }
 
         if (!orderCode) {
-          alert("Order code tidak ditemukan!");
+          toast.error("Order code tidak ditemukan!", { toasterId: "global" });
           navigateRef.current.push("/cart");
           return;
         }
@@ -83,7 +84,7 @@ function CheckoutPageContent() {
         const orderResult = await orderService.getOrder(orderCode);
 
         if (!orderResult.ok || !orderResult.data?.order) {
-          alert("Order tidak ditemukan!");
+          toast.error("Order tidak ditemukan!", { toasterId: "global" });
           navigateRef.current.push("/cart");
           return;
         }
@@ -146,7 +147,7 @@ function CheckoutPageContent() {
         }
       } catch (error) {
         console.error("Error loading order data:", error);
-        alert("Gagal memuat data order!");
+        toast.error("Gagal memuat data order!", { toasterId: "global" });
         navigateRef.current.push("/cart");
       } finally {
         setLoading(false);
@@ -156,11 +157,9 @@ function CheckoutPageContent() {
     loadOrderData();
   }, [orderCode]); // Removed navigate from dependencies - using ref instead
 
-  const productTotal = orderData?.sub_total || 0;
-  const shipping = orderData?.shipping_fee || 10000;
-  const adminFee = orderData?.admin_fee || 1000;
-  const grandTotal =
-    orderData?.grand_total || productTotal + shipping + adminFee;
+  const productTotal = Number(orderData?.sub_total) || 0;
+  const shipping = Number(orderData?.shipping_fee) || 10000;
+  const adminFee = Number(orderData?.admin_fee) || 1000;
 
   React.useEffect(() => {
     const loadAddresses = async () => {
@@ -216,16 +215,27 @@ function CheckoutPageContent() {
   const [voucher, setVoucher] = React.useState<VoucherChoice | null>(null);
   const [isProcessing, setIsProcessing] = React.useState(false);
 
+  // Discount: pakai dari order jika sudah ada, atau dari voucher yang dipilih
+  const existingDiscount = Number(orderData?.discount) || 0;
+  const selectedVoucherDiscount = Number(voucher?.discount_value) || 0;
+  const discount = existingDiscount > 0 ? existingDiscount : selectedVoucherDiscount;
+  
+  // Grand total: kalkulasi ulang jika ada voucher baru yang dipilih
+  const baseTotal = productTotal + shipping + adminFee;
+  const grandTotal = existingDiscount > 0 
+    ? (Number(orderData?.grand_total) || baseTotal - existingDiscount)
+    : Math.max(0, baseTotal - selectedVoucherDiscount);
+
   const handlePayment = async () => {
     if (isProcessing) return;
 
     if (!payChoice.option) {
-      alert("Silakan pilih metode pembayaran terlebih dahulu!");
+      toast.warning("Silakan pilih metode pembayaran terlebih dahulu!", { toasterId: "global" });
       return;
     }
 
     if (!orderCode) {
-      alert("Order code tidak ditemukan!");
+      toast.error("Order code tidak ditemukan!", { toasterId: "global" });
       return;
     }
 
@@ -239,10 +249,11 @@ function CheckoutPageContent() {
         shipping_recipient_name:
           address.name?.split(" – ")[1] || address.name,
         shipping_recipient_phone: address.phone,
+        voucher_id: voucher?.voucher_id,
       });
 
       if (!result.ok) {
-        alert(result.message || "Gagal memproses pembayaran!");
+        toast.error(result.message || "Gagal memproses pembayaran!", { toasterId: "global" });
         setIsProcessing(false);
         return;
       }
@@ -251,8 +262,9 @@ function CheckoutPageContent() {
       navigate.push(`/payment/waiting?order=${orderCode}`);
     } catch (error) {
       console.error("Payment process error:", error);
-      alert(
+      toast.error(
         "Gagal memproses pembayaran. Pastikan Anda login sebagai Customer, bukan Admin.",
+        { toasterId: "global" }
       );
       setIsProcessing(false);
     }
@@ -427,18 +439,24 @@ function CheckoutPageContent() {
                     <p className="text-sm font-semibold text-emerald-700">
                       Voucher dan Promo
                     </p>
-                    <VoucherDialog
-                      current={voucher}
-                      onApply={setVoucher}
-                      trigger={
-                        <button className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm hover:bg-gray-50">
-                          Pilih
-                        </button>
-                      }
-                    />
+                    {!orderData?.voucher && (
+                      <VoucherDialog
+                        current={voucher}
+                        onApply={setVoucher}
+                        trigger={
+                          <button className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm hover:bg-gray-50">
+                            Pilih
+                          </button>
+                        }
+                      />
+                    )}
                   </div>
                   <p className="text-sm text-gray-600">
-                    {voucher ? voucher.title : "-"}
+                    {orderData?.voucher 
+                      ? orderData.voucher.name 
+                      : voucher 
+                        ? voucher.title 
+                        : "-"}
                   </p>
                 </div>
 
@@ -454,6 +472,13 @@ function CheckoutPageContent() {
                         {currency(productTotal)}
                       </span>
                     </div>
+
+                    {discount > 0 && (
+                      <div className="flex justify-between text-sm text-emerald-600">
+                        <span>Diskon Voucher</span>
+                        <span className="font-medium">-{currency(discount)}</span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Biaya Pengiriman</span>

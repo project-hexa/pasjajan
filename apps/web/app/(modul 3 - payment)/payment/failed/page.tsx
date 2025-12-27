@@ -126,7 +126,7 @@ function FailedPageContent() {
             <button onClick={() => navigate.push("/cart")} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white transition-colors hover:bg-emerald-800">
               <Icon icon="lucide:shopping-cart" width={18} height={18} />Belanja Lagi
             </button>
-            <button onClick={() => navigate.push("/orders")} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
+            <button onClick={() => navigate.push(`/payment/detail?order_code=${orderCode}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
               <Icon icon="lucide:package" width={18} height={18} />Lihat Pesanan
             </button>
           </div>
