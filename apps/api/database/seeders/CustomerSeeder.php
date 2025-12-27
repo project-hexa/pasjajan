@@ -65,7 +65,7 @@ class CustomerSeeder extends Seeder
       'full_name' => 'Azhar Yadi',
       'email' => 'azhar.luthfiadi@gmail.com',
       'phone_number' => '081234567897',
-      'password' => Hash::make('Password123'),
+      'password' => Hash::make('Password123!'),
       'role' => 'Customer',
       'phone_number_verified_at' => now(),
       'last_login_date' => now(),
