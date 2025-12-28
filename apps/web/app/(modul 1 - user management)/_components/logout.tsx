@@ -17,30 +17,36 @@ import { toast } from "@workspace/ui/components/sonner";
 import Cookies from "js-cookie";
 import { authService } from "../_services/auth.service";
 import { useUserStore } from "../_stores/useUserStore";
+import { useState } from "react";
 
 export const Logout = () => {
   const navigate = useNavigate();
   const role = Cookies.get("token");
   const { setIsLoggedIn } = useUserStore();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleClick = async () => {
+    setIsLoading(true);
     const result = await authService.logout();
 
     if (result.ok) {
-      toast.success(result.message, {
+      toast.success("Berhasil Logout", {
         toasterId: "global",
       });
 
-      Cookies.remove("token")
       setIsLoggedIn(false);
-      Cookies.remove("token")
+      Cookies.remove("token");
+
+      setIsLoading(false);
 
       if (role === "admin") navigate.push("/login/admin");
       navigate.push("/login");
     } else {
-      toast.error(result.message, {
+      toast.error("Ada kesalahan ketika logout!", {
         toasterId: "global",
       });
+
+      setIsLoading(false);
     }
   };
 
@@ -57,10 +63,22 @@ export const Logout = () => {
           <AlertDialogTitle>Apakah anda yakin ingin keluar?</AlertDialogTitle>
           <AlertDialogDescription className="sr-only" />
         </AlertDialogHeader>
-        <AlertDialogFooter className="!justify-center gap-20">
+        <AlertDialogFooter className="justify-center! gap-20">
           <AlertDialogCancel>Batal</AlertDialogCancel>
-          <Button variant={"destructive"} onClick={handleClick}>
-            Keluar
+          <Button
+            variant={"destructive"}
+            disabled={isLoading}
+            onClick={handleClick}
+          >
+            {isLoading ? (
+              <Icon
+                icon={"lucide:loader-circle"}
+                width={24}
+                className="animate-spin"
+              />
+            ) : (
+              "Keluar"
+            )}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
