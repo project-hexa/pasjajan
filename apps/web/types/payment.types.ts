@@ -36,6 +36,7 @@ export interface ProcessPaymentPayload {
     shipping_address: string;
     shipping_recipient_name: string;
     shipping_recipient_phone: string;
+    voucher_id?: number;
 }
 
 export interface ProcessPaymentResponse {

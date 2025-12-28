@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
+import { toast } from "@workspace/ui/components/sonner"
 import Footer from "@/components/Footer";
 import { useNavigate } from "@/hooks/useNavigate";
 import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
@@ -57,7 +58,7 @@ function SuccessPageContent() {
 
       try {
         const result = await orderService.getOrder(orderCode);
-        if (!result.ok || !result.data?.order) { alert("Order tidak ditemukan!"); navigateRef.current.push("/"); return; }
+        if (!result.ok || !result.data?.order) { toast.error("Order tidak ditemukan!", { toasterId: "global" }); navigateRef.current.push("/"); return; }
 
         const order = result.data.order;
         const paymentStatus = order.payment_status;
@@ -75,7 +76,7 @@ function SuccessPageContent() {
         const paymentDataStr = localStorage.getItem("payment_data");
         const paymentData = paymentDataStr ? JSON.parse(paymentDataStr) : null;
         setOrderData({ ...order, payment_method: order.payment_method || paymentData?.payment_method });
-      } catch (error) { console.error("Error fetching order:", error); alert("Gagal memuat data order!"); navigateRef.current.push("/"); }
+      } catch (error) { console.error("Error fetching order:", error); toast.error("Gagal memuat data order!", { toasterId: "global" }); navigateRef.current.push("/"); }
       finally { setLoading(false); }
     };
 
@@ -118,7 +119,7 @@ function SuccessPageContent() {
             <button onClick={() => navigate.push("/cart")} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white transition-colors hover:bg-emerald-800">
               <Icon icon="lucide:shopping-cart" width={18} height={18} />Belanja Lagi
             </button>
-            <button onClick={() => navigate.push("/orders")} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
+            <button onClick={() => navigate.push(`/payment/detail?order_code=${orderCode}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
               <Icon icon="lucide:package" width={18} height={18} />Lihat Pesanan
             </button>
           </div>

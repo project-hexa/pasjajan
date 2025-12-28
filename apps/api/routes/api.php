@@ -80,6 +80,7 @@ Route::prefix('staff')->group(function () {
 Route::prefix('admin')->group(function () {
 	// Dashboard orders
 	Route::get('/orders', [OrderController::class, 'getOrdersForAdmin']);
+	Route::get('/orders/{code}', [OrderController::class, 'getOrderForAdmin']);
 
 	// Order statistics
 	Route::get('/orders/stats', [OrderController::class, 'getStatistics']);
