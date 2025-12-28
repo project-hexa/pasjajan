@@ -67,7 +67,7 @@ export const useLogin = () => {
           navigate.push("/");
         }
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal Masuk!", {
           description: result.description,
           toasterId: "global",
         });
