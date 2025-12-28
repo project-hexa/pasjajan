@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse, isAxiosError } from "axios";
-import { api, getApiWithAuth } from "./axios";
+import { api, createServerAPI } from "./axios";
 
 const wrapTryCatch = async <T>(
   callback: () => Promise<AxiosResponse>,
@@ -36,16 +36,16 @@ const wrapTryCatch = async <T>(
 };
 
 interface RequestConfig extends AxiosRequestConfig {
-  withAuth?: boolean;
+  ssr?: boolean;
   defaultErrorMessage?: string;
 }
 
 export const handleApiRequest = {
   get: async <TResponse = unknown>(url: string, config?: RequestConfig) =>
     await wrapTryCatch<TResponse>(
-      (config?.withAuth ?? false)
+      (config?.ssr ?? false)
         ? async () =>
-            (await getApiWithAuth()).get<APIResponse<TResponse>>(url, config)
+            (await createServerAPI()).get<APIResponse<TResponse>>(url, config)
         : () => api.get<APIResponse<TResponse>>(url, config),
       config?.defaultErrorMessage,
     ),
@@ -55,9 +55,9 @@ export const handleApiRequest = {
     config?: RequestConfig,
   ) =>
     await wrapTryCatch<TResponse>(
-      (config?.withAuth ?? false)
+      (config?.ssr ?? false)
         ? async () =>
-            (await getApiWithAuth()).post<APIResponse<TResponse>>(
+            (await createServerAPI()).post<APIResponse<TResponse>>(
               url,
               data,
               config,
@@ -71,9 +71,9 @@ export const handleApiRequest = {
     config?: RequestConfig,
   ) =>
     await wrapTryCatch<TResponse>(
-      (config?.withAuth ?? false)
+      (config?.ssr ?? false)
         ? async () =>
-            (await getApiWithAuth()).put<APIResponse<TResponse>>(
+            (await createServerAPI()).put<APIResponse<TResponse>>(
               url,
               data,
               config,
@@ -87,9 +87,9 @@ export const handleApiRequest = {
     config?: RequestConfig,
   ) =>
     await wrapTryCatch<TResponse>(
-      (config?.withAuth ?? false)
+      (config?.ssr ?? false)
         ? async () =>
-            (await getApiWithAuth()).patch<APIResponse<TResponse>>(
+            (await createServerAPI()).patch<APIResponse<TResponse>>(
               url,
               data,
               config,
@@ -100,9 +100,12 @@ export const handleApiRequest = {
 
   delete: async <TResponse = unknown>(url: string, config?: RequestConfig) =>
     await wrapTryCatch<TResponse>(
-      (config?.withAuth ?? false)
+      (config?.ssr ?? false)
         ? async () =>
-            (await getApiWithAuth()).delete<APIResponse<TResponse>>(url, config)
+            (await createServerAPI()).delete<APIResponse<TResponse>>(
+              url,
+              config,
+            )
         : () => api.delete<APIResponse<TResponse>>(url, config),
       config?.defaultErrorMessage,
     ),
