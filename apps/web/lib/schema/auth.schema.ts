@@ -17,7 +17,7 @@ export const registerSchema = userSchema
     phone_number: true,
   })
   .extend({
-    address: addressSchema,
+    address: addressSchema.shape.detail_address,
     password: passwordSchema,
     password_confirmation: passwordSchema,
   })

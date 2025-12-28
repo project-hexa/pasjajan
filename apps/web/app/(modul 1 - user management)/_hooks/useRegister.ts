@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
-import { cookiesOptions } from "@/lib/utils/cookies-option";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useRegister = () => {
   const navigate = useNavigate();
@@ -52,8 +52,8 @@ export const useRegister = () => {
           toasterId: "global",
         });
 
-        Cookies.set("verificationStep", "email-sent", cookiesOptions);
-        Cookies.set("pendingEmail", data.email, cookiesOptions);
+        Cookies.set("verificationStep", "email-sent", baseCookiesOptions);
+        Cookies.set("pendingEmail", data.email, baseCookiesOptions);
 
         navigate.push("/send-otp");
       } else {

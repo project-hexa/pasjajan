@@ -63,6 +63,11 @@ const navigation = [
     href: "/dashboard/delivery",
     icon: "lucide:truck",
   },
+  {
+    name: "Order",
+    href: "/dashboard/orders",
+    icon: "lucide:shopping-bag",
+  },
 ];
 
 export function Sidebar() {

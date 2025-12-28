@@ -75,7 +75,7 @@ export const SearchInput = ({
               )}
             >
               <Input
-                placeholder="Cari produk atau toko..."
+                placeholder="Cari produk yang anda inginkan disini"
                 className={cn(
                   "bg-card w-full rounded-full pr-6 placeholder:max-sm:text-xs",
                   classNameInput,
@@ -85,7 +85,7 @@ export const SearchInput = ({
               <Button
                 type="submit"
                 form="search-form"
-                className="z-50 rounded-full border-t border-r border-b hover:bg-primary"
+                className="hover:bg-primary z-50 rounded-full border-t border-r border-b"
               >
                 <Icon icon="lucide:search" className="size-4" />
               </Button>
