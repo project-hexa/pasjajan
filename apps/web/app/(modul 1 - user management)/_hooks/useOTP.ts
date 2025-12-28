@@ -84,7 +84,7 @@ export const useOTP = () => {
       });
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "OTP Berhasil diverifikasi!", {
           toasterId: "global",
         });
 
@@ -95,7 +95,7 @@ export const useOTP = () => {
 
         navigate.push("/");
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "OTP Gagal diverifikasi!", {
           toasterId: "global",
         });
       }
