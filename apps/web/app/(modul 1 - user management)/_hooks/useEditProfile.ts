@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useUserStore } from "../_stores/useUserStore";
 import { editProfileSchema } from "@/lib/schema/user.schema";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@workspace/ui/components/sonner";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import z from "zod";
 import { userService } from "../_services/user.service";
-import { toast } from "@workspace/ui/components/sonner";
+import { useUserStore } from "../_stores/useUserStore";
 
 export const useEditProfile = () => {
   const [editingFields, setEditingFields] = useState<
@@ -15,8 +15,7 @@ export const useEditProfile = () => {
   >(new Set());
   const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
   const [files, setFiles] = useState<File[] | undefined>();
-
-  const { user } = useUserStore();
+  const { user, setUser } = useUserStore();
 
   const profileForm = useForm<z.infer<typeof editProfileSchema>>({
     resolver: zodResolver(editProfileSchema),
@@ -27,7 +26,17 @@ export const useEditProfile = () => {
       phone_number: "",
       gender: null,
       birth_date: null,
-      avatar: "",
+    },
+  });
+
+  const changeAvatarForm = useForm<{ avatar: File | null }>({
+    resolver: zodResolver(
+      z.object({
+        avatar: z.instanceof(File).nullable(),
+      }),
+    ),
+    defaultValues: {
+      avatar: null,
     },
   });
 
@@ -40,9 +49,34 @@ export const useEditProfile = () => {
       phone_number: user.phone_number,
       gender: user.gender ? user.gender : null,
       birth_date: user.birth_date ? user.birth_date : null,
-      avatar: user.avatar,
     });
   }, [user, profileForm]);
+
+  const handleUploadAvatar = async (data: { avatar: File | null }) => {
+    if (data.avatar) {
+      const res = await userService.changeAvatar(
+        user?.email || "",
+        data.avatar,
+      );
+
+      if (res.ok) {
+        toast.success(res.message || "Berhasil mengubah Avatar!", {
+          toasterId: "global",
+        });
+        setCroppedImageUrl("");
+        if (res.data?.avatar) {
+          setUser({
+            ...user!,
+            avatar: res.data.avatar,
+          });
+        }
+      } else {
+        toast.success("Gagal mengubah Avatar!", {
+          toasterId: "global",
+        });
+      }
+    }
+  };
 
   const handleBtnEdit = useCallback(
     (field: keyof z.infer<typeof editProfileSchema>) => {
@@ -69,8 +103,12 @@ export const useEditProfile = () => {
   const handleOnSubmit = useCallback(
     async (data: z.infer<typeof editProfileSchema>) => {
       const dirtyFields = profileForm.formState.dirtyFields;
-      const payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
+      const payload: Omit<
+        z.infer<typeof editProfileSchema>,
+        "birth_date" | "avatar"
+      > & {
         birth_date?: string;
+        avatar?: string;
       } = {};
 
       if (Object.keys(dirtyFields).length === 0) {
@@ -95,7 +133,7 @@ export const useEditProfile = () => {
           payload[
             key as keyof Omit<
               z.infer<typeof editProfileSchema>,
-              "birth_date" | "gender"
+              "birth_date" | "gender" | "avatar"
             >
           ] = data[key as keyof typeof data] as string;
         }
@@ -107,13 +145,13 @@ export const useEditProfile = () => {
       );
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "Berhasil mengubah Profile!", {
           toasterId: "global",
         });
 
         setEditingFields(new Set());
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal Mengubah Profile!", {
           toasterId: "global",
         });
       }
@@ -130,5 +168,7 @@ export const useEditProfile = () => {
     croppedImageUrl,
     setCroppedImageUrl,
     files,
+    handleUploadAvatar,
+    changeAvatarForm,
   };
 };
