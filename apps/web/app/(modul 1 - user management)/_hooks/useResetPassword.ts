@@ -35,13 +35,13 @@ export const useResetPassword = () => {
       const result = await authService.resetPassword(data);
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "Berhasil merubah Password!", {
           toasterId: "global",
         });
 
         navigate.replace("/login");
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal merubah Password!", {
           toasterId: "global",
         });
       }
