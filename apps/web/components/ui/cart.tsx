@@ -4,7 +4,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { Icon } from "@workspace/ui/components/icon";
@@ -71,69 +70,90 @@ export const Cart = () => {
 
   return (
     <DropdownMenu>
+      {/* Hapus satu DropdownMenuTrigger yang dobel */}
       <DropdownMenuTrigger asChild>
-        <Button size={"icon"} className="p-0 text-white" variant={"ghost"}>
-          <div className="relative">
-            <Icon icon="lucide:shopping-basket" />
+        <Button
+          size={"icon"}
+          // Tambahkan focus-visible:ring-0 untuk menghapus outline saat diklik
+          className="hover:bg-primary/80 text-white focus-visible:ring-0 focus-visible:ring-offset-0"
+          variant={"ghost"}
+        >
+          <span className="relative flex items-center justify-center pr-5">
+            <Icon
+              icon="lucide:shopping-basket"
+              width="24"
+              height="24"
+              className="scale: relative top-[1px] shrink-0 rounded-md stroke-[2.5px] p-2.5 transition-all hover:scale-105 hover:bg-white/10 hover:text-white"
+            />
+
             {totalCount > 0 && (
-              <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs text-white">
+              <span className="border-primary absolute -top-1.5 -right-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 bg-red-600 text-[10px] font-bold text-white">
                 {totalCount}
               </span>
             )}
-          </div>
+          </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-card text-accent-foreground">
-        <DropdownMenuLabel className="text-muted-foreground">
+      <DropdownMenuContent className="w-96 bg-white p-0">
+        <DropdownMenuLabel className="px-4 py-3">
           Keranjang Belanja
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <div className="h-80 w-96 overflow-y-auto p-2">
-          {items.length === 0 && (
-            <div className="text-muted-foreground p-4 text-sm">
-              Keranjang kosong
+        <div className="max-h-80 overflow-y-auto">
+          {items.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-sm text-gray-400">Keranjang kosong</p>
+            </div>
+          ) : (
+            <div className="p-2">
+              {items.map((it, index) => (
+                <DropdownMenuItem key={index} className="p-0">
+                  <Link href={`/detail/${it.id || ""}`} className="w-full">
+                    <Item>
+                      <ItemMedia variant={"image"}>
+                        <Image
+                          src={
+                            it.image || `https://placehold.co/100?text=Produk`
+                          }
+                          alt={it.name ?? ""}
+                          width={80}
+                          height={80}
+                          unoptimized
+                        />
+                      </ItemMedia>
+                      <ItemContent className="w-52">
+                        <ItemTitle className="line-clamp-2 w-40">
+                          {it.name}
+                        </ItemTitle>
+                        <ItemDescription className="text-sm">
+                          {it.variant}
+                        </ItemDescription>
+                        <ItemFooter className="text-muted-foreground">
+                          Rp {Number(it.price).toLocaleString()}
+                        </ItemFooter>
+                      </ItemContent>
+                      <ItemContent>
+                        <ItemDescription>Qty: {it.quantity}</ItemDescription>
+                      </ItemContent>
+                      <ItemActions>
+                        <Button size={"sm"}>Checkout</Button>
+                      </ItemActions>
+                    </Item>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </div>
           )}
-
-          {items.map((it, index) => (
-            <DropdownMenuItem key={index} className="p-0">
-              <Link href={`/detail/${it.id || ""}`} className="w-full">
-                <Item>
-                  <ItemMedia variant={"image"}>
-                    <Image
-                      src={it.image || `https://placehold.co/100?text=Produk`}
-                      alt={it.name ?? ""}
-                      width={80}
-                      height={80}
-                      unoptimized
-                    />
-                  </ItemMedia>
-                  <ItemContent className="w-52">
-                    <ItemTitle className="line-clamp-2 w-40">
-                      {it.name}
-                    </ItemTitle>
-                    <ItemDescription className="text-sm">
-                      {it.variant}
-                    </ItemDescription>
-                    <ItemFooter className="text-muted-foreground">
-                      Rp {Number(it.price).toLocaleString()}
-                    </ItemFooter>
-                  </ItemContent>
-                  <ItemContent>
-                    <ItemDescription>Qty: {it.quantity}</ItemDescription>
-                  </ItemContent>
-                  <ItemActions>
-                    <Button size={"sm"}>Checkout</Button>
-                  </ItemActions>
-                </Item>
-              </Link>
-            </DropdownMenuItem>
-          ))}
         </div>
-        <DropdownMenuSeparator />
-        <Link href="/cart">
-          <Button variant={"link"}>Lihat semua keranjang</Button>
-        </Link>
+        <div className="border-t border-gray-200 px-4 py-3">
+          <Link href="/cart">
+            <Button
+              variant={"link"}
+              className="text-primary hover:text-primary/80 h-auto p-0"
+            >
+              Lihat semua keranjang
+            </Button>
+          </Link>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

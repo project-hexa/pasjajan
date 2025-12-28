@@ -9,13 +9,16 @@ import Link from "next/link";
 import { Cart } from "./cart";
 import { SearchInput } from "./search-input";
 import { UserDropdown } from "./user-dropdown";
+import { CategoryDropdown } from "./category-dropdown";
 
 export const Navbar = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const { isLoggedIn } = useUserStore();
 
   return (
-    <header className={`bg-primary h-20 w-full border-2 ${className}`}>
+    <header
+      className={`bg-primary h-20 w-full border-b border-purple-200 ${className}`}
+    >
       <nav className="flex h-full items-center justify-between gap-5 px-4 md:px-10 lg:gap-10">
         <Link
           href="/"
@@ -32,32 +35,37 @@ export const Navbar = ({ className }: { className?: string }) => {
           PasJajan
         </Link>
 
+        <CategoryDropdown />
+
         <SearchInput variant="home" />
 
         <div className="flex h-10 items-center gap-2 max-sm:hidden">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <Link href="/promo">
-              <Button variant={"link"} className="text-white">
-                Promo
+              <Button
+                variant={"ghost"}
+                className="flex items-center text-white transition-all hover:scale-105 hover:bg-white/10 hover:text-white max-sm:hidden"
+              >
+                <span className="pt-1 font-medium">Promo</span>
               </Button>
             </Link>
             <Cart />
           </div>
 
-          <Separator orientation="vertical" />
+          <Separator orientation="vertical" className="bg-white/20" />
 
           {!isLoggedIn ? (
-            <div className="ml-2 flex items-center gap-5">
+            <div className="ml-2 flex items-center gap-2">
               <Button
-                variant={"link"}
-                className="text-white"
+                variant={"ghost"}
+                className="text-white transition-all hover:scale-105 hover:bg-white/10 hover:text-white"
                 onClick={() => navigate.push("/register")}
               >
                 Daftar
               </Button>
               <Button
-                variant={"link"}
-                className="text-white"
+                variant={"ghost"}
+                className="text-white transition-all hover:scale-105 hover:bg-white/10 hover:text-white"
                 onClick={() => navigate.push("/login")}
               >
                 Masuk
