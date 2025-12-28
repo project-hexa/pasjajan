@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import {
@@ -61,7 +61,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export default function OrderManagementPage() {
+function OrderListContent() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -72,6 +72,7 @@ export default function OrderManagementPage() {
         current_page: 1,
         last_page: 1,
         total: 0,
+        per_page: 10
     });
 
     // URL State Sync
@@ -94,8 +95,6 @@ export default function OrderManagementPage() {
             queryParams.append("per_page", "10");
 
             // Use debounced search term directly if available, or fallback to URL param
-            // But since we sync debounced term to URL, usually URL param is enough.
-            // However, to be reactive to the debounced value change immediately:
             if (debouncedSearchTerm) queryParams.append("search", debouncedSearchTerm);
 
             if (currentPaymentStatus !== "all") queryParams.append("payment_status", currentPaymentStatus);
@@ -163,27 +162,6 @@ export default function OrderManagementPage() {
         }
 
         router.replace(`${pathname}?${params.toString()}`);
-    };
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "paid":
-            case "settlement":
-            case "capture":
-                return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Success</Badge>;
-            case "pending":
-            case "unpaid":
-                return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Waiting</Badge>;
-            case "failed":
-            case "cancel":
-            case "deny":
-                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Failed</Badge>;
-            case "expired":
-            case "expire":
-                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Expired</Badge>;
-            default:
-                return <Badge variant="secondary">{status}</Badge>;
-        }
     };
 
     return (
@@ -378,5 +356,17 @@ export default function OrderManagementPage() {
                 )}
             </Card>
         </div>
+    );
+}
+
+export default function OrderManagementPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-96 items-center justify-center">
+                <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+        }>
+            <OrderListContent />
+        </Suspense>
     );
 }

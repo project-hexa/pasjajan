@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { Badge } from "@workspace/ui/components/badge";
 import { Separator } from "@workspace/ui/components/separator";
@@ -20,7 +20,7 @@ const currency = (val: number) =>
         maximumFractionDigits: 0,
     }).format(val);
 
-export default function AdminOrderDetailPage() {
+function OrderDetailContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const orderCode = searchParams.get("order_code");
@@ -30,8 +30,7 @@ export default function AdminOrderDetailPage() {
 
     useEffect(() => {
         if (!orderCode) {
-            toast.error("Order code tidak ditemukan", { toasterId: "global" });
-            router.push("/dashboard/orders");
+            // Check handled in loading state or similar, return to avoid flashing
             return;
         }
 
@@ -66,17 +65,17 @@ export default function AdminOrderDetailPage() {
             case "paid":
             case "settlement":
             case "capture":
-                return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Success</Badge>;
+                return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none">Success</Badge>;
             case "pending":
             case "unpaid":
-                return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Waiting</Badge>;
+                return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none">Waiting</Badge>;
             case "failed":
             case "cancel":
             case "deny":
-                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Failed</Badge>;
+                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none">Failed</Badge>;
             case "expired":
             case "expire":
-                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Expired</Badge>;
+                return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-none">Expired</Badge>;
             default:
                 return <Badge variant="secondary">{status}</Badge>;
         }
@@ -90,7 +89,15 @@ export default function AdminOrderDetailPage() {
         );
     }
 
-    if (!order) return null;
+    if (!order) {
+        if (!orderCode) {
+            // Handle case where orderCode is missing but haven't redirected yet
+            toast.error("Order code tidak ditemukan", { toasterId: "global" });
+            router.push("/dashboard/orders");
+            return null;
+        }
+        return null;
+    }
 
     return (
         <div className="space-y-6 pb-10">
@@ -203,6 +210,7 @@ export default function AdminOrderDetailPage() {
                         </CardContent>
                     </Card>
 
+                    {/* Shipping Info Card */}
                     <Card className="border-none shadow-sm">
                         <CardHeader className="bg-white">
                             <CardTitle>Pengiriman</CardTitle>
@@ -231,5 +239,17 @@ export default function AdminOrderDetailPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AdminOrderDetailPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex h-96 items-center justify-center">
+                <Icon icon="lucide:loader-2" className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+        }>
+            <OrderDetailContent />
+        </Suspense>
     );
 }
