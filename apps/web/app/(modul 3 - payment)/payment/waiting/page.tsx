@@ -5,9 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useNavigate } from "@/hooks/useNavigate";
 import { toast } from "@workspace/ui/components/sonner";
 import { PaymentInstructionsModal } from "@/components/PaymentInstructionsModal";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
+import { Navbar } from "@/components/ui/navigation-bar";
+import { Footer } from "@/components/ui/footer";
 import { orderService } from "@/app/(modul 3 - payment)/_services/order.service";
 import { paymentService } from "@/app/(modul 3 - payment)/_services/payment.service";
 import { PaymentData } from "@/types/payment.types";
@@ -112,8 +111,6 @@ function WaitingPageContent() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [showQrPreview, setShowQrPreview] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  const { user } = useUserStore();
 
   useEffect(() => {
     const loadPaymentData = async () => {
@@ -231,7 +228,9 @@ function WaitingPageContent() {
         }
         setLoading(false);
       } else {
-        toast.error("Data pembayaran tidak ditemukan!", { toasterId: "global" });
+        toast.error("Data pembayaran tidak ditemukan!", {
+          toasterId: "global",
+        });
         navigateRef.current.push("/");
         setLoading(false);
       }
@@ -330,18 +329,7 @@ function WaitingPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header
-        logoSrc="/img/pasjajan2.png"
-        logoAlt="PasJajan Logo"
-        userName={user?.full_name}
-        userInitials={user?.full_name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)}
-        userAvatar={user?.avatar}
-      />
+      <Navbar />
       <main className="flex grow flex-col items-center justify-center bg-emerald-50/50 px-4 py-10">
         <div
           className={`w-full rounded-2xl bg-white p-8 shadow-xl ${payment_method.category === "bank_transfer" ? "max-w-xl" : "max-w-md"}`}

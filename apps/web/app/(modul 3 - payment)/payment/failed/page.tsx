@@ -2,10 +2,9 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Navbar } from "@/components/ui/navigation-bar";
+import { Footer } from "@/components/ui/footer";
 import { useNavigate } from "@/hooks/useNavigate";
-import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
 import { orderService } from "@/app/(modul 3 - payment)/_services/order.service";
 import { PaymentData } from "@/types/payment.types";
 
@@ -72,7 +71,6 @@ function FailedPageContent() {
   const [loading, setLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [orderNotFound, setOrderNotFound] = useState(false);
-  const { user } = useUserStore();
 
   useEffect(() => {
     const validateAndLoadData = async () => {
@@ -160,18 +158,7 @@ function FailedPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header
-        logoSrc="/img/pasjajan2.png"
-        logoAlt="PasJajan Logo"
-        userName={user?.full_name}
-        userInitials={user?.full_name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)}
-        userAvatar={user?.avatar}
-      />
+      <Navbar />
       <main className="flex grow items-center justify-center bg-emerald-50/50 px-4 py-10">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
           <div className="mb-6 flex justify-center">
@@ -221,8 +208,14 @@ function FailedPageContent() {
               <Icon icon="lucide:shopping-cart" width={18} height={18} />
               Belanja Lagi
             </button>
-            <button onClick={() => navigate.push(`/payment/detail?order_code=${orderCode}`)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50">
-              <Icon icon="lucide:package" width={18} height={18} />Lihat Pesanan
+            <button
+              onClick={() =>
+                navigate.push(`/payment/detail?order_code=${orderCode}`)
+              }
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
+            >
+              <Icon icon="lucide:package" width={18} height={18} />
+              Lihat Pesanan
             </button>
           </div>
         </div>

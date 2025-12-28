@@ -27,7 +27,7 @@ export const faqs: { question: string; answer?: string }[] = [
       "Kami menerima transfer bank, kartu kredit/debit, e-wallet populer (mis. GoPay, OVO, Dana), dan opsi COD di wilayah tertentu.",
   },
   {
-    question: "Bagaimana cara melacak status toko saya?",
+    question: "Bagaimana cara melacak status pesanan saya?",
     answer:
       "Buka halaman 'Pesanan' di akun Anda, pilih pesanan terkait untuk melihat status pengiriman dan nomor resi. Untuk masalah lebih lanjut, hubungi penjual atau dukungan pelanggan.",
   },
@@ -50,7 +50,7 @@ export const Footer = () => {
             <span className="text-lg font-bold md:text-4xl">PasJajan</span>
           </div>
           <p className="max-w-62.5 font-bold">
-            Solusi belanja kelontong dalam genggaman.
+            Solusi Belanja Kelontong Dalam Genggaman.
           </p>
         </div>
         <Item>
