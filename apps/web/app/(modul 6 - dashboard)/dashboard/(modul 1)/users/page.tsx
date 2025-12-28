@@ -30,7 +30,7 @@ export default async function DataUsersPage() {
         <Button>Tambah Akun</Button>
       </div>
 
-      <SearchInput className="w-1/4" />
+      <SearchInput classNameContainer="w-1/4" />
 
       <Table className="overflow-clip rounded-2xl">
         <TableHeader>

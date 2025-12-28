@@ -36,15 +36,20 @@ export const faqs: { question: string; answer?: string }[] = [
 export const Footer = () => {
   return (
     <footer className="bg-primary">
-      <div className="bg-background grid w-full grid-cols-[repeat(1,auto)] items-start gap-4 pb-5 max-md:pb-10 lg:grid-cols-[repeat(4,auto)] lg:gap-10">
+      <div className="bg-background grid w-full grid-cols-[repeat(1,auto)] items-start gap-4 overflow-x-hidden pb-5 max-md:pb-10 lg:grid-cols-[repeat(4,auto)] lg:gap-10">
         <div className="bg-primary text-primary-foreground relative flex w-full items-center justify-between gap-4 rounded-br-full px-4 py-5 shadow-[20px_0_0_-10px_var(--secondary)] md:h-60 md:w-max md:gap-10 md:px-10 md:shadow-[50px_-10px_0_-10px_var(--secondary)]">
           <div className="flex flex-col items-center justify-center gap-2">
             <div className="relative h-32 w-38">
-              <Image src="/logo-footer.png" alt="logo" fill sizes="(max-width: 768px) 100vw, 200px" />
+              <Image
+                src="/img/logo-footer.png"
+                alt="logo"
+                fill
+                sizes="(max-width: 768px) 100vw, 200px"
+              />
             </div>
             <span className="text-lg font-bold md:text-4xl">PasJajan</span>
           </div>
-          <p className="max-w-[250px] font-bold">
+          <p className="max-w-62.5 font-bold">
             Solusi belanja kelontong dalam genggaman.
           </p>
         </div>
@@ -72,7 +77,7 @@ export const Footer = () => {
         <Item>
           <ItemContent>
             <ItemTitle className="text-xl font-bold">FAQ</ItemTitle>
-            <Accordion type="single" collapsible>
+            <Accordion type="single" defaultValue={`faq-1`}>
               {faqs.map((faq, i) => (
                 <AccordionItem key={i} value={`faq-${i + 1}`}>
                   <AccordionTrigger>{faq.question}</AccordionTrigger>

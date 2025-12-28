@@ -1,7 +1,5 @@
 "use client";
 
-import { editProfileSchema } from "@/lib/schema/user.schema";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Avatar,
   AvatarFallback,
@@ -27,122 +25,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select";
-import { toast } from "@workspace/ui/components/sonner";
+import {
+  Dropzone,
+  DropzoneEmptyState,
+} from "@workspace/ui/components/shadcnio/dropzone";
 import { eachMonthOfInterval, endOfYear, format, startOfYear } from "date-fns";
 import { id } from "date-fns/locale";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import z from "zod";
-import { userService } from "../_services/user.service";
+import { useState } from "react";
+import { Controller } from "react-hook-form";
+import { useEditProfile } from "../_hooks/useEditProfile";
 import { useUserStore } from "../_stores/useUserStore";
+import { CropAvatarModal } from "./crop-avatar-modal";
 
 export const UserProfileForm = () => {
-  const [editingFields, setEditingFields] = useState<
-    Set<keyof z.infer<typeof editProfileSchema>>
-  >(new Set());
+  const [rawImage, setRawImage] = useState<string | null>(null);
+  const [openCropper, setOpenCropper] = useState(false);
 
   const { user } = useUserStore();
 
-  const profileForm = useForm<z.infer<typeof editProfileSchema>>({
-    resolver: zodResolver(editProfileSchema),
-    mode: "onChange",
-    defaultValues: {
-      email_before: "",
-      token: "",
-      full_name: "",
-      email: "",
-      phone_number: "",
-      gender: null,
-      birth_date: null,
-    },
-  });
+  const {
+    profileForm,
+    croppedImageUrl,
+    editingFields,
+    files,
+    handleBtnCancelEdit,
+    handleBtnEdit,
+    handleOnSubmit,
+    setCroppedImageUrl,
+  } = useEditProfile();
 
-  useEffect(() => {
-    if (!user) return;
+  const handleDrop = (files: File[]) => {
+    const file = files[0];
+    if (!file) return;
 
-    profileForm.reset({
-      full_name: user.full_name,
-      email: user.email,
-      phone_number: user.phone_number,
-      gender: user.gender ? user.gender : null,
-      birth_date: user.birth_date ? user.birth_date : null,
-    });
-  }, [user, profileForm]);
-
-  const handleBtnEdit = (field: keyof z.infer<typeof editProfileSchema>) => {
-    setEditingFields((prev) => new Set(prev).add(field));
-    profileForm.setFocus(field);
-  };
-
-  const handleBtnCancelEdit = (
-    field: keyof z.infer<typeof editProfileSchema>,
-  ) => {
-    setEditingFields((prev) => {
-      const next = new Set(prev);
-      next.delete(field);
-      return next;
-    });
-    profileForm.resetField(field);
-  };
-
-  const handleSubmit = async (data: z.infer<typeof editProfileSchema>) => {
-    const dirtyFields = profileForm.formState.dirtyFields;
-    const payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
-      birth_date?: string;
-    } = {
-      email_before: user?.email ?? "",
-      token: Cookies.get("token") ?? "",
-    };
-
-    if (Object.keys(dirtyFields).length === 0) {
-      toast.info("Tidak ada perubahan untuk disimpan", {
-        toasterId: "global",
-      });
-      return;
-    }
-
-    Object.keys(dirtyFields).forEach((key) => {
-      if (key === "birth_date" && data.birth_date) {
-        payload.birth_date = new Date(
-          data.birth_date.year!,
-          data.birth_date.month! - 1,
-          data.birth_date.day!,
-        )
-          .toISOString()
-          .split("T")[0];
-      } else if (key === "gender" && data.gender) {
-        payload.gender = data.gender;
-      } else {
-        payload[
-          key as keyof Omit<
-            z.infer<typeof editProfileSchema>,
-            "birth_date" | "gender"
-          >
-        ] = data[key as keyof typeof data] as string;
-      }
-    });
-
-    const result = await userService.editUserProfile(payload);
-
-    if (result.ok) {
-      toast.success(result.message, {
-        toasterId: "global",
-      });
-
-      setEditingFields(new Set());
-    } else {
-      toast.error(result.message, {
-        toasterId: "global",
-      });
-    }
+    const imageUrl = URL.createObjectURL(file);
+    setRawImage(imageUrl);
+    setOpenCropper(true);
   };
 
   return (
     <form
       className="space-y-4"
       id="profile-form"
-      onSubmit={profileForm.handleSubmit(handleSubmit)}
+      onSubmit={profileForm.handleSubmit(handleOnSubmit)}
     >
       <div className="flex justify-between">
         <div className="flex flex-1 flex-col gap-4 py-10">
@@ -154,9 +79,12 @@ export const UserProfileForm = () => {
                 data-invalid={fieldState.invalid}
                 className="grid grid-cols-[200px_1fr_100px]"
               >
-                <FieldLabel className="w-20">Nama Lengkap</FieldLabel>
+                <FieldLabel htmlFor="fullname" className="w-20">
+                  Nama Lengkap
+                </FieldLabel>
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
+                    id="fullname"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("full_name")}
                     {...field}
@@ -193,9 +121,10 @@ export const UserProfileForm = () => {
                 data-invalid={fieldState.invalid}
                 className="grid grid-cols-[200px_1fr_100px]"
               >
-                <FieldLabel>Email</FieldLabel>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
+                    id="email"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("email")}
                     {...field}
@@ -232,9 +161,10 @@ export const UserProfileForm = () => {
                 data-invalid={fieldState.invalid}
                 className="grid grid-cols-[200px_1fr_100px]"
               >
-                <FieldLabel>No Telepon</FieldLabel>
+                <FieldLabel htmlFor="telpon">No Telepon</FieldLabel>
                 <FieldContent className="flex-row items-center gap-4">
                   <Input
+                    id="telpon"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("phone_number")}
                     {...field}
@@ -472,22 +402,68 @@ export const UserProfileForm = () => {
           />
         </div>
 
-        <div className="flex w-80 flex-col items-center gap-4 border-l py-10">
-          <Avatar className="size-40 object-cover">
-            <AvatarFallback>U</AvatarFallback>
-            <AvatarImage
-              src={user?.avatar || "/img/user-profile.png"}
-              alt={`avatar ${user?.full_name || "user profile"}`}
-            />
-          </Avatar>
+        <Controller
+          control={profileForm.control}
+          name="avatar"
+          render={({ field }) => (
+            <Field className="w-80">
+              <FieldContent className="flex flex-col items-center gap-4 border-l px-4 py-10">
+                <Avatar className="size-40 object-cover">
+                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage
+                    src={
+                      croppedImageUrl || user?.avatar || "/img/user-profile.png"
+                    }
+                    alt={`avatar ${user?.full_name || "user profile"}`}
+                  />
+                </Avatar>
 
-          <Button type="button">Ubah Profile</Button>
+                <CropAvatarModal
+                  openCropper={openCropper}
+                  setOpenCropper={setOpenCropper}
+                  rawImage={rawImage}
+                  setCroppedImageUrl={setCroppedImageUrl}
+                  formSetValue={profileForm}
+                  onCancel={() => handleBtnCancelEdit(field.name)}
+                />
 
-          <div className="text-muted-foreground flex flex-col text-center text-sm">
-            <span>Ukuran Gambar: maks 2 MB</span>
-            <span>Format Gambar: JPG, JPEG, PNG</span>
-          </div>
-        </div>
+                {editingFields.has(field.name) ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleBtnCancelEdit(field.name)}
+                  >
+                    Batal
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="hover:text-primary-foreground"
+                    asChild
+                  >
+                    <Dropzone
+                      maxSize={1024 * 1024 * 2}
+                      minSize={1024}
+                      onDrop={(e) => {
+                        handleBtnEdit(field.name);
+                        handleDrop(e);
+                      }}
+                      onError={console.error}
+                      src={files}
+                      accept={{ "image/*": [] }}
+                    >
+                      <DropzoneEmptyState>Ubah Profile</DropzoneEmptyState>
+                    </Dropzone>
+                  </Button>
+                )}
+                <div className="flex flex-col items-center text-xs">
+                  <span>Ukuran Gambar: Maks 2MB</span>
+                  <span>Format Gambar: JPG, JPEG, PNG</span>
+                </div>
+              </FieldContent>
+            </Field>
+          )}
+        />
       </div>
 
       {editingFields.size > 0 && (

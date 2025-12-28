@@ -2,7 +2,7 @@ import {
   ReportSalesResponse,
   reportSalesSchema,
 } from "@/lib/schema/report-sales.schema";
-import { api, getApiWithAuth } from "@/lib/utils/axios";
+import { api, createServerAPI } from "@/lib/utils/axios";
 
 interface ReportSalesParams {
   period: "monthly" | "yearly" | "daily" | "custom";
@@ -47,7 +47,7 @@ export const getReportSalesServer = async ({
   to,
   storeId,
 }: ReportSalesParams): Promise<ReportSalesResponse> => {
-  const serverApi = await getApiWithAuth();
+  const serverApi = await createServerAPI();
   const params: Record<string, string> = { period };
 
   if (from) params.from = from;

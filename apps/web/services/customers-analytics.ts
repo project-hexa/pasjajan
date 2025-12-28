@@ -3,7 +3,7 @@ import {
   customerAnalyticSchema,
   customerListSchema,
 } from "@/lib/schema/customers-analytics.schema";
-import { api, getApiWithAuth } from "@/lib/utils/axios";
+import { api, createServerAPI } from "@/lib/utils/axios";
 
 interface CustomerAnalyticParams {
   period: "monthly" | "yearly" | "daily" | "custom";
@@ -58,7 +58,7 @@ export const getCustomersAnalyticsServer = async ({
   start_date,
   end_date,
 }: CustomerAnalyticParams): Promise<CustomerAnalyticResponse> => {
-  const serverApi = await getApiWithAuth();
+  const serverApi = await createServerAPI();
   const params: Record<string, string> = { period };
 
   if (period === "custom" && start_date && end_date) {
@@ -134,7 +134,7 @@ export const getCustomerListServer = async ({
   start_date,
   end_date,
 }: CustomerListParams) => {
-  const serverApi = await getApiWithAuth();
+  const serverApi = await createServerAPI();
   const params: Record<string, string> = {
     sort,
     period,

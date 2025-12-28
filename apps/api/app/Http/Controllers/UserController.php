@@ -14,6 +14,7 @@ use App\Models\Staff;
 use App\Models\Address;
 use App\Models\HistoryPoint;
 use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends BaseController
 {
@@ -368,17 +369,25 @@ class UserController extends BaseController
 		}
 
 		// Tambahkan alamat baru ke database sesuai inputan user
-		$address = Address::create([
-			'customer_id' => $user->customer['id'],
-			'label' => $data['label'],
-			'detail_address' => $data['detail_address'],
-			'notes_address' => $data['notes_address'] ?? null,
-			'recipient_name' => $data['recipient_name'] ?? $user['full_name'],
-			'phone_number' => $data['phone_number'] ?? $user['phone_number'],
-			'latitude' => $data['latitude'] ?? null,
-			'longitude' => $data['longitude'] ?? null,
-			'is_default' => $data['is_default'],
-		]);
+		DB::transaction(function () use ($data, $user, &$address) {
+
+            if ($data['is_default']) {
+                Address::where('customer_id', $user->customer->id)
+                    ->update(['is_default' => false]);
+            }
+
+            $address = Address::create([
+                'customer_id' => $user->customer->id,
+                'label' => $data['label'],
+                'detail_address' => $data['detail_address'],
+                'notes_address' => $data['notes_address'] ?? null,
+                'recipient_name' => $data['recipient_name'] ?? $user->full_name,
+                'phone_number' => $data['phone_number'] ?? $user->phone_number,
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'is_default' => $data['is_default'],
+            ]);
+        });
 
 		$result['address'] = $address;
 

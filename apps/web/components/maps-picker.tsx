@@ -1,7 +1,8 @@
 "use client";
 
-import Map, { Marker, MapRef } from "react-map-gl/mapbox";
+import Map, { Marker, MapRef, MarkerDragEvent } from "react-map-gl/mapbox";
 import { useRef, useState } from "react";
+import { MapLayerMouseEvent } from "mapbox-gl";
 
 interface LocationCoords {
   lat: number;
@@ -38,7 +39,7 @@ export const MapsPicker = ({
       touchZoomRotate
       dragPan
       dragRotate={false}
-      onClick={(e) => {
+      onClick={(e: MapLayerMouseEvent) => {
         const coords = {
           lat: e.lngLat.lat,
           lng: e.lngLat.lng,
@@ -51,7 +52,7 @@ export const MapsPicker = ({
         latitude={marker.lat}
         longitude={marker.lng}
         draggable
-        onDragEnd={(e) => {
+        onDragEnd={(e: MarkerDragEvent) => {
           const coords = {
             lat: e.lngLat.lat,
             lng: e.lngLat.lng,
