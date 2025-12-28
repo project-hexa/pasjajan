@@ -1,40 +1,84 @@
 import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
-import { User } from "@/types/user";
+import {
+  AddAddressSchema,
+  AddressSchema,
+  Customer,
+  EditAddressSchema,
+  User,
+} from "@/types/user";
 import z from "zod";
 
 export const userService = {
-  getUserProfile: async (email: string) =>
-    await handleApiResponse(
+  getUserProfile: async (email: string, opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ user: User & { customer: Customer } }>(
       async () =>
         await handleApiRequest.get("/user/profile", {
           params: { email },
-          withAuth: true,
+          ssr: opts?.ssr,
         }),
     ),
   editUserProfile: async (
+    email_before: string,
     payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
       birth_date?: string;
     },
+    opts?: { ssr: boolean },
   ) =>
-    await handleApiResponse(
+    await handleApiResponse<{ user: User }>(
       async () =>
-        await handleApiRequest.patch("/user/change-profile", payload, {
-          defaultErrorMessage: "Profile Gagal diubah!",
-          withAuth: true,
+        await handleApiRequest.patch(
+          "/user/change-profile",
+          {
+            email_before,
+            ...payload,
+          },
+          {
+            defaultErrorMessage: "Profile Gagal diubah!",
+            ssr: opts?.ssr ?? true,
+          },
+        ),
+    ),
+  getUserByID: async (id: User["id"], opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ user_data: User }>(
+      async () =>
+        await handleApiRequest.get("/admin/users", {
+          params: { id },
+          ssr: opts?.ssr ?? true,
         }),
     ),
-  getUserByID: async (id: User["id"]) =>
-    await handleApiRequest.get("/admin/users", {
-      params: { id },
-      withAuth: true,
-    }),
-  getUserByRole: async (role: User["role"]) =>
+  getUserByRole: async (role: User["role"], opts?: { ssr: boolean }) =>
     await handleApiResponse<{ users: User }>(
       async () =>
         await handleApiRequest.get<{ users: User }>(`/admin/users/${role}`, {
-          withAuth: true,
+          ssr: opts?.ssr ?? true,
         }),
+    ),
+  addAddresses: async (payload: AddAddressSchema, opts?: { ssr: boolean }) =>
+    await handleApiResponse<AddressSchema>(
+      async () =>
+        await handleApiRequest.post<AddressSchema>(
+          "/user/add-address",
+          payload,
+          {
+            ssr: opts?.ssr ?? false,
+          },
+        ),
+    ),
+  editAddresses: async (
+    id: number,
+    payload: EditAddressSchema,
+    opts?: { ssr: boolean },
+  ) =>
+    await handleApiResponse<AddressSchema>(
+      async () =>
+        await handleApiRequest.patch<AddressSchema>(
+          `/user/change-address/${id}`,
+          payload,
+          {
+            ssr: opts?.ssr ?? false,
+          },
+        ),
     ),
 };

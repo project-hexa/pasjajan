@@ -35,7 +35,7 @@ api.interceptors.response.use(
   },
 );
 
-export async function getApiWithAuth() {
+export async function createServerAPI() {
   const { cookies } = await import("next/headers");
   const token = (await cookies()).get("token")?.value;
   return axios.create({

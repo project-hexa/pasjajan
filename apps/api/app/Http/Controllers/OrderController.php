@@ -598,6 +598,79 @@ class OrderController extends Controller
     }
 
     /**
+     * 
+     * @param string $code
+     * @return JsonResponse
+     */
+    public function getOrderForAdmin(string $code)
+    {
+        try {
+            $order = Order::with(['items.product', 'paymentMethod', 'store', 'voucher', 'customer.user'])
+                ->where('code', $code)
+                ->firstOrFail();
+
+            return ApiResponse::success([
+                'order' => [
+                    'id' => $order->id,
+                    'code' => $order->code,
+                    'customer_id' => $order->customer_id,
+                    'customer_name' => $order->customer_name,
+                    'customer_email' => $order->customer_email,
+                    'customer_phone' => $order->customer_phone,
+                    'shipping_address' => $order->shipping_address,
+                    'shipping_recipient_name' => $order->shipping_recipient_name,
+                    'shipping_recipient_phone' => $order->shipping_recipient_phone,
+                    'sub_total' => $order->sub_total,
+                    'discount' => $order->discount,
+                    'shipping_fee' => $order->shipping_fee,
+                    'admin_fee' => $order->admin_fee,
+                    'grand_total' => $order->grand_total,
+                    'payment_method' => $order->paymentMethod ? [
+                        'id' => $order->paymentMethod->id,
+                        'name' => $order->paymentMethod->method_name,
+                        'code' => $order->paymentMethod->code,
+                        'category' => $order->paymentMethod->payment_type,
+                    ] : null,
+                    'payment_instructions' => $order->payment_instructions,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status,
+                    'paid_at' => $order->paid_at?->toIso8601String(),
+                    'expired_at' => $order->expired_at?->toIso8601String(),
+                    'store_id' => $order->store_id,
+                    'store_name' => $order->store?->name,
+                    'voucher' => $order->voucher ? [
+                        'id' => $order->voucher->id,
+                        'code' => $order->voucher->code,
+                        'name' => $order->voucher->name,
+                        'discount_value' => $order->voucher->discount_value,
+                    ] : null,
+                    'notes' => $order->notes,
+                    'created_at' => $order->created_at->toIso8601String(),
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product' => $item->product ? [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'price' => $item->product->price,
+                                'image_url' => $item->product->image_url,
+                            ] : null,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                            'sub_total' => $item->sub_total,
+                        ];
+                    }),
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return ApiResponse::notFound('Order tidak ditemukan');
+        } catch (\Exception $e) {
+            Log::error('Get Admin Order Detail Error: ' . $e->getMessage());
+            return ApiResponse::serverError('Gagal mengambil data order');
+        }
+    }
+
+    /**
      * Cancel order
      * 
      * @param string $code

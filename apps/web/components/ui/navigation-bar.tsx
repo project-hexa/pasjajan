@@ -7,7 +7,7 @@ import { Separator } from "@workspace/ui/components/separator";
 import Image from "next/image";
 import Link from "next/link";
 import { Cart } from "./cart";
-import { Search } from "./search";
+import { SearchInput } from "./search-input";
 import { UserDropdown } from "./user-dropdown";
 
 export const Navbar = ({ className }: { className?: string }) => {
@@ -22,7 +22,7 @@ export const Navbar = ({ className }: { className?: string }) => {
           className="flex flex-col items-center text-xs font-bold text-white md:text-sm"
         >
           <Image
-            src={"/logo.png"}
+            src={"/img/logo.png"}
             alt="logo"
             width={64}
             height={64}
@@ -32,7 +32,7 @@ export const Navbar = ({ className }: { className?: string }) => {
           PasJajan
         </Link>
 
-        <Search />
+        <SearchInput variant="home" />
 
         <div className="flex h-10 items-center gap-2 max-sm:hidden">
           <div className="flex items-center gap-2">

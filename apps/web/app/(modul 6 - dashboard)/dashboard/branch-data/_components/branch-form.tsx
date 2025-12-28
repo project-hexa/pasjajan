@@ -15,8 +15,7 @@ const branchSchema = z.object({
   address: z.string().min(10, "Alamat minimal 10 karakter"),
   phone_number: z.string().min(10, "Nomor telepon minimal 10 karakter"),
   status: z.enum(["Active", "Inactive"], {
-    required_error: "Status harus dipilih",
-    invalid_type_error: "Status harus berupa 'Active' atau 'Inactive'",
+    message: "Status harus berupa 'Active' atau 'Inactive'",
   }),
 });
 
