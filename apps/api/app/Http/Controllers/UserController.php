@@ -15,6 +15,7 @@ use App\Models\Address;
 use App\Models\HistoryPoint;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends BaseController
 {
@@ -281,7 +282,6 @@ class UserController extends BaseController
 			'full_name' => 'nullable|string',
 			'birth_date' => 'nullable|date',
 			'gender' => 'nullable|string',
-			'avatar' => 'nullable|string',
 		];
 
 		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
@@ -318,7 +318,6 @@ class UserController extends BaseController
 		$user['email'] = $data['email'] ?? $user['email'];
 		$user['birth_date'] = $data['birth_date'] ?? $user['birth_date'];
 		$user['gender'] = $data['gender'] ?? $user['gender'];
-		$user['avatar'] = $data['avatar'] ?? $user['avatar'];
 
 		$user->save();
 
@@ -668,4 +667,49 @@ class UserController extends BaseController
 
 		return $user;
 	}
+
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|exists:users,email',
+            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user->avatar) {
+            $oldPath = str_replace(
+                env('R2_PUBLIC_URL') . '/',
+                '',
+                $user->avatar
+            );
+
+            Storage::disk('r2')->delete($oldPath);
+        }
+
+        $file = $request->file('avatar');
+
+        $filename = uniqid('avatar_' . $user->full_name . '-') . '.' . $file->getClientOriginalExtension();
+
+        $path = Storage::disk('r2')->putFileAs(
+            '/images/avatar',
+            $file,
+            $filename,
+            'public'
+        );
+
+        if (!$path) {
+            return sendFailResponse("Gagal Upload file ke storage", code: 500);
+        }
+
+        $url = env('R2_PUBLIC_URL') . '/' . $path;
+
+        $user->avatar = $url;
+        $user->save();
+
+        return $this->sendSuccessResponse('Avatar berhasil diupload', [
+            'avatar' => $url
+        ]);
+    }
+
 }
