@@ -10,8 +10,8 @@ import { useCallback, useEffect } from "react";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
-import { cookiesOptions } from "@/lib/utils/cookies-option";
 import Cookies from "js-cookie";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -51,9 +51,9 @@ export const useLogin = () => {
           toasterId: "global",
         });
 
-        if (data.rememberMe) {
-          Object.assign(cookiesOptions, { expires: 7 });
-        }
+        const cookiesOptions: Cookies.CookieAttributes = data.rememberMe
+          ? { ...baseCookiesOptions, expires: 7 }
+          : { ...baseCookiesOptions };
 
         Cookies.set("token", result.data?.token ?? "", cookiesOptions);
         Cookies.set("role", result.data?.user_data.role, cookiesOptions);
