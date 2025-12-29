@@ -32,7 +32,7 @@ import {
 } from "@workspace/ui/components/radio-group";
 import { EditAddressFormSchema, EditAddressSchema } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { editAddressFormSchema } from "@/lib/schema/user.schema";
+import { editAddressFormSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
 import { useUserStore } from "../_stores/useUserStore";
 import { useEffect, useState } from "react";
 import { Button } from "@workspace/ui/components/button";

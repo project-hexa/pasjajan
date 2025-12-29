@@ -2,7 +2,7 @@
 
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { addAddressFormSchema } from "@/lib/schema/user.schema";
+import { addAddressFormSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
 import { AddAddressFormSchema } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Badge } from "@workspace/ui/components/badge";

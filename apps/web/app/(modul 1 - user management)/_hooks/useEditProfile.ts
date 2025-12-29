@@ -1,6 +1,6 @@
 "use client";
 
-import { editProfileSchema } from "@/lib/schema/user.schema";
+import { editProfileSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "@workspace/ui/components/sonner";
 import { useCallback, useEffect, useState } from "react";
