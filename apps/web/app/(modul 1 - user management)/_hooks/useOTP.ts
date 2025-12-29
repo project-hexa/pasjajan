@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { verifyOTPSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,6 +90,8 @@ export const useOTP = () => {
 
         Cookies.remove("OTP_attempt_count");
         Cookies.remove("OTP_expires_at");
+        Cookies.remove("verificationStep");
+
         setUser(result.data?.user_data);
         setIsLoggedIn(true);
 
