@@ -11,11 +11,10 @@ import {
 import z from "zod";
 
 export const userService = {
-  getUserProfile: async (email: string, opts?: { ssr: boolean }) =>
+  getUserProfile: async (opts?: { ssr: boolean }) =>
     await handleApiResponse<{ user: User & { customer: Customer } }>(
       async () =>
         await handleApiRequest.get("/user/profile", {
-          params: { email },
           ssr: opts?.ssr,
         }),
     ),
