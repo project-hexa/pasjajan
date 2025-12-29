@@ -15,17 +15,17 @@ import { userService } from "../../_services/user.service";
 import { useUserStore } from "../../_stores/useUserStore";
 
 export default function ProfilePage() {
-  const { customer, setCustomer, user } = useUserStore();
+  const { customer, setCustomer } = useUserStore();
   const [loading, setLoading] = useState<boolean>(false);
 
   const refreshProfile = useCallback(async () => {
     setLoading(true);
-    const res = await userService.getUserProfile(user?.email || "");
+    const res = await userService.getUserProfile();
     if (res.ok && res.data) {
       setCustomer(res.data.user.customer);
     }
     setLoading(false);
-  }, [setCustomer, user]);
+  }, [setCustomer]);
 
   useEffect(() => {
     refreshProfile();
