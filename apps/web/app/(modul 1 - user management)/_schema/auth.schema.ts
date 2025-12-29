@@ -41,13 +41,9 @@ export const verifyOTPSchema = userSchema
     otp,
   });
 
-export const sendOTPSchema = userSchema
-  .pick({
-    email: true,
-  })
-  .extend({
-    context: z.enum(["register", "forgot_password"]),
-  });
+export const sendOTPSchema = userSchema.pick({
+  email: true,
+});
 
 export const forgotPasswordSchema = userSchema.pick({
   email: true,
