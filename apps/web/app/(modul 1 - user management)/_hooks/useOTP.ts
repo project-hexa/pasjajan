@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "@/hooks/useNavigate";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useOTP = () => {
   const navigate = useNavigate();
@@ -91,6 +92,9 @@ export const useOTP = () => {
         Cookies.remove("OTP_attempt_count");
         Cookies.remove("OTP_expires_at");
         Cookies.remove("verificationStep");
+
+        Cookies.set("token", result.data?.token ?? "", baseCookiesOptions);
+        Cookies.set("role", result.data?.user_data.role, baseCookiesOptions);
 
         setUser(result.data?.user_data);
         setIsLoggedIn(true);
