@@ -2,10 +2,10 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Navbar } from "@/components/ui/navigation-bar";
+import { toast } from "@workspace/ui/components/sonner";
+import { Footer } from "@/components/ui/footer";
 import { useNavigate } from "@/hooks/useNavigate";
-import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
 import { orderService } from "@/app/(modul 3 - payment)/_services/order.service";
 import { Order } from "@/types/order.types";
 
@@ -71,7 +71,6 @@ function SuccessPageContent() {
   const [orderData, setOrderData] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const { user } = useUserStore();
 
   useEffect(() => {
     const validateAndFetchOrder = async () => {
@@ -83,7 +82,7 @@ function SuccessPageContent() {
       try {
         const result = await orderService.getOrder(orderCode);
         if (!result.ok || !result.data?.order) {
-          alert("Order tidak ditemukan!");
+          toast.error("Order tidak ditemukan!", { toasterId: "global" });
           navigateRef.current.push("/");
           return;
         }
@@ -124,7 +123,7 @@ function SuccessPageContent() {
         });
       } catch (error) {
         console.error("Error fetching order:", error);
-        alert("Gagal memuat data order!");
+        toast.error("Gagal memuat data order!", { toasterId: "global" });
         navigateRef.current.push("/");
       } finally {
         setLoading(false);
@@ -144,18 +143,7 @@ function SuccessPageContent() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header
-        logoSrc="/img/pasjajan2.png"
-        logoAlt="PasJajan Logo"
-        userName={user?.full_name}
-        userInitials={user?.full_name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)}
-        userAvatar={user?.avatar}
-      />
+      <Navbar />
       <main className="flex grow items-center justify-center bg-emerald-50/50 px-4 py-10">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
           <div className="mb-6 flex justify-center">
@@ -219,7 +207,9 @@ function SuccessPageContent() {
               Belanja Lagi
             </button>
             <button
-              onClick={() => navigate.push("/orders")}
+              onClick={() =>
+                navigate.push(`/payment/detail?order_code=${orderCode}`)
+              }
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
             >
               <Icon icon="lucide:package" width={18} height={18} />

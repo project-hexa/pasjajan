@@ -7,6 +7,9 @@ use App\Http\Requests\CheckoutRequest;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Address;
+use App\Models\Voucher;
+use App\Models\CustomerVoucher;
+use App\Models\HistoryPoint;
 use App\Helpers\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -68,6 +71,38 @@ class OrderController extends Controller
                 return ApiResponse::error('Data alamat pengiriman tidak lengkap', 400);
             }
 
+            // Validasi dan proses voucher jika ada
+            $voucherId = null;
+            $voucherDiscount = 0;
+            $customerVoucher = null;
+
+            if ($request->voucher_id) {
+                // Cek voucher exists dan masih available
+                $voucher = Voucher::available()->find($request->voucher_id);
+
+                if (!$voucher) {
+                    return ApiResponse::error('Voucher tidak valid atau sudah expired', 400);
+                }
+
+                // Cek voucher dimiliki customer dan belum dipakai
+                $customerVoucher = CustomerVoucher::where('customer_id', $customer->id)
+                    ->where('voucher_id', $voucher->id)
+                    ->where('is_used', false)
+                    ->first();
+
+                if (!$customerVoucher) {
+                    return ApiResponse::error('Voucher tidak ditemukan atau sudah digunakan', 400);
+                }
+
+                $voucherId = $voucher->id;
+                $voucherDiscount = (float) $voucher->discount_value;
+            }
+
+            // Hitung ulang grand_total dengan voucher discount dari BE
+            $discount = $voucherDiscount;
+            $grandTotal = ($request->sub_total + $request->shipping_fee + ($request->admin_fee ?? 0)) - $discount;
+            if ($grandTotal < 0) $grandTotal = 0;
+
             // Generate unique order code
             $orderCode = $this->generateOrderCode();
 
@@ -77,7 +112,7 @@ class OrderController extends Controller
                 'customer_id' => $customer->id,
                 'address_id' => $request->address_id ?? null,
                 'store_id' => $request->store_id ?? null,
-                'voucher_id' => $request->voucher_id ?? null,
+                'voucher_id' => $voucherId,
                 'customer_name' => $customerName,
                 'customer_email' => $customerEmail,
                 'customer_phone' => $customerPhone,
@@ -85,10 +120,10 @@ class OrderController extends Controller
                 'shipping_recipient_name' => $shippingRecipientName,
                 'shipping_recipient_phone' => $shippingRecipientPhone,
                 'sub_total' => $request->sub_total,
-                'discount' => $request->discount ?? 0,
+                'discount' => $discount,
                 'shipping_fee' => $request->shipping_fee,
                 'admin_fee' => $request->admin_fee ?? 0,
-                'grand_total' => $request->grand_total,
+                'grand_total' => $grandTotal,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
                 'expired_at' => null, // Akan di-set saat payment process
@@ -103,6 +138,14 @@ class OrderController extends Controller
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
                     'sub_total' => $item['price'] * $item['quantity'],
+                ]);
+            }
+
+            // Mark voucher sebagai used jika ada
+            if ($customerVoucher) {
+                $customerVoucher->update([
+                    'is_used' => true,
+                    'used_at' => now(),
                 ]);
             }
 
@@ -145,10 +188,49 @@ class OrderController extends Controller
             $user = request()->user();
             $customer = $user->customer;
 
-            $order = Order::with(['items.product', 'paymentMethod', 'store'])
+            $order = Order::with(['items.product', 'paymentMethod', 'store', 'voucher'])
                 ->where('code', $code)
                 ->where('customer_id', $customer->id) // Ownership check
                 ->firstOrFail();
+
+            // Auto-sync dengan Midtrans jika order pending dan punya midtrans_order_id
+            if ($order->payment_status === 'pending' && $order->midtrans_order_id) {
+                try {
+                    $midtransService = new \App\Services\MidtransService();
+                    $result = $midtransService->getTransactionStatus($order->midtrans_order_id);
+
+                    if ($result->success) {
+                        $paymentStatus = $this->mapMidtransStatus(
+                            $result->data->transaction_status,
+                            $result->data->fraud_status ?? null
+                        );
+
+                        if ($order->payment_status !== $paymentStatus) {
+                            $updateData = ['payment_status' => $paymentStatus];
+
+                            if ($paymentStatus === 'paid' && !$order->paid_at) {
+                                $updateData['paid_at'] = now();
+                                $updateData['status'] = 'confirmed';
+
+                                // Give points to customer (1 point per Rp 1.000)
+                                $this->awardPointsToCustomer($order);
+                            }
+
+                            if (in_array($paymentStatus, ['expired', 'failed'])) {
+                                $updateData['status'] = 'cancelled';
+                                $this->restoreVoucherIfUsed($order);
+                            }
+
+                            $order->update($updateData);
+                            $order->refresh();
+
+                            Log::info("Order {$order->code} synced from Midtrans: {$paymentStatus}");
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Failed to sync Midtrans status for order {$order->code}: " . $e->getMessage());
+                }
+            }
 
             // Auto-update jika order sudah expired tapi status belum diupdate
             if (in_array($order->payment_status, ['pending', 'unpaid']) && $order->status === 'pending') {
@@ -164,6 +246,9 @@ class OrderController extends Controller
                 }
 
                 if ($isExpired) {
+                    // Restore voucher sebelum update status
+                    $this->restoreVoucherIfUsed($order);
+
                     $order->update([
                         'status' => 'cancelled',
                         'payment_status' => 'expired',
@@ -201,6 +286,12 @@ class OrderController extends Controller
                     'expired_at' => $order->expired_at?->toIso8601String(),
                     'store_id' => $order->store_id,
                     'store_name' => $order->store?->name,
+                    'voucher' => $order->voucher ? [
+                        'id' => $order->voucher->id,
+                        'code' => $order->voucher->code,
+                        'name' => $order->voucher->name,
+                        'discount_value' => $order->voucher->discount_value,
+                    ] : null,
                     'notes' => $order->notes,
                     'created_at' => $order->created_at->toIso8601String(),
                     'items' => $order->items->map(function ($item) {
@@ -246,33 +337,43 @@ class OrderController extends Controller
 
             // Auto-update expired orders sebelum fetch
             // Case 1: Orders dengan expired_at yang sudah lewat
-            Order::where('customer_id', $customer->id)
+            $expiredOrders1 = Order::where('customer_id', $customer->id)
                 ->whereIn('payment_status', ['pending', 'unpaid'])
                 ->where('status', 'pending')
                 ->whereNotNull('expired_at')
                 ->where('expired_at', '<', now())
-                ->update([
+                ->get();
+
+            foreach ($expiredOrders1 as $expiredOrder) {
+                $this->restoreVoucherIfUsed($expiredOrder);
+                $expiredOrder->update([
                     'status' => 'cancelled',
                     'payment_status' => 'expired',
                 ]);
+            }
 
             // Case 2: Orders tanpa expired_at, tapi created_at sudah lebih dari 1 jam
-            Order::where('customer_id', $customer->id)
+            $expiredOrders2 = Order::where('customer_id', $customer->id)
                 ->whereIn('payment_status', ['pending', 'unpaid'])
                 ->where('status', 'pending')
                 ->whereNull('expired_at')
                 ->where('created_at', '<', now()->subHour())
-                ->update([
+                ->get();
+
+            foreach ($expiredOrders2 as $expiredOrder) {
+                $this->restoreVoucherIfUsed($expiredOrder);
+                $expiredOrder->update([
                     'status' => 'cancelled',
                     'payment_status' => 'expired',
                 ]);
+            }
 
             $status = $request->query('status');
             $paymentStatus = $request->query('payment_status');
             $perPage = $request->query('per_page', 10);
             $search = $request->query('search');
 
-            $query = Order::with(['items.product', 'paymentMethod'])
+            $query = Order::with(['items.product', 'paymentMethod', 'voucher'])
                 ->where('customer_id', $customer->id) // Auto-filter by logged-in customer
                 ->orderBy('created_at', 'desc');
 
@@ -321,6 +422,12 @@ class OrderController extends Controller
                     'paid_at' => $order->paid_at?->toIso8601String(),
                     'expired_at' => $order->expired_at?->toIso8601String(),
                     'store_id' => $order->store_id,
+                    'voucher' => $order->voucher ? [
+                        'id' => $order->voucher->id,
+                        'code' => $order->voucher->code,
+                        'name' => $order->voucher->name,
+                        'discount_value' => $order->voucher->discount_value,
+                    ] : null,
                     'notes' => $order->notes,
                     'created_at' => $order->created_at->toIso8601String(),
                     'updated_at' => $order->updated_at->toIso8601String(),
@@ -491,6 +598,79 @@ class OrderController extends Controller
     }
 
     /**
+     * 
+     * @param string $code
+     * @return JsonResponse
+     */
+    public function getOrderForAdmin(string $code)
+    {
+        try {
+            $order = Order::with(['items.product', 'paymentMethod', 'store', 'voucher', 'customer.user'])
+                ->where('code', $code)
+                ->firstOrFail();
+
+            return ApiResponse::success([
+                'order' => [
+                    'id' => $order->id,
+                    'code' => $order->code,
+                    'customer_id' => $order->customer_id,
+                    'customer_name' => $order->customer_name,
+                    'customer_email' => $order->customer_email,
+                    'customer_phone' => $order->customer_phone,
+                    'shipping_address' => $order->shipping_address,
+                    'shipping_recipient_name' => $order->shipping_recipient_name,
+                    'shipping_recipient_phone' => $order->shipping_recipient_phone,
+                    'sub_total' => $order->sub_total,
+                    'discount' => $order->discount,
+                    'shipping_fee' => $order->shipping_fee,
+                    'admin_fee' => $order->admin_fee,
+                    'grand_total' => $order->grand_total,
+                    'payment_method' => $order->paymentMethod ? [
+                        'id' => $order->paymentMethod->id,
+                        'name' => $order->paymentMethod->method_name,
+                        'code' => $order->paymentMethod->code,
+                        'category' => $order->paymentMethod->payment_type,
+                    ] : null,
+                    'payment_instructions' => $order->payment_instructions,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status,
+                    'paid_at' => $order->paid_at?->toIso8601String(),
+                    'expired_at' => $order->expired_at?->toIso8601String(),
+                    'store_id' => $order->store_id,
+                    'store_name' => $order->store?->name,
+                    'voucher' => $order->voucher ? [
+                        'id' => $order->voucher->id,
+                        'code' => $order->voucher->code,
+                        'name' => $order->voucher->name,
+                        'discount_value' => $order->voucher->discount_value,
+                    ] : null,
+                    'notes' => $order->notes,
+                    'created_at' => $order->created_at->toIso8601String(),
+                    'items' => $order->items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product' => $item->product ? [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'price' => $item->product->price,
+                                'image_url' => $item->product->image_url,
+                            ] : null,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                            'sub_total' => $item->sub_total,
+                        ];
+                    }),
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return ApiResponse::notFound('Order tidak ditemukan');
+        } catch (\Exception $e) {
+            Log::error('Get Admin Order Detail Error: ' . $e->getMessage());
+            return ApiResponse::serverError('Gagal mengambil data order');
+        }
+    }
+
+    /**
      * Cancel order
      * 
      * @param string $code
@@ -524,6 +704,9 @@ class OrderController extends Controller
                     Log::warning('Failed to cancel Midtrans transaction: ' . $result->message);
                 }
             }
+
+            // Restore voucher jika ada
+            $this->restoreVoucherIfUsed($order);
 
             // Update status di database
             $order->update([
@@ -640,6 +823,114 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             Log::error('Get Payment Receipt Error: ' . $e->getMessage());
             return ApiResponse::serverError('Gagal mengambil bukti pembayaran');
+        }
+    }
+
+    /**
+     * Restore voucher jika order di-cancel atau expired
+     * Mengembalikan voucher ke status belum terpakai
+     * 
+     * @param Order $order
+     * @return void
+     */
+    private function restoreVoucherIfUsed(Order $order): void
+    {
+        if (!$order->voucher_id) {
+            return;
+        }
+
+        try {
+            $customerVoucher = CustomerVoucher::where('customer_id', $order->customer_id)
+                ->where('voucher_id', $order->voucher_id)
+                ->where('is_used', true)
+                ->first();
+
+            if ($customerVoucher) {
+                $customerVoucher->update([
+                    'is_used' => false,
+                    'used_at' => null,
+                ]);
+
+                Log::info("Voucher restored for cancelled/expired order", [
+                    'order_code' => $order->code,
+                    'voucher_id' => $order->voucher_id,
+                    'customer_voucher_id' => $customerVoucher->id,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to restore voucher for order {$order->code}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Map Midtrans status to our payment_status
+     * 
+     * @param string $transactionStatus
+     * @param string|null $fraudStatus
+     * @return string
+     */
+    private function mapMidtransStatus(string $transactionStatus, ?string $fraudStatus): string
+    {
+        if ($transactionStatus == 'capture') {
+            return ($fraudStatus == 'accept') ? 'paid' : 'pending';
+        } elseif ($transactionStatus == 'settlement') {
+            return 'paid';
+        } elseif (in_array($transactionStatus, ['cancel', 'deny'])) {
+            return 'failed';
+        } elseif ($transactionStatus == 'expire') {
+            return 'expired';
+        } elseif ($transactionStatus == 'pending') {
+            return 'pending';
+        } else {
+            return 'failed';
+        }
+    }
+
+    /**
+     * Award points to customer based on transaction amount
+     * 1 point per Rp 1.000
+     * 
+     * @param Order $order
+     * @return void
+     */
+    private function awardPointsToCustomer(Order $order): void
+    {
+        try {
+            $order->load('customer');
+            $customer = $order->customer;
+
+            if (!$customer) {
+                Log::warning("Cannot award points: customer not found for order {$order->code}");
+                return;
+            }
+
+            // Calculate points: 1 point per Rp 1.000
+            $pointsEarned = (int) floor($order->grand_total / 1000);
+
+            if ($pointsEarned <= 0) {
+                return;
+            }
+
+            // Add points to customer
+            $customer->point += $pointsEarned;
+            $customer->save();
+
+            // Create history point record
+            HistoryPoint::create([
+                'customer_id' => $customer->id,
+                'type' => 'Masuk',
+                'notes' => "Poin dari transaksi #{$order->code}",
+                'total_point' => $pointsEarned,
+            ]);
+
+            Log::info("Points awarded to customer", [
+                'order_code' => $order->code,
+                'customer_id' => $customer->id,
+                'points_earned' => $pointsEarned,
+                'new_balance' => $customer->point,
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Failed to award points for order {$order->code}: " . $e->getMessage());
         }
     }
 }

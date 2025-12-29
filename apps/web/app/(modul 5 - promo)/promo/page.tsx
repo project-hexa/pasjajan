@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Footer } from "@/components/ui/footer";
 import { Navbar } from "@/components/ui/navigation-bar";
@@ -70,7 +70,7 @@ export default function PromoPage() {
   const PromoSkeleton = () => (
     <Card className="overflow-hidden rounded-xl border bg-white p-0">
       <Skeleton className="aspect-[16/9] w-full" />
-      <div className="p-4 pt-3 space-y-2">
+      <div className="space-y-2 p-4 pt-3">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
       </div>
@@ -78,10 +78,10 @@ export default function PromoPage() {
   );
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 py-10">
+      <main className="mx-auto max-w-7xl flex-1 px-4 py-10">
         <h1 className="mb-8 text-3xl font-semibold text-gray-800">
           Semua Promo
         </h1>
@@ -93,18 +93,20 @@ export default function PromoPage() {
             ))}
           </div>
         ) : promos.length === 0 ? (
-          <div className="text-center py-20">
-            <Icon icon="lucide:tag" className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg">Tidak ada promo tersedia saat ini</p>
+          <div className="py-20 text-center">
+            <Icon
+              icon="lucide:tag"
+              className="mx-auto mb-4 h-16 w-16 text-gray-300"
+            />
+            <p className="text-lg text-gray-500">
+              Tidak ada promo tersedia saat ini
+            </p>
           </div>
         ) : (
           <>
             <div className="grid cursor-pointer grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {promos.map((promo) => (
-                <Link
-                  key={promo.id}
-                  href={`/promo/${promo.id}`}
-                >
+                <Link key={promo.id} href={`/promo/${promo.id}`}>
                   <Card className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                     <div className="group relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
                       {promo.banner_url ? (
@@ -115,8 +117,11 @@ export default function PromoPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <Icon icon="lucide:image" className="h-12 w-12 text-gray-300" />
+                        <div className="flex h-full items-center justify-center">
+                          <Icon
+                            icon="lucide:image"
+                            className="h-12 w-12 text-gray-300"
+                          />
                         </div>
                       )}
                       {/* Discount Badge */}
@@ -126,11 +131,16 @@ export default function PromoPage() {
                     </div>
 
                     <div className="p-4 pt-3">
-                      <h2 className="font-bold text-gray-800 line-clamp-1">{promo.name}</h2>
-                      <p className="text-sm text-gray-500 line-clamp-1 mt-1">{promo.description}</p>
-                      <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                      <h2 className="line-clamp-1 font-bold text-gray-800">
+                        {promo.name}
+                      </h2>
+                      <p className="mt-1 line-clamp-1 text-sm text-gray-500">
+                        {promo.description}
+                      </p>
+                      <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
                         <Icon icon="lucide:calendar" className="h-3 w-3" />
-                        {formatDate(promo.start_date)} - {formatDate(promo.end_date)}
+                        {formatDate(promo.start_date)} -{" "}
+                        {formatDate(promo.end_date)}
                       </p>
                     </div>
                   </Card>
@@ -140,7 +150,7 @@ export default function PromoPage() {
 
             {/* Pagination */}
             {meta && meta.last_page > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-10">
+              <div className="mt-10 flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="icon"
@@ -150,17 +160,23 @@ export default function PromoPage() {
                   <Icon icon="lucide:chevron-left" className="h-4 w-4" />
                 </Button>
 
-                {Array.from({ length: meta.last_page }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => handlePageChange(page)}
-                    className={currentPage === page ? "bg-green-700 hover:bg-green-800" : ""}
-                  >
-                    {page}
-                  </Button>
-                ))}
+                {Array.from({ length: meta.last_page }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="icon"
+                      onClick={() => handlePageChange(page)}
+                      className={
+                        currentPage === page
+                          ? "bg-green-700 hover:bg-green-800"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </Button>
+                  ),
+                )}
 
                 <Button
                   variant="outline"
@@ -177,6 +193,6 @@ export default function PromoPage() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }

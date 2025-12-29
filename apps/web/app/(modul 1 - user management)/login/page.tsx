@@ -15,7 +15,7 @@ export default function LoginPage() {
           <div className="flex h-full max-sm:py-10">
             <SideBanner />
 
-            <div className="flex flex-1 flex-col items-center gap-4 py-4">
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 py-4">
               <CardTitle className="text-2xl">Masuk</CardTitle>
 
               <LoginForm />

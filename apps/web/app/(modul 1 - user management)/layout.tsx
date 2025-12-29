@@ -22,13 +22,13 @@ export default function AuthLayout({
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Navbar className="sticky top-0 z-50" />
-      <main className="overflow-y-auto -mt-10 overflow-x-hidden">
+      <main className="-mt-10 flex-1 overflow-x-hidden overflow-y-auto">
         {children}
         <Footer />
       </main>
       <BottomBar />
-    </>
+    </div>
   );
 }
