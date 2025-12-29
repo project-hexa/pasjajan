@@ -85,17 +85,17 @@ export const UserProfileForm = () => {
                 <FieldLabel htmlFor="fullname" className="w-20">
                   Nama Lengkap
                 </FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="fullname"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("full_name")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
@@ -125,17 +125,17 @@ export const UserProfileForm = () => {
                 className="grid grid-cols-[200px_1fr_100px]"
               >
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="email"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("email")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
@@ -165,17 +165,17 @@ export const UserProfileForm = () => {
                 className="grid grid-cols-[200px_1fr_100px]"
               >
                 <FieldLabel htmlFor="telpon">No Telepon</FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="telpon"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("phone_number")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
