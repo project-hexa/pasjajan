@@ -22,6 +22,7 @@ use App\Http\Controllers\Product\StoreController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Product\ProductCategoryController;
 use App\Http\Controllers\Product\CartController;
+use App\Http\Controllers\Product\StaffProductController;
 use App\Http\Middleware\EnsureOtpIsVerified;
 
 /*
@@ -257,6 +258,13 @@ Route::middleware('auth:sanctum')->group(function () {
 //Stores
 Route::get('/stores', [StoreController::class, 'index']);
 Route::get('/stores/{id}', [StoreController::class, 'show']);
+Route::get('/stores/{storeId}/products', [StoreController::class, 'products']);
+Route::get('/stores/{storeId}/products/{productId}', [StoreController::class, 'productDetail']);
+
+// Staff actions for product & stock management
+Route::post('/stores/{storeId}/products', [StaffProductController::class, 'addProductToStore']);
+Route::delete('/stores/{storeId}/products/{productId}', [StaffProductController::class, 'removeProductFromStore']);
+Route::post('/stores/{storeId}/products/{productId}/adjust-stock', [StaffProductController::class, 'adjustStock']);
 
 //Products
 Route::get('/products', [ProductController::class, 'index']);
