@@ -43,12 +43,22 @@ export const useEditProfile = () => {
   useEffect(() => {
     if (!user) return;
 
+    let birthDateObj = null;
+    if (user.birth_date && typeof user.birth_date === "string") {
+      const [year, month, day] = (user.birth_date as string)
+        .split("-")
+        .map(Number);
+      birthDateObj = { year, month, day };
+    } else if (user.birth_date) {
+      birthDateObj = user.birth_date;
+    }
+
     profileForm.reset({
       full_name: user.full_name,
       email: user.email,
       phone_number: user.phone_number,
       gender: user.gender ? user.gender : null,
-      birth_date: user.birth_date ? user.birth_date : null,
+      birth_date: birthDateObj,
     });
   }, [user, profileForm]);
 
@@ -120,15 +130,14 @@ export const useEditProfile = () => {
 
       Object.keys(dirtyFields).forEach((key) => {
         if (key === "birth_date" && data.birth_date) {
-          payload.birth_date = new Date(
-            data.birth_date.year!,
-            data.birth_date.month! - 1,
-            data.birth_date.day!,
-          )
-            .toISOString()
-            .split("T")[0];
+          const { year, month, day } = data.birth_date;
+          payload.birth_date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         } else if (key === "gender" && data.gender) {
           payload.gender = data.gender;
+        } else if (key === "phone_number" && data.phone_number) {
+          payload.phone_number = data.phone_number.startsWith("0")
+            ? data.phone_number.slice(1)
+            : data.phone_number;
         } else {
           payload[
             key as keyof Omit<
@@ -150,13 +159,17 @@ export const useEditProfile = () => {
         });
 
         setEditingFields(new Set());
+        setUser({
+          ...user!,
+          ...result.data?.user,
+        });
       } else {
         toast.error(result.message || "Gagal Mengubah Profile!", {
           toasterId: "global",
         });
       }
     },
-    [profileForm, user],
+    [profileForm, user, setUser],
   );
 
   return {
