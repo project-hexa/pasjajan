@@ -1,6 +1,6 @@
 "use client"
 
-import { verifyOTPSchema } from "@/lib/schema/auth.schema";
+import { verifyOTPSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -84,7 +84,7 @@ export const useOTP = () => {
       });
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "OTP Berhasil diverifikasi!", {
           toasterId: "global",
         });
 
@@ -95,7 +95,7 @@ export const useOTP = () => {
 
         navigate.push("/");
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "OTP Gagal diverifikasi!", {
           toasterId: "global",
         });
       }

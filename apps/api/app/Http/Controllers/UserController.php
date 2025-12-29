@@ -15,6 +15,7 @@ use App\Models\Address;
 use App\Models\HistoryPoint;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends BaseController
 {
@@ -227,49 +228,13 @@ class UserController extends BaseController
 
 	public function getProfile(Request $request): JsonResponse
 	{
-		$rules = [
-			'email' => 'required|exists:App\Models\User,email|string|email',
-		];
-
-		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
-		$validator = $this->makeValidator($request->all(), $rules);
-
-		// Jika validasi gagal, maka
-		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors()->toArray();
-
-			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
-		}
-
-		// Jika validasi berhasil, maka
-		// Ambil inputan user yang telah divalidasi
-		$data = $validator->validated();
-
-		// Mencari user di database dengan email yang terdapat pada url
-		$user = User::where('email', $data['email'])->first();
-
-		// Jika user tidak ditemukan, maka
-		if (!$user) {
-			return $this->sendFailResponse("Tidak menemukan user dengan email " . $data['email'] . ". Gagal mendapatkan data profile.");
-		}
-
-		// Jika user ditemukan, maka
-		// Cek apakah data user yang diakses adalah milik user yang mengakses
-		if ($request->user()->cannot('view', $user)) {
-			return $this->sendFailResponse('User tidak boleh mengakses data profile user lain. Gagal mendapatkan data profile user.', code: 403);
-		}
-
-		// Ambil data user
-		if ($user['role'] = 'Customer') {
-			$result['user'] = $user->load('customer.addresses');
-		} else if ($user['role'] = 'Staff') {
-			$result['user'] = $user->load('staff.stores');
-		} else {
-			$result['user'] = $user;
-		}
-
-		return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
-	}
+        $user = $request->user()->load('customer.addresses');
+        if (!$user) {
+            return $this->sendFailResponse("User tidak ditemukan.", code: 404);
+        }
+        $result['user'] = $user;
+        return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
+    }
 
 	public function changeProfile(Request $request): JsonResponse
 	{
@@ -281,7 +246,6 @@ class UserController extends BaseController
 			'full_name' => 'nullable|string',
 			'birth_date' => 'nullable|date',
 			'gender' => 'nullable|string',
-			'avatar' => 'nullable|string',
 		];
 
 		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
@@ -318,7 +282,6 @@ class UserController extends BaseController
 		$user['email'] = $data['email'] ?? $user['email'];
 		$user['birth_date'] = $data['birth_date'] ?? $user['birth_date'];
 		$user['gender'] = $data['gender'] ?? $user['gender'];
-		$user['avatar'] = $data['avatar'] ?? $user['avatar'];
 
 		$user->save();
 
@@ -668,4 +631,49 @@ class UserController extends BaseController
 
 		return $user;
 	}
+
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|exists:users,email',
+            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user->avatar) {
+            $oldPath = str_replace(
+                env('R2_PUBLIC_URL') . '/',
+                '',
+                $user->avatar
+            );
+
+            Storage::disk('r2')->delete($oldPath);
+        }
+
+        $file = $request->file('avatar');
+
+        $filename = uniqid('avatar_' . $user->full_name . '-') . '.' . $file->getClientOriginalExtension();
+
+        $path = Storage::disk('r2')->putFileAs(
+            '/images/avatar',
+            $file,
+            $filename,
+            'public'
+        );
+
+        if (!$path) {
+            return sendFailResponse("Gagal Upload file ke storage", code: 500);
+        }
+
+        $url = env('R2_PUBLIC_URL') . '/' . $path;
+
+        $user->avatar = $url;
+        $user->save();
+
+        return $this->sendSuccessResponse('Avatar berhasil diupload', [
+            'avatar' => $url
+        ]);
+    }
+
 }

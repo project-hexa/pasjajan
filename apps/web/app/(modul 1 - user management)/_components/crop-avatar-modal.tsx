@@ -25,7 +25,7 @@ export const CropAvatarModal = ({
   openCropper?: boolean;
   setOpenCropper?: (state: boolean) => void;
   rawImage: string | null;
-  formSetValue: UseFormReturn;
+  formSetValue: UseFormReturn<{ avatar: File | null }>;
   onCancel?: () => void;
 }) => {
   const [crop, setCrop] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -33,10 +33,27 @@ export const CropAvatarModal = ({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [open, setOpen] = useState<boolean>(false);
 
+  const canvasToFile = (canvas: HTMLCanvasElement): Promise<File> => {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) throw new Error("Blob gagal dibuat");
+        resolve(
+          new File(
+            [blob],
+            `avatar.jpg`,
+            {
+              type: "image/*",
+            },
+          ),
+        );
+      }, "image/*");
+    });
+  };
+
   const getCroppedImage = async (
     imageSrc: string,
     crop: Area,
-  ): Promise<string> => {
+  ): Promise<File> => {
     const image = new Image();
     image.src = imageSrc;
 
@@ -66,7 +83,7 @@ export const CropAvatarModal = ({
       crop.height,
     );
 
-    return canvas.toDataURL("image/*");
+    return canvasToFile(canvas);
   };
 
   return (
@@ -106,13 +123,10 @@ export const CropAvatarModal = ({
             onClick={async () => {
               if (!rawImage || !croppedAreaPixels) return;
 
-              const croppedUrl = await getCroppedImage(
-                rawImage,
-                croppedAreaPixels,
-              );
+              const file = await getCroppedImage(rawImage, croppedAreaPixels);
 
-              setCroppedImageUrl(croppedUrl);
-              formSetValue.setValue("avatar", croppedUrl, {
+              setCroppedImageUrl(URL.createObjectURL(file));
+              formSetValue.setValue("avatar", file, {
                 shouldDirty: true,
                 shouldValidate: true,
               });

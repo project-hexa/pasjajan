@@ -1,7 +1,7 @@
 "use client";
 
 import { useNavigate } from "@/hooks/useNavigate";
-import { forgotPasswordSchema } from "@/lib/schema/auth.schema";
+import { forgotPasswordSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardTitle } from "@workspace/ui/components/card";

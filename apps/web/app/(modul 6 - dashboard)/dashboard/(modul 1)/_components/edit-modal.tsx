@@ -1,7 +1,7 @@
 "use client";
 
 import { Password } from "@/app/(modul 1 - user management)/_components/password";
-import { editUserSchema } from "@/lib/schema/user.schema";
+import { editUserSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
 import { User } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
