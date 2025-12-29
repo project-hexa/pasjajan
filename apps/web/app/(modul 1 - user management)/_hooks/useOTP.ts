@@ -118,7 +118,9 @@ export const useOTP = () => {
     });
 
     if (result.ok) {
-      toast.success(result.message, { toasterId: "global" });
+      toast.success(result.message || "OTP Berhasil dikirim Ulang!", {
+        toasterId: "global",
+      });
       otpForm.resetField("otp");
 
       const newAttemptCount = attemptCount + 1;
@@ -141,9 +143,15 @@ export const useOTP = () => {
         result.message?.includes("admin")
       ) {
         setIsMaxAttempt(true);
-        toast.error(result.message, { toasterId: "global" });
+        toast.error(
+          result.message || "Anda telah mencapai batas maksimal percobaan OTP",
+          {
+            description: "Silakan hubungi admin untuk bantuan lebih lanjut.",
+            toasterId: "global",
+          },
+        );
       } else {
-        toast.error(result.message, { toasterId: "global" });
+        toast.error(result.message || "OTP Gagal dikirim Ulang!", { toasterId: "global" });
       }
     }
 
