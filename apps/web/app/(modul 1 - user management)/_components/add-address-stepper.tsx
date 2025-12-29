@@ -81,6 +81,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [openAddAddressDialog, setOpenAddAddressDialog] =
     useState<boolean>(false);
+  const [shouldAutoLocate, setShouldAutoLocate] = useState<boolean>(true);
 
   const { user } = useUserStore();
   const {
@@ -108,7 +109,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!openAddAddressDialog || !shouldAutoLocate) return;
     if (!("geolocation" in navigator)) return;
 
     navigator.geolocation.getCurrentPosition(
@@ -129,6 +130,8 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
         addAddressForm.setValue("detail_address", address.fullAddress);
         addAddressForm.setValue("recipient_name", user?.full_name || "");
         addAddressForm.setValue("phone_number", user?.phone_number || "");
+
+        setShouldAutoLocate(false);
       },
       () => {
         console.warn("user deny location");
@@ -140,6 +143,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
     addAddressForm,
     user,
     setQueryFromOutside,
+    shouldAutoLocate
   ]);
 
   useEffect(() => {
@@ -181,7 +185,12 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
         >
           Semua Alamat
         </Badge>
-        <Button onClick={() => setOpenAddAddressDialog(true)}>
+        <Button
+          onClick={() => {
+            setOpenAddAddressDialog(true);
+            setShouldAutoLocate(true);
+          }}
+        >
           Tambah Alamat
         </Button>
       </div>
@@ -190,7 +199,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
         open={openAddAddressDialog}
         onOpenChange={setOpenAddAddressDialog}
       >
-        <DialogContent className="flex max-h-3/4 min-w-2/3 flex-col gap-4 overflow-y-auto">
+        <DialogContent className="flex min-h-2/3 min-w-2/3 flex-col gap-4">
           <DialogTitle className="text-center">Tambah Alamat</DialogTitle>
           <DialogDescription className="sr-only">
             Tambah Alamat User
@@ -221,7 +230,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
                   Dimana Lokasi tujuan pengirimanmu?
                 </h2>
 
-                <div className="flex w-full flex-col items-center gap-5">
+                <div className="flex w-full flex-col items-center gap-5 h-80 justify-between">
                   <div className="relative w-full">
                     <InputGroup>
                       <InputGroupAddon>
@@ -321,11 +330,11 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
 
               <StepperContent
                 value={3}
-                className="flex flex-col items-center gap-4"
+                className="flex flex-col items-center gap-4 overflow-y-auto max-h-80"
               >
                 <form
                   id="address-detail-form"
-                  className="flex w-full flex-col items-center gap-4"
+                  className="flex w-full flex-col items-center gap-4 pb-10"
                   onSubmit={addAddressForm.handleSubmit(handleOnSubmit)}
                 >
                   <Controller
@@ -487,7 +496,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
                     )}
                   />
 
-                  <Button type="submit" form="address-detail-form">
+                  <Button type="submit" form="address-detail-form" className="absolute bottom-4 left-1/2 -translate-x-1/2">
                     {addAddressForm.formState.isSubmitting ? (
                       <Icon
                         icon={"lucide:loader-circle"}
