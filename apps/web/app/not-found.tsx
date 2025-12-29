@@ -28,22 +28,22 @@ export default function NotFoundPage() {
             </div>
           </CardHeader>
           <CardTitle className="text-8xl">404</CardTitle>
-          <h2 className="text-2xl">Oops! Page Not Found</h2>
+          <h2 className="text-2xl">Oops! Halaman Tidak Ditemukan.</h2>
           <CardDescription className="mt-4 max-w-sm text-center">
-            We can’t seem to find the page you’re looking for. It might have
-            been moved, deleted, or never existed.
+            Sepertinya kami tidak dapat menemukan halaman yang Anda cari. Mungkin saja
+            telah dipindahkan, dihapus, atau tidak pernah ada.
           </CardDescription>
           <CardFooter className="mt-4 gap-5">
             <Link href="/">
               <Button>
                 <Icon icon={"lucide:home"} />
-                Back to Home
+                Kembali ke Beranda
               </Button>
             </Link>
             <Link href="mailto:admin@pasjajan.com">
               <Button variant={"outline"}>
                 <Icon icon={"lucide:email"} />
-                Contact Support
+                Hubungi Dukungan
               </Button>
             </Link>
           </CardFooter>
