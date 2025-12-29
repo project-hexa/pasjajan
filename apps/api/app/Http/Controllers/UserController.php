@@ -228,49 +228,13 @@ class UserController extends BaseController
 
 	public function getProfile(Request $request): JsonResponse
 	{
-		$rules = [
-			'email' => 'required|exists:App\Models\User,email|string|email',
-		];
-
-		// Validasi inputan user berdasarkan aturan (rules) validasi ganti profile yang telah ditetapkan sebelumnya
-		$validator = $this->makeValidator($request->all(), $rules);
-
-		// Jika validasi gagal, maka
-		if ($validator->fails()) {
-			$errors['validation_errors'] = $validator->errors()->toArray();
-
-			return $this->sendFailResponse("Validasi lihat profile gagal.", $errors, 422);
-		}
-
-		// Jika validasi berhasil, maka
-		// Ambil inputan user yang telah divalidasi
-		$data = $validator->validated();
-
-		// Mencari user di database dengan email yang terdapat pada url
-		$user = User::where('email', $data['email'])->first();
-
-		// Jika user tidak ditemukan, maka
-		if (!$user) {
-			return $this->sendFailResponse("Tidak menemukan user dengan email " . $data['email'] . ". Gagal mendapatkan data profile.");
-		}
-
-		// Jika user ditemukan, maka
-		// Cek apakah data user yang diakses adalah milik user yang mengakses
-		if ($request->user()->cannot('view', $user)) {
-			return $this->sendFailResponse('User tidak boleh mengakses data profile user lain. Gagal mendapatkan data profile user.', code: 403);
-		}
-
-		// Ambil data user
-		if ($user['role'] = 'Customer') {
-			$result['user'] = $user->load('customer.addresses');
-		} else if ($user['role'] = 'Staff') {
-			$result['user'] = $user->load('staff.stores');
-		} else {
-			$result['user'] = $user;
-		}
-
-		return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
-	}
+        $user = $request->user()->load('customer.addresses');
+        if (!$user) {
+            return $this->sendFailResponse("User tidak ditemukan.", code: 404);
+        }
+        $result['user'] = $user;
+        return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
+    }
 
 	public function changeProfile(Request $request): JsonResponse
 	{
