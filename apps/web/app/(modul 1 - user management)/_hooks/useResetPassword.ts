@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
+import Cookies from "js-cookie";
 
 export const useResetPassword = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export const useResetPassword = () => {
           toasterId: "global",
         });
 
+        Cookies.set("verificationStep", "otp-sent");
         navigate.replace("/login");
       } else {
         toast.error(result.message || "Gagal merubah Password!", {

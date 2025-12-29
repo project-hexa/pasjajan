@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (data: z.infer<typeof forgotPasswordSchema>) => {
     const result = await authService.sendOTP({
       email: data.email,
-      context: "forgot_password",
+      context: "forgot-password",
     });
 
     if (result.ok) {
