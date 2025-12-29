@@ -1,4 +1,3 @@
-import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
 import {
@@ -9,6 +8,7 @@ import {
   User,
 } from "@/types/user";
 import z from "zod";
+import { editProfileSchema } from "../_schema/user.schema";
 
 export const userService = {
   getUserProfile: async (opts?: { ssr: boolean }) =>
