@@ -13,6 +13,8 @@ import { AddAddress } from "../../_components/add-address-stepper";
 import { EditAddressDialog } from "../../_components/edit-address-dialog";
 import { userService } from "../../_services/user.service";
 import { useUserStore } from "../../_stores/useUserStore";
+import z from "zod";
+import { addressSchema } from "../../_schema/user.schema";
 
 export default function ProfilePage() {
   const { customer, setCustomer } = useUserStore();
@@ -57,7 +59,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       ) : (
-        customer?.addresses.map((address) => (
+        customer?.addresses.map((address: z.infer<typeof addressSchema>) => (
           <Card
             key={`customer-${customer.id}-${address.id}`}
             className="border-primary bg-primary/10"
