@@ -1,7 +1,7 @@
 "use client";
 
 import { useNavigate } from "@/hooks/useNavigate";
-import { resetPasswordSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
+import { resetPasswordSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
