@@ -42,12 +42,13 @@ export default function VerificationCodePage() {
     });
 
     if (result.ok) {
-      toast.success(result.message, {
+      toast.success(result.message || "OTP berhasil dikirim!", {
         toasterId: "global",
       });
+      Cookies.set("verificationStep", "otp-sent");
       navigate.push("/one-time-password");
     } else {
-      toast.error(result.message, {
+      toast.error(result.message || "OTP gagal dikirim!", {
         toasterId: "global",
       });
     }

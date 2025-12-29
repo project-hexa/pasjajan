@@ -281,7 +281,7 @@ class AuthController extends BaseController
 
         $validator = $this->makeValidator($request->all(), [
             $type => $type === 'email' ? 'required|email' : 'required|string',
-            'context' => 'sometimes|in:register,forgot_password',
+            'context' => 'sometimes|in:register,forgot-password',
         ]);
 
         if ($validator->fails()) {
