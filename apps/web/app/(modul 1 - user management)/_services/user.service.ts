@@ -1,4 +1,3 @@
-import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
 import {
@@ -9,13 +8,13 @@ import {
   User,
 } from "@/types/user";
 import z from "zod";
+import { editProfileSchema } from "../_schema/user.schema";
 
 export const userService = {
-  getUserProfile: async (email: string, opts?: { ssr: boolean }) =>
+  getUserProfile: async (opts?: { ssr: boolean }) =>
     await handleApiResponse<{ user: User & { customer: Customer } }>(
       async () =>
         await handleApiRequest.get("/user/profile", {
-          params: { email },
           ssr: opts?.ssr,
         }),
     ),
@@ -36,7 +35,7 @@ export const userService = {
           },
           {
             defaultErrorMessage: "Profile Gagal diubah!",
-            ssr: opts?.ssr ?? true,
+            ssr: opts?.ssr ?? false,
           },
         ),
     ),
@@ -78,6 +77,23 @@ export const userService = {
           payload,
           {
             ssr: opts?.ssr ?? false,
+          },
+        ),
+    ),
+  changeAvatar: async (email: string, avatar: File, opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ avatar: string }>(
+      async () =>
+        await handleApiRequest.post<{ avatar: string }>(
+          "/user/upload-avatar",
+          {
+            email,
+            avatar,
+          },
+          {
+            ssr: opts?.ssr ?? false,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           },
         ),
     ),

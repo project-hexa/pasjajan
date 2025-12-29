@@ -30,9 +30,13 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group";
-import { EditAddressFormSchema, EditAddressSchema } from "@/types/user";
+import {
+  AddressSchema,
+  EditAddressFormSchema,
+  EditAddressSchema,
+} from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { editAddressFormSchema } from "@/lib/schema/user.schema";
+import { editAddressFormSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
 import { useUserStore } from "../_stores/useUserStore";
 import { useEffect, useState } from "react";
 import { Button } from "@workspace/ui/components/button";
@@ -80,7 +84,7 @@ export const EditAddressDialog = ({
   useEffect(() => {
     if (!customer) return;
 
-    const address = customer.addresses.find((a) => a.id === id);
+    const address = customer.addresses.find((a: AddressSchema) => a.id === id);
 
     if (address) {
       const lat = Number(address.latitude);

@@ -4,7 +4,7 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "../_stores/useUserStore";
 import { useForm } from "react-hook-form";
-import { loginSchema } from "@/lib/schema/auth.schema";
+import { loginSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { authService } from "../_services/auth.service";
@@ -67,7 +67,7 @@ export const useLogin = () => {
           navigate.push("/");
         }
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal Masuk!", {
           description: result.description,
           toasterId: "global",
         });

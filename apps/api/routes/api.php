@@ -125,6 +125,7 @@ Route::controller(UserController::class)->group(function () {
 		Route::put('/user/change-password', 'changePassword')->name('user.change.password');
 		Route::get('/user/total-point', 'getPoint')->name('user.point');
 		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');
+        Route::post('/user/upload-avatar', 'uploadAvatar')->name('user.upload.avatar');
 		Route::get('/admin/users/{role}', 'index')->name('admin.users');
 		Route::get('/admin/user/{id}', 'show')->name('admin.user');
 		Route::post('/admin/add-user', 'store')->name('admin.create.user');

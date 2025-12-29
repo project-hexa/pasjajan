@@ -6,7 +6,7 @@ import {
   editAddressFormSchema,
   editAddressSchema,
   userSchema,
-} from "@/lib/schema/user.schema";
+} from "@/app/(modul 1 - user management)/_schema/user.schema";
 import z from "zod";
 
 export type User = z.infer<typeof userSchema>;

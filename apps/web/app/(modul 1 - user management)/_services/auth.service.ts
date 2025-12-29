@@ -4,7 +4,7 @@ import {
   resetPasswordSchema,
   sendOTPSchema,
   verifyOTPSchema,
-} from "@/lib/schema/auth.schema";
+} from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
 import z from "zod";

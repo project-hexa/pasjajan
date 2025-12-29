@@ -147,7 +147,6 @@ export const editProfileSchema = userSchema
   .extend({
     gender: userSchema.shape.gender.nullable().optional(),
     birth_date: userSchema.shape.birth_date.nullable().optional(),
-    avatar: z.string().nullable().optional(),
   })
   .partial();
 
