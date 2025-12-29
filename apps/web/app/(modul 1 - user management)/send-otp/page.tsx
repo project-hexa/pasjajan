@@ -1,6 +1,6 @@
 "use client";
 
-import { sendOTPSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
+import { sendOTPSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
