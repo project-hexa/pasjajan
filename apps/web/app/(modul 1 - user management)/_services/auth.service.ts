@@ -32,7 +32,7 @@ export const authService = {
           defaultErrorMessage: "Gagal Daftar!",
         }),
     ),
-  sendOTP: async (payload: z.infer<typeof sendOTPSchema>) =>
+  sendOTP: async (payload: z.infer<typeof sendOTPSchema> & {context: "register" | "forgot-password"}) =>
     await handleApiResponse(
       async () =>
         await handleApiRequest.post<SendOTPResponse>(
