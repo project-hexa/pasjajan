@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@workspace/ui/components/button";
 import {
   Card,
@@ -13,15 +12,13 @@ import {
 import { Icon } from "@workspace/ui/components/icon";
 import Image from "next/image";
 import Link from "next/link";
-import { useNavigate } from "@/hooks/useNavigate";
+import { useEffect } from "react";
 
 export default function ErrorPage({
   error,
 }: {
   error: Error & { digest?: string };
 }) {
-  const navigate = useNavigate();
-
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -48,7 +45,9 @@ export default function ErrorPage({
             atau hubungi tim support jika masalah terus berlanjut.
           </CardDescription>
           <CardFooter className="mt-4 gap-5">
-            <Button onClick={() => navigate.refresh()}>Refresh Halaman</Button>
+            <Button onClick={() => window.location.reload()}>
+              Refresh Halaman
+            </Button>
             <Link href="mailto:admin@pasjajan.com">
               <Button variant={"outline"}>
                 <Icon icon={"lucide:email"} />
