@@ -69,7 +69,7 @@ export default function PromoPage() {
 
   const PromoSkeleton = () => (
     <Card className="overflow-hidden rounded-xl border bg-white p-0">
-      <Skeleton className="aspect-[16/9] w-full" />
+      <Skeleton className="aspect-video w-full" />
       <div className="space-y-2 p-4 pt-3">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-4 w-1/2" />
@@ -108,7 +108,7 @@ export default function PromoPage() {
               {promos.map((promo) => (
                 <Link key={promo.id} href={`/promo/${promo.id}`}>
                   <Card className="overflow-hidden rounded-xl border bg-white p-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                    <div className="group relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+                    <div className="group relative aspect-video w-full overflow-hidden bg-gray-100">
                       {promo.banner_url ? (
                         <Image
                           src={promo.banner_url}
