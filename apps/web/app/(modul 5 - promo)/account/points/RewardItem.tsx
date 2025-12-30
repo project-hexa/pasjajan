@@ -1,14 +1,21 @@
 "use client";
 
+import { cn } from "@workspace/ui/lib/utils";
 import Image from "next/image";
 
 export interface RewardProps {
   title: string;
   points: number;
   image: string;
+  imageClassName?: string;
 }
 
-export default function RewardItem({ title, points, image }: RewardProps) {
+export default function RewardItem({
+  title,
+  points,
+  image,
+  imageClassName,
+}: RewardProps) {
   return (
     <div className="rounded-lg border bg-white p-3 shadow transition hover:shadow-lg">
       {/* Voucher Image */}
@@ -18,7 +25,7 @@ export default function RewardItem({ title, points, image }: RewardProps) {
           alt={title}
           width={500}
           height={200}
-          className="h-[120px] w-full object-cover"
+          className={cn("h-30 w-full object-scale-down", imageClassName)}
         />
       </div>
 
