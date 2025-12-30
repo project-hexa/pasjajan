@@ -92,6 +92,7 @@ export const useOTP = () => {
         Cookies.remove("OTP_attempt_count");
         Cookies.remove("OTP_expires_at");
         Cookies.remove("verificationStep");
+        Cookies.remove("pendingEmail");
 
         Cookies.set("token", result.data?.token ?? "", baseCookiesOptions);
         Cookies.set("role", result.data?.user_data.role, baseCookiesOptions);
