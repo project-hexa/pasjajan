@@ -89,6 +89,12 @@ export const useLocationSearch = () => {
     [sessionToken, clearSession, setQuery],
   );
 
+  const resetSearch = () => {
+    setQuery("");
+    setResults([]);
+    setIsSearching(false);
+  };
+
   return {
     query,
     results,
@@ -98,5 +104,6 @@ export const useLocationSearch = () => {
     selectPlace,
     setQuery,
     setQueryFromOutside,
+    resetSearch,
   };
 };
