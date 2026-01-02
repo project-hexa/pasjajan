@@ -5,6 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/react";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -83,6 +84,7 @@ export default function RootLayout({
           id="global"
           offset={100}
         />
+        <Analytics />
       </body>
     </html>
   );
