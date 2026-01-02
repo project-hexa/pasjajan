@@ -16,14 +16,16 @@ use App\Models\HistoryPoint;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\LogsActivity;
 
 class UserController extends BaseController
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request, string $role): JsonResponse
-    {
+	use LogsActivity;
+	/**
+	 * Display a listing of the resource.
+	 */
+	public function index(Request $request, string $role): JsonResponse
+	{
 		// Cek apakah role user adalah admin atau bukan
 		if ($request->user()->cannot('view', User::class)) {
 			return $this->sendFailResponse('Role user bukan admin. Gagal mendapatkan data seluruh user.', code: 403);
@@ -51,13 +53,13 @@ class UserController extends BaseController
 		$result['users'] = $users;
 
 		return $this->sendSuccessResponse('Berhasil mendapatkan data seluruh user.', $result);
-    }
+	}
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request): JsonResponse
-    {
+	/**
+	 * Store a newly created resource in storage.
+	 */
+	public function store(Request $request): JsonResponse
+	{
 		// Cek apakah role user adalah admin atau bukan
 		if ($request->user()->cannot('create', User::class)) {
 			return $this->sendFailResponse('Role user bukan admin. Gagal menambah user baru.', code: 403);
@@ -99,16 +101,19 @@ class UserController extends BaseController
 
 		$user = $this->createUser($data['result']);
 
+		// Log activity
+		$this->logActivity('CREATE', "Membuat user baru: {$user->full_name} ({$user->email}) - Role: {$user->role}");
+
 		$result['user_data'] = $user;
 
 		return $this->sendSuccessResponse('Berhasil menambah user baru.', $data['result']);
-    }
+	}
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Request $request, string $id): JsonResponse
-    {
+	/**
+	 * Display the specified resource.
+	 */
+	public function show(Request $request, string $id): JsonResponse
+	{
 		// Ambil data seluruh user dengan difilter berdasarkan rolenya
 		$user = User::find($id);
 
@@ -137,13 +142,13 @@ class UserController extends BaseController
 		$result['user_data'] = $user;
 
 		return $this->sendSuccessResponse('Berhasil mendapatkan data user.', $result);
-    }
+	}
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): JsonResponse
-    {
+	/**
+	 * Update the specified resource in storage.
+	 */
+	public function update(Request $request, string $id): JsonResponse
+	{
 		$rules = [
 			'full_name' => 'nullable|string',
 			'email' => 'nullable|unique:App\Models\User,email|string|email',
@@ -194,16 +199,19 @@ class UserController extends BaseController
 
 		$user->save();
 
+		// Log activity
+		$this->logActivity('UPDATE', "Memperbarui data user: {$user->full_name} ({$user->email})");
+
 		$result['user_data'] = $user;
 
 		return $this->sendSuccessResponse('Berhasil mengubah data user.', $result);
-    }
+	}
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Request $request, string $id): JsonResponse
-    {
+	/**
+	 * Remove the specified resource from storage.
+	 */
+	public function destroy(Request $request, string $id): JsonResponse
+	{
 		// Cari user dengan id dari parameter
 		$user = User::find($id);
 
@@ -217,24 +225,32 @@ class UserController extends BaseController
 			return $this->sendFailResponse('Role user bukan admin. Gagal manghapus data user.', code: 403);
 		}
 
+		// Simpan data sebelum delete untuk logging
+		$userName = $user->full_name;
+		$userEmail = $user->email;
+		$userRole = $user->role;
+
 		// Jika user ditemukan, maka
 		// Hapus user dengan mekanisme softdelete
 		$user->delete();
 
+		// Log activity
+		$this->logActivity('DELETE', "Menghapus user: {$userName} ({$userEmail}) - Role: {$userRole}");
+
 		$result['user_data'] = $user;
 
 		return $this->sendSuccessResponse('Berhasil menghapus data user.', $result);
-    }
+	}
 
 	public function getProfile(Request $request): JsonResponse
 	{
-        $user = $request->user()->load('customer.addresses');
-        if (!$user) {
-            return $this->sendFailResponse("User tidak ditemukan.", code: 404);
-        }
-        $result['user'] = $user;
-        return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
-    }
+		$user = $request->user()->load('customer.addresses');
+		if (!$user) {
+			return $this->sendFailResponse("User tidak ditemukan.", code: 404);
+		}
+		$result['user'] = $user;
+		return $this->sendSuccessResponse("Berhasil mendapatkan data profile user.", $result);
+	}
 
 	public function changeProfile(Request $request): JsonResponse
 	{
@@ -334,23 +350,23 @@ class UserController extends BaseController
 		// Tambahkan alamat baru ke database sesuai inputan user
 		DB::transaction(function () use ($data, $user, &$address) {
 
-            if ($data['is_default']) {
-                Address::where('customer_id', $user->customer->id)
-                    ->update(['is_default' => false]);
-            }
+			if ($data['is_default']) {
+				Address::where('customer_id', $user->customer->id)
+					->update(['is_default' => false]);
+			}
 
-            $address = Address::create([
-                'customer_id' => $user->customer->id,
-                'label' => $data['label'],
-                'detail_address' => $data['detail_address'],
-                'notes_address' => $data['notes_address'] ?? null,
-                'recipient_name' => $data['recipient_name'] ?? $user->full_name,
-                'phone_number' => $data['phone_number'] ?? $user->phone_number,
-                'latitude' => $data['latitude'] ?? null,
-                'longitude' => $data['longitude'] ?? null,
-                'is_default' => $data['is_default'],
-            ]);
-        });
+			$address = Address::create([
+				'customer_id' => $user->customer->id,
+				'label' => $data['label'],
+				'detail_address' => $data['detail_address'],
+				'notes_address' => $data['notes_address'] ?? null,
+				'recipient_name' => $data['recipient_name'] ?? $user->full_name,
+				'phone_number' => $data['phone_number'] ?? $user->phone_number,
+				'latitude' => $data['latitude'] ?? null,
+				'longitude' => $data['longitude'] ?? null,
+				'is_default' => $data['is_default'],
+			]);
+		});
 
 		$result['address'] = $address;
 
@@ -632,48 +648,47 @@ class UserController extends BaseController
 		return $user;
 	}
 
-    public function uploadAvatar(Request $request): JsonResponse
-    {
-        $request->validate([
-            'email' => 'required|exists:users,email',
-            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+	public function uploadAvatar(Request $request): JsonResponse
+	{
+		$request->validate([
+			'email' => 'required|exists:users,email',
+			'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+		]);
 
-        $user = User::where('email', $request->email)->first();
+		$user = User::where('email', $request->email)->first();
 
-        if ($user->avatar) {
-            $oldPath = str_replace(
-                env('R2_PUBLIC_URL') . '/',
-                '',
-                $user->avatar
-            );
+		if ($user->avatar) {
+			$oldPath = str_replace(
+				env('R2_PUBLIC_URL') . '/',
+				'',
+				$user->avatar
+			);
 
-            Storage::disk('r2')->delete($oldPath);
-        }
+			Storage::disk('r2')->delete($oldPath);
+		}
 
-        $file = $request->file('avatar');
+		$file = $request->file('avatar');
 
-        $filename = uniqid('avatar_' . $user->full_name . '-') . '.' . $file->getClientOriginalExtension();
+		$filename = uniqid('avatar_' . $user->full_name . '-') . '.' . $file->getClientOriginalExtension();
 
-        $path = Storage::disk('r2')->putFileAs(
-            '/images/avatar',
-            $file,
-            $filename,
-            'public'
-        );
+		$path = Storage::disk('r2')->putFileAs(
+			'/images/avatar',
+			$file,
+			$filename,
+			'public'
+		);
 
-        if (!$path) {
-            return sendFailResponse("Gagal Upload file ke storage", code: 500);
-        }
+		if (!$path) {
+			return sendFailResponse("Gagal Upload file ke storage", code: 500);
+		}
 
-        $url = env('R2_PUBLIC_URL') . '/' . $path;
+		$url = env('R2_PUBLIC_URL') . '/' . $path;
 
-        $user->avatar = $url;
-        $user->save();
+		$user->avatar = $url;
+		$user->save();
 
-        return $this->sendSuccessResponse('Avatar berhasil diupload', [
-            'avatar' => $url
-        ]);
-    }
-
+		return $this->sendSuccessResponse('Avatar berhasil diupload', [
+			'avatar' => $url
+		]);
+	}
 }
