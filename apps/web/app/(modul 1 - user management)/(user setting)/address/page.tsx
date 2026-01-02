@@ -1,59 +1,90 @@
 "use client";
 
+import { AddressSchema } from "@/types/user";
 import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardTitle,
 } from "@workspace/ui/components/card";
-import { AddAddress } from "../../_components/add-address";
-import { useState } from "react";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { useCallback, useEffect, useState } from "react";
+import { AddAddress } from "../../_components/add-address-stepper";
+import { EditAddressDialog } from "../../_components/edit-address-dialog";
+import { userService } from "../../_services/user.service";
 import { useUserStore } from "../../_stores/useUserStore";
 
 export default function ProfilePage() {
-  const { user } = useUserStore();
-  const [openAddAddressDialog, setOpenAddAddressDialog] =
-    useState<boolean>(false);
+  const { customer, setCustomer } = useUserStore();
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const refreshProfile = useCallback(async () => {
+    setLoading(true);
+    const res = await userService.getUserProfile();
+    if (res.ok && res.data) {
+      setCustomer(res.data.user.customer);
+    }
+    setLoading(false);
+  }, [setCustomer]);
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   return (
     <>
       <h1 className="text-2xl font-bold">Alamat Saya</h1>
+      <AddAddress onSuccess={refreshProfile} />
 
-      <div className="flex w-full items-center justify-between">
-        <Badge
-          className="text-primary border-primary rounded-md p-2.5"
-          variant={"outline"}
-        >
-          Semua Alamat
-        </Badge>
-        <Button onClick={() => setOpenAddAddressDialog(true)}>
-          Tambah Alamat
-        </Button>
-        <AddAddress
-          open={openAddAddressDialog}
-          onOpenChange={setOpenAddAddressDialog}
-        />
-      </div>
+      {loading ? (
+        <Card>
+          <CardContent className="space-y-4">
+            <CardTitle className="flex w-1/3 gap-2">
+              <Skeleton className="h-4 w-2/4" />
+              <Skeleton className="h-4 w-1/4" />
+            </CardTitle>
+            <div className="flex flex-col gap-1">
+              <Skeleton className="h-4 w-1/5" />
+              <Skeleton className="h-4 w-1/4" />
+            </div>
 
-      <Card className="border-primary bg-primary/10">
-        <CardContent>
-          <CardTitle>
-            Rumah
-            <Badge variant={"outline"} className="ml-2 p-0">
-              Utama
-            </Badge>
-          </CardTitle>
-          <h2 className="text-md font-bold">{user?.full_name}</h2>
-          <span>{user?.phone_number}</span>
-          <CardDescription>
-            Jl.Jambu NO 100 RT 05 RW 07, Antapani, Antapani kidul 40291, Kota
-            Bandung, Jawa Barat
-          </CardDescription>
-          <Button variant={"link"}>Ubah Alamat</Button>
-        </CardContent>
-      </Card>
+            <CardDescription className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/3" />
+            </CardDescription>
+            <Skeleton className="h-4 w-20" />
+          </CardContent>
+        </Card>
+      ) : (
+        customer?.addresses.map((address: AddressSchema) => (
+          <Card
+            key={`customer-${customer.id}-${address.id}`}
+            className="border-primary bg-primary/10"
+          >
+            <CardContent>
+              <CardTitle>
+                {address.label}
+                {address.is_default ? (
+                  <Badge variant={"outline"} className="ml-2 p-1">
+                    Utama
+                  </Badge>
+                ) : null}
+              </CardTitle>
+              <h2 className="text-md font-bold">{address.recipient_name}</h2>
+              <span>{address.phone_number}</span>
+
+              <CardDescription>{address.detail_address}</CardDescription>
+              <EditAddressDialog
+                id={address.id}
+                pinpoint={address.detail_address}
+                onSuccess={refreshProfile}
+              />
+            </CardContent>
+          </Card>
+        ))
+      )}
     </>
   );
 }

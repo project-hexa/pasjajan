@@ -116,6 +116,17 @@ class VoucherController extends Controller
             return ApiResponse::error('You already have this voucher', 400);
         }
 
+        // Check if voucher is being used in a pending order
+        $inPendingOrder = \App\Models\Order::where('customer_id', $customer->id)
+            ->where('voucher_id', $voucher->id)
+            ->whereIn('payment_status', ['pending', 'unpaid'])
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($inPendingOrder) {
+            return ApiResponse::error('Voucher ini sedang digunakan di order yang belum dibayar', 400);
+        }
+
         // Process redemption in transaction
         DB::beginTransaction();
         try {

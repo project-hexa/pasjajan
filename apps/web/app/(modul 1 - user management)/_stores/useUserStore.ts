@@ -1,20 +1,27 @@
-import { User } from "@/types/user";
+import { Customer, User } from "@/types/user";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-interface UserStore {
+type State = {
   user: User | null;
+  customer: Customer | null;
   isLoggedIn: boolean;
-  setUser: (user: User) => void;
-  setIsLoggedIn: (state: boolean) => void;
-}
+};
 
-export const useUserStore = create<UserStore>()(
+type Action = {
+  setUser: (user: User) => void;
+  setCustomer: (customer: Customer) => void;
+  setIsLoggedIn: (state: boolean) => void;
+};
+
+export const useUserStore = create<State & Action>()(
   persist(
     (set) => ({
       user: null,
+      customer: null,
       isLoggedIn: false,
       setUser: (user) => set({ user }),
+      setCustomer: (customer) => set({ customer }),
       setIsLoggedIn: (state) => set({ isLoggedIn: state }),
     }),
     {

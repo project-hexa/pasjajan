@@ -1,16 +1,21 @@
-import { editProfileSchema } from "@/lib/schema/user.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
-import { User } from "@/types/user";
+import {
+  AddAddressSchema,
+  AddressSchema,
+  Customer,
+  EditAddressSchema,
+  User,
+} from "@/types/user";
 import z from "zod";
+import { editProfileSchema } from "../_schema/user.schema";
 
 export const userService = {
-  getUserProfile: async (email: string) =>
-    await handleApiResponse(
+  getUserProfile: async (opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ user: User & { customer: Customer } }>(
       async () =>
         await handleApiRequest.get("/user/profile", {
-          params: { email },
-          withAuth: true,
+          ssr: opts?.ssr,
         }),
     ),
   editUserProfile: async (
@@ -18,8 +23,9 @@ export const userService = {
     payload: Omit<z.infer<typeof editProfileSchema>, "birth_date"> & {
       birth_date?: string;
     },
+    opts?: { ssr: boolean },
   ) =>
-    await handleApiResponse(
+    await handleApiResponse<{ user: User }>(
       async () =>
         await handleApiRequest.patch(
           "/user/change-profile",
@@ -29,20 +35,66 @@ export const userService = {
           },
           {
             defaultErrorMessage: "Profile Gagal diubah!",
-            withAuth: true,
+            ssr: opts?.ssr ?? false,
           },
         ),
     ),
-  getUserByID: async (id: User["id"]) =>
-    await handleApiRequest.get("/admin/users", {
-      params: { id },
-      withAuth: true,
-    }),
-  getUserByRole: async (role: User["role"]) =>
+  getUserByID: async (id: User["id"], opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ user_data: User }>(
+      async () =>
+        await handleApiRequest.get("/admin/users", {
+          params: { id },
+          ssr: opts?.ssr ?? true,
+        }),
+    ),
+  getUserByRole: async (role: User["role"], opts?: { ssr: boolean }) =>
     await handleApiResponse<{ users: User }>(
       async () =>
         await handleApiRequest.get<{ users: User }>(`/admin/users/${role}`, {
-          withAuth: true,
+          ssr: opts?.ssr ?? true,
         }),
+    ),
+  addAddresses: async (payload: AddAddressSchema, opts?: { ssr: boolean }) =>
+    await handleApiResponse<AddressSchema>(
+      async () =>
+        await handleApiRequest.post<AddressSchema>(
+          "/user/add-address",
+          payload,
+          {
+            ssr: opts?.ssr ?? false,
+          },
+        ),
+    ),
+  editAddresses: async (
+    id: number,
+    payload: EditAddressSchema,
+    opts?: { ssr: boolean },
+  ) =>
+    await handleApiResponse<AddressSchema>(
+      async () =>
+        await handleApiRequest.patch<AddressSchema>(
+          `/user/change-address/${id}`,
+          payload,
+          {
+            ssr: opts?.ssr ?? false,
+          },
+        ),
+    ),
+  changeAvatar: async (email: string, avatar: File, opts?: { ssr: boolean }) =>
+    await handleApiResponse<{ avatar: string }>(
+      async () =>
+        await handleApiRequest.post<{ avatar: string }>(
+          "/user/upload-avatar",
+          {
+            email,
+            avatar,
+          },
+          {
+            ssr: opts?.ssr ?? false,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        ),
     ),
 };

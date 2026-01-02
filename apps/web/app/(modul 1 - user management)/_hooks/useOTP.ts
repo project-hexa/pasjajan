@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { verifyOTPSchema } from "@/lib/schema/auth.schema";
+import { verifyOTPSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "@/hooks/useNavigate";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useOTP = () => {
   const navigate = useNavigate();
@@ -84,18 +85,23 @@ export const useOTP = () => {
       });
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "OTP Berhasil diverifikasi!", {
           toasterId: "global",
         });
 
         Cookies.remove("OTP_attempt_count");
         Cookies.remove("OTP_expires_at");
+        Cookies.remove("verificationStep");
+
+        Cookies.set("token", result.data?.token ?? "", baseCookiesOptions);
+        Cookies.set("role", result.data?.user_data.role, baseCookiesOptions);
+
         setUser(result.data?.user_data);
         setIsLoggedIn(true);
 
         navigate.push("/");
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "OTP Gagal diverifikasi!", {
           toasterId: "global",
         });
       }
@@ -112,7 +118,9 @@ export const useOTP = () => {
     });
 
     if (result.ok) {
-      toast.success(result.message, { toasterId: "global" });
+      toast.success(result.message || "OTP Berhasil dikirim Ulang!", {
+        toasterId: "global",
+      });
       otpForm.resetField("otp");
 
       const newAttemptCount = attemptCount + 1;
@@ -135,9 +143,15 @@ export const useOTP = () => {
         result.message?.includes("admin")
       ) {
         setIsMaxAttempt(true);
-        toast.error(result.message, { toasterId: "global" });
+        toast.error(
+          result.message || "Anda telah mencapai batas maksimal percobaan OTP",
+          {
+            description: "Silakan hubungi admin untuk bantuan lebih lanjut.",
+            toasterId: "global",
+          },
+        );
       } else {
-        toast.error(result.message, { toasterId: "global" });
+        toast.error(result.message || "OTP Gagal dikirim Ulang!", { toasterId: "global" });
       }
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { sendOTPSchema } from "@/lib/schema/auth.schema";
+import { sendOTPSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent } from "@workspace/ui/components/card";
@@ -42,12 +42,13 @@ export default function VerificationCodePage() {
     });
 
     if (result.ok) {
-      toast.success(result.message, {
+      toast.success(result.message || "OTP berhasil dikirim!", {
         toasterId: "global",
       });
+      Cookies.set("verificationStep", "otp-sent");
       navigate.push("/one-time-password");
     } else {
-      toast.error(result.message, {
+      toast.error(result.message || "OTP gagal dikirim!", {
         toasterId: "global",
       });
     }

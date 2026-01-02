@@ -2,25 +2,12 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Icon } from "@workspace/ui/components/icon";
 import { useSearchParams } from "next/navigation";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Cookies from "js-cookie";
+import { Navbar } from "@/components/ui/navigation-bar";
+import { toast } from "@workspace/ui/components/sonner";
+import { Footer } from "@/components/ui/footer";
 import { useNavigate } from "@/hooks/useNavigate";
-import { useUserStore } from "@/app/(modul 1 - user management)/_stores/useUserStore";
-
-interface OrderData {
-  order_code: string;
-  customer_name: string;
-  grand_total: string;
-  payment_method?: {
-    name: string;
-    category: string;
-  };
-  payment_status: string;
-  created_at: string;
-  va_number?: string;
-  payment_code?: string;
-}
+import { orderService } from "@/app/(modul 3 - payment)/_services/order.service";
+import { Order } from "@/types/order.types";
 
 const currency = (n: number | string) => {
   const num = typeof n === "string" ? parseFloat(n) : n;
@@ -31,7 +18,6 @@ const currency = (n: number | string) => {
   }).format(num);
 };
 
-// Detail Row Component
 const DetailRow: React.FC<{
   label: string;
   value: string;
@@ -39,7 +25,6 @@ const DetailRow: React.FC<{
   isStatus?: boolean;
 }> = ({ label, value, isCopyable, isStatus }) => {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(value);
     setCopied(true);
@@ -76,66 +61,46 @@ const DetailRow: React.FC<{
 
 function SuccessPageContent() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  navigateRef.current = navigate;
+
   const searchParams = useSearchParams();
-  // Sanitize order code - hapus suffix :1 atau :digit jika ada
   const rawOrderCode = searchParams.get("order");
   const orderCode = rawOrderCode ? rawOrderCode.replace(/:\d+$/, "") : null;
 
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [orderData, setOrderData] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
-
-  // Get logged-in user from auth store
-  const { user } = useUserStore();
 
   useEffect(() => {
     const validateAndFetchOrder = async () => {
       if (!orderCode) {
-        navigate.push("/");
+        navigateRef.current.push("/");
         return;
       }
 
       try {
-        // Get auth token
-        const token = Cookies.get("token");
-
-        const res = await fetch(
-          `http://localhost:8000/api/orders/${orderCode}`,
-          {
-            headers: {
-              Accept: "application/json",
-              ...(token && { Authorization: `Bearer ${token}` }),
-            },
-          },
-        );
-        const result = await res.json();
-
-        if (!result.success || !result.data.order) {
-          alert("Order tidak ditemukan!");
-          navigate.push("/");
+        const result = await orderService.getOrder(orderCode);
+        if (!result.ok || !result.data?.order) {
+          toast.error("Order tidak ditemukan!", { toasterId: "global" });
+          navigateRef.current.push("/");
           return;
         }
 
         const order = result.data.order;
         const paymentStatus = order.payment_status;
 
-        // Validate: only show success page if status is actually paid
         if (paymentStatus === "pending") {
-          // Check if expired
           const expiredAt = order.expired_at
             ? new Date(order.expired_at).getTime()
             : null;
-          const now = Date.now();
-
-          if (expiredAt && now > expiredAt) {
-            // Expired, redirect to failed
+          if (expiredAt && Date.now() > expiredAt) {
             setIsRedirecting(true);
-            navigate.replace(`/payment/failed?order=${orderCode}`);
+            navigateRef.current.replace(`/payment/failed?order=${orderCode}`);
             return;
           } else {
-            // Still pending, redirect to waiting
             setIsRedirecting(true);
-            navigate.replace(`/payment/waiting?order=${orderCode}`);
+            navigateRef.current.replace(`/payment/waiting?order=${orderCode}`);
             return;
           }
         }
@@ -145,66 +110,42 @@ function SuccessPageContent() {
           paymentStatus === "failed" ||
           paymentStatus === "cancelled"
         ) {
-          // Redirect to failed page
           setIsRedirecting(true);
-          navigate.replace(`/payment/failed?order=${orderCode}`);
+          navigateRef.current.replace(`/payment/failed?order=${orderCode}`);
           return;
         }
 
-        // Status is paid/settlement/capture - show success page
         const paymentDataStr = localStorage.getItem("payment_data");
         const paymentData = paymentDataStr ? JSON.parse(paymentDataStr) : null;
-
-        const mergedData = {
+        setOrderData({
           ...order,
-          order_code: order.order_code || orderCode,
           payment_method: order.payment_method || paymentData?.payment_method,
-          va_number: order.va_number || paymentData?.va_number,
-          payment_code: order.payment_code || paymentData?.payment_code,
-        };
-        setOrderData(mergedData);
+        });
       } catch (error) {
         console.error("Error fetching order:", error);
-        alert("Gagal memuat data order!");
-        navigate.push("/");
+        toast.error("Gagal memuat data order!", { toasterId: "global" });
+        navigateRef.current.push("/");
       } finally {
         setLoading(false);
       }
     };
 
     validateAndFetchOrder();
-  }, [orderCode, navigate]);
+  }, [orderCode]); // Removed navigate - using ref instead
 
-  // Show loading while redirecting or loading
-  if (loading || isRedirecting) {
+  if (loading || isRedirecting)
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Mengalihkan...</p>
       </div>
     );
-  }
-
-  if (!orderData) {
-    return null;
-  }
+  if (!orderData) return null;
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <Header
-        logoSrc="/img/pasjajan2.png"
-        logoAlt="PasJajan Logo"
-        userName={user?.full_name}
-        userInitials={user?.full_name
-          ?.split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .slice(0, 2)}
-        userAvatar={user?.avatar}
-      />
-      <main className="flex flex-grow items-center justify-center bg-emerald-50/50 px-4 py-10">
+      <Navbar />
+      <main className="flex grow items-center justify-center bg-emerald-50/50 px-4 py-10">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-          {/* Icon */}
           <div className="mb-6 flex justify-center">
             <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-emerald-600 bg-emerald-600">
               <Icon
@@ -215,15 +156,10 @@ function SuccessPageContent() {
               />
             </div>
           </div>
-
-          {/* Title */}
           <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">
             Pembayaran Berhasil!
           </h1>
-
-          {/* Detail Card */}
           <div className="mb-6 rounded-xl bg-emerald-50 p-5">
-            {/* Amount Header with bottom border */}
             <div className="mb-4 flex items-center justify-between border-b border-emerald-200 pb-3">
               <span className="font-semibold text-gray-700">
                 Jumlah Pembayaran
@@ -232,37 +168,19 @@ function SuccessPageContent() {
                 {currency(orderData.grand_total).replace("Rp", "Rp.")}
               </span>
             </div>
-
-            {/* Details */}
             <div className="space-y-1">
-              {orderData.va_number && (
-                <DetailRow
-                  label="No. VA"
-                  value={orderData.va_number}
-                  isCopyable
-                />
-              )}
-              {orderData.payment_code && (
-                <DetailRow
-                  label="Kode Pembayaran"
-                  value={orderData.payment_code}
-                  isCopyable
-                />
-              )}
               {orderData.payment_method && (
                 <DetailRow
                   label="Metode Pembayaran"
                   value={orderData.payment_method.name}
                 />
               )}
-              <DetailRow label="ID Pesanan" value={orderData.order_code} />
+              <DetailRow label="ID Pesanan" value={orderData.code} />
               <DetailRow label="Status" value="Lunas" isStatus />
             </div>
           </div>
-
-          {/* Info Box */}
           <div className="mb-6 flex items-start gap-3 rounded-xl bg-blue-50 p-4">
-            <div className="flex-shrink-0 rounded-full bg-blue-100 p-2">
+            <div className="shrink-0 rounded-full bg-blue-100 p-2">
               <Icon
                 icon="lucide:package"
                 width={20}
@@ -280,8 +198,6 @@ function SuccessPageContent() {
               </p>
             </div>
           </div>
-
-          {/* Action Buttons */}
           <div className="flex gap-3">
             <button
               onClick={() => navigate.push("/cart")}
@@ -291,7 +207,9 @@ function SuccessPageContent() {
               Belanja Lagi
             </button>
             <button
-              onClick={() => navigate.push("/orders")}
+              onClick={() =>
+                navigate.push(`/payment/detail?order_code=${orderCode}`)
+              }
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-emerald-700 px-4 py-3 font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
             >
               <Icon icon="lucide:package" width={18} height={18} />

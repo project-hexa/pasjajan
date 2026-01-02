@@ -1,55 +1,65 @@
 "use client";
 
-import { Badge } from "@workspace/ui/components/badge";
-import { Button } from "@workspace/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card";
-import { Item, ItemContent, ItemMedia } from "@workspace/ui/components/item";
-import Image from "next/image";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { orderService } from "@/lib/services/orderService";
+import { OrderCard } from "@/components/orders/OrderCard";
+import { OrderEmptyState } from "@/components/orders/OrderEmptyState";
+import { OrderListSkeleton } from "@/components/orders/OrderLoadingSkeleton";
+import type { Order } from "@/types/order.types";
+
+function AllOrderContent() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  
+  const searchQuery = searchParams.get("search") || undefined;
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await orderService.getOrders({
+        search: searchQuery,
+        per_page: 50,
+      });
+      setOrders(response.orders);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const handleBuyAgain = async (order: Order) => {
+    // TODO: Implement buy again functionality
+    console.log("Buy again:", order);
+  };
+
+  if (loading) {
+    return <OrderListSkeleton />;
+  }
+
+  if (orders.length === 0) {
+    return <OrderEmptyState message="Belum ada pesanan" />;
+  }
+
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <OrderCard key={order.id} order={order} onBuyAgain={handleBuyAgain} />
+      ))}
+    </div>
+  );
+}
 
 export default function AllOrderPage() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="sr-only">All Order</CardTitle>
-        <div className="flex items-center justify-between">
-          <div className="flex gap-4">
-            <span className="text-sm">25 November 2025</span>
-            <Badge variant={"secondary"} className="rounded-md">
-              Selesai
-            </Badge>
-          </div>
-          <span className="text-sm">INV/2025/PPL/123456789</span>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <Item>
-          <ItemMedia>
-            <Image
-              src="/img/catalogue/Screenshot 2025-10-25 190505.png"
-              alt="produk"
-              width={32}
-              height={32}
-            />
-          </ItemMedia>
-          <ItemContent>
-            <span>Teh Kotak</span>
-            <span>Total: 2 Pesanan</span>
-          </ItemContent>
-          <span>Total Belanja Rp.30.000</span>
-        </Item>
-      </CardContent>
-
-      <CardFooter className="justify-between">
-        <Button variant={"link"}>Lihat Detail Pesanan</Button>
-        <Button>Beli Lagi</Button>
-      </CardFooter>
-    </Card>
+    <Suspense fallback={<OrderListSkeleton />}>
+      <AllOrderContent />
+    </Suspense>
   );
 }

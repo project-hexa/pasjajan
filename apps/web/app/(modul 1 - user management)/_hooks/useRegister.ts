@@ -1,7 +1,7 @@
 "use client";
 
 import { useNavigate } from "@/hooks/useNavigate";
-import { registerSchema } from "@/lib/schema/auth.schema";
+import { registerSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Cookies from "js-cookie";
 import { useCallback, useEffect } from "react";
@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
-import { cookiesOptions } from "@/lib/utils/cookies-option";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useRegister = () => {
   const navigate = useNavigate();
@@ -48,16 +48,16 @@ export const useRegister = () => {
       const result = await authService.register(data);
 
       if (result.ok) {
-        toast.success(result.message, {
+        toast.success(result.message || "Berhasil Daftar Akun!", {
           toasterId: "global",
         });
 
-        Cookies.set("verificationStep", "email-sent", cookiesOptions);
-        Cookies.set("pendingEmail", data.email, cookiesOptions);
+        Cookies.set("verificationStep", "email-sent", baseCookiesOptions);
+        Cookies.set("pendingEmail", data.email, baseCookiesOptions);
 
         navigate.push("/send-otp");
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal Daftar Akun!", {
           description: result.description,
           toasterId: "global",
         });

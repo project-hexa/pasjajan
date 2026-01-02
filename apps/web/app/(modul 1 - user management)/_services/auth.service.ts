@@ -4,7 +4,7 @@ import {
   resetPasswordSchema,
   sendOTPSchema,
   verifyOTPSchema,
-} from "@/lib/schema/auth.schema";
+} from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { handleApiRequest } from "@/lib/utils/handle-api-request";
 import { handleApiResponse } from "@/lib/utils/handle-api-response";
 import z from "zod";
@@ -32,7 +32,7 @@ export const authService = {
           defaultErrorMessage: "Gagal Daftar!",
         }),
     ),
-  sendOTP: async (payload: z.infer<typeof sendOTPSchema>) =>
+  sendOTP: async (payload: z.infer<typeof sendOTPSchema> & {context: "register" | "forgot-password"}) =>
     await handleApiResponse(
       async () =>
         await handleApiRequest.post<SendOTPResponse>(

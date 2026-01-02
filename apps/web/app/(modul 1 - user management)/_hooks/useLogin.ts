@@ -4,14 +4,14 @@ import { useNavigate } from "@/hooks/useNavigate";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "../_stores/useUserStore";
 import { useForm } from "react-hook-form";
-import { loginSchema } from "@/lib/schema/auth.schema";
+import { loginSchema } from "@/app/(modul 1 - user management)/_schema/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { authService } from "../_services/auth.service";
 import { toast } from "@workspace/ui/components/sonner";
 import z from "zod";
-import { cookiesOptions } from "@/lib/utils/cookies-option";
 import Cookies from "js-cookie";
+import { baseCookiesOptions } from "@/lib/utils/cookies-option";
 
 export const useLogin = () => {
   const navigate = useNavigate();
@@ -51,9 +51,9 @@ export const useLogin = () => {
           toasterId: "global",
         });
 
-        if (data.rememberMe) {
-          Object.assign(cookiesOptions, { expires: 7 });
-        }
+        const cookiesOptions: Cookies.CookieAttributes = data.rememberMe
+          ? { ...baseCookiesOptions, expires: 7 }
+          : { ...baseCookiesOptions };
 
         Cookies.set("token", result.data?.token ?? "", cookiesOptions);
         Cookies.set("role", result.data?.user_data.role, cookiesOptions);
@@ -67,7 +67,7 @@ export const useLogin = () => {
           navigate.push("/");
         }
       } else {
-        toast.error(result.message, {
+        toast.error(result.message || "Gagal Masuk!", {
           description: result.description,
           toasterId: "global",
         });

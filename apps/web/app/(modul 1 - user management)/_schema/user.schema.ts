@@ -3,11 +3,6 @@ import z from "zod";
 
 export const token = z.string({ message: "Credentials Dibutuhkan" });
 
-export const addressSchema = z
-  .string()
-  .min(10, "Alamat minimal harus 10 karakter")
-  .max(200, "Alamat maksimal 200 karakter");
-
 export const emailSchema = z.string().email("Email tidak Valid");
 
 export const phoneSchema = z
@@ -66,6 +61,11 @@ export const passwordValidation = (
   }
 };
 
+export const timestampFields = {
+  created_at: z.string(),
+  updated_at: z.string(),
+};
+
 export const userSchema = z.object({
   id: z.number(),
   full_name: z
@@ -83,23 +83,59 @@ export const userSchema = z.object({
   avatar: z.string(),
   role: z.enum(["Admin", "Staff", "Customer"]),
   status_account: z.enum(["Active", "Inactive", "Pending"]),
+  ...timestampFields,
+  deleted_at: z.string(),
 });
 
-export const addAddressSchema = userSchema
-  .pick({
-    phone_number: true,
+export const addressSchema = z.object({
+  id: z.number(),
+  customer_id: z.number(),
+  label: z
+    .string()
+    .min(5, "Label Alamart minimal harus 5 karakter")
+    .max(20, "Label Alamart maksimal 20 karakter"),
+  detail_address: z
+    .string()
+    .min(10, "Alamat minimal harus 10 karakter")
+    .max(200, "Alamat maksimal 200 karakter"),
+  notes_address: z
+    .string()
+    .min(10, "Note Alamat minimal harus 10 karakter")
+    .max(50, "Alamat maksimal 50 karakter"),
+  recipient_name: userSchema.shape.full_name,
+  phone_number: userSchema.shape.phone_number,
+  latitude: z.string(),
+  longitude: z.string(),
+  is_default: z.coerce.boolean(),
+  ...timestampFields,
+});
+
+export const addAddressSchema = addressSchema
+  .omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+    customer_id: true,
   })
   .extend({
-    pinpoint: z
-      .string()
-      .min(3, "Pinpoint minimal harus 3 karakter")
-      .max(200, "Pinpoint maksimal 200 karakter"),
-    label_address: z
-      .string()
-      .min(3, "Label alamat minimal harus 3 karakter")
-      .max(50, "Label alamat maksimal 50 karakter"),
-    address: addressSchema,
-    reciper_name: userSchema.shape.full_name,
+    email: emailSchema,
+  });
+
+export const addAddressFormSchema = addAddressSchema
+  .omit({
+    email: true,
+    latitude: true,
+    longitude: true,
+  })
+  .extend({
+    pinpoint: z.string({ message: "Pinpoint harus diisi!" }),
+  });
+
+export const editAddressSchema = addAddressSchema.partial();
+export const editAddressFormSchema = editAddressSchema
+  .omit({ email: true })
+  .extend({
+    pinpoint: addAddressFormSchema.shape.pinpoint,
   });
 
 export const editProfileSchema = userSchema
@@ -111,7 +147,6 @@ export const editProfileSchema = userSchema
   .extend({
     gender: userSchema.shape.gender.nullable().optional(),
     birth_date: userSchema.shape.birth_date.nullable().optional(),
-    avatar: z.string().nullable().optional(),
   })
   .partial();
 
@@ -133,3 +168,11 @@ export const editUserSchema = userSchema
     token,
   })
   .superRefine((val, ctx) => passwordValidation(val, ctx));
+
+export const customerProfileSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  point: z.number(),
+  ...timestampFields,
+  addresses: z.array(addressSchema),
+});

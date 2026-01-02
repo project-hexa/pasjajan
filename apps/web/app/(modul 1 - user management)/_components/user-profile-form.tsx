@@ -36,6 +36,7 @@ import { Controller } from "react-hook-form";
 import { useEditProfile } from "../_hooks/useEditProfile";
 import { useUserStore } from "../_stores/useUserStore";
 import { CropAvatarModal } from "./crop-avatar-modal";
+import { Icon } from "@workspace/ui/components/icon";
 
 export const UserProfileForm = () => {
   const [rawImage, setRawImage] = useState<string | null>(null);
@@ -52,6 +53,8 @@ export const UserProfileForm = () => {
     handleBtnEdit,
     handleOnSubmit,
     setCroppedImageUrl,
+    changeAvatarForm,
+    handleUploadAvatar,
   } = useEditProfile();
 
   const handleDrop = (files: File[]) => {
@@ -64,12 +67,12 @@ export const UserProfileForm = () => {
   };
 
   return (
-    <form
-      className="space-y-4"
-      id="profile-form"
-      onSubmit={profileForm.handleSubmit(handleOnSubmit)}
-    >
-      <div className="flex justify-between">
+    <div className="flex justify-between">
+      <form
+        className="space-y-4"
+        id="profile-form"
+        onSubmit={profileForm.handleSubmit(handleOnSubmit)}
+      >
         <div className="flex flex-1 flex-col gap-4 py-10">
           <Controller
             name="full_name"
@@ -82,17 +85,17 @@ export const UserProfileForm = () => {
                 <FieldLabel htmlFor="fullname" className="w-20">
                   Nama Lengkap
                 </FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="fullname"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("full_name")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
@@ -122,17 +125,17 @@ export const UserProfileForm = () => {
                 className="grid grid-cols-[200px_1fr_100px]"
               >
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="email"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("email")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
@@ -162,17 +165,17 @@ export const UserProfileForm = () => {
                 className="grid grid-cols-[200px_1fr_100px]"
               >
                 <FieldLabel htmlFor="telpon">No Telepon</FieldLabel>
-                <FieldContent className="flex-row items-center gap-4">
+                <FieldContent className="gap-2">
                   <Input
                     id="telpon"
                     className="read-only:focus-visible:border-border read-only:text-muted-foreground flex-1 read-only:caret-transparent read-only:focus-visible:ring-0"
                     readOnly={!editingFields.has("phone_number")}
                     {...field}
                   />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </FieldContent>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
                 {!editingFields.has(field.name) ? (
                   <Button
                     type="button"
@@ -402,10 +405,28 @@ export const UserProfileForm = () => {
           />
         </div>
 
+        {editingFields.size > 0 && (
+          <Button type="submit" form="profile-form" className="mb-4">
+            {profileForm.formState.isSubmitting ? (
+              <Icon
+                icon={"lucide:loader-circle"}
+                width={24}
+                className="animate-spin"
+              />
+            ) : (
+              "Simpan"
+            )}
+          </Button>
+        )}
+      </form>
+      <form
+        id="change-avatar"
+        onSubmit={changeAvatarForm.handleSubmit(handleUploadAvatar)}
+      >
         <Controller
-          control={profileForm.control}
+          control={changeAvatarForm.control}
           name="avatar"
-          render={({ field }) => (
+          render={() => (
             <Field className="w-80">
               <FieldContent className="flex flex-col items-center gap-4 border-l px-4 py-10">
                 <Avatar className="size-40 object-cover">
@@ -423,18 +444,30 @@ export const UserProfileForm = () => {
                   setOpenCropper={setOpenCropper}
                   rawImage={rawImage}
                   setCroppedImageUrl={setCroppedImageUrl}
-                  formSetValue={profileForm}
-                  onCancel={() => handleBtnCancelEdit(field.name)}
+                  formSetValue={changeAvatarForm}
                 />
 
-                {editingFields.has(field.name) ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleBtnCancelEdit(field.name)}
-                  >
-                    Batal
-                  </Button>
+                {croppedImageUrl ? (
+                  <>
+                    <Button type="submit" form="change-avatar">
+                      {changeAvatarForm.formState.isSubmitting ? (
+                        <Icon
+                          icon={"lucide:loader-circle"}
+                          width={24}
+                          className="animate-spin"
+                        />
+                      ) : (
+                        "Simpan"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCroppedImageUrl("")}
+                    >
+                      Batal
+                    </Button>
+                  </>
                 ) : (
                   <Button
                     type="button"
@@ -445,7 +478,6 @@ export const UserProfileForm = () => {
                       maxSize={1024 * 1024 * 2}
                       minSize={1024}
                       onDrop={(e) => {
-                        handleBtnEdit(field.name);
                         handleDrop(e);
                       }}
                       onError={console.error}
@@ -464,13 +496,7 @@ export const UserProfileForm = () => {
             </Field>
           )}
         />
-      </div>
-
-      {editingFields.size > 0 && (
-        <Button type="submit" form="profile-form" className="mb-4">
-          Simpan
-        </Button>
-      )}
-    </form>
+      </form>
+    </div>
   );
 };

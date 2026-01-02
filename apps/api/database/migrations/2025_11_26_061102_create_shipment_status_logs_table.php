@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Shipment::class)->constrained()->cascadeOnDelete();
             $table->string('status_name');
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }

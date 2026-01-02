@@ -31,6 +31,17 @@ const nextConfig = {
         port: '8000',
         pathname: '/**',
       },
+      // Midtrans payment gateway QR codes
+      {
+        protocol: 'https',
+        hostname: 'api.sandbox.midtrans.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.midtrans.com',
+        pathname: '/**',
+      },
     ],
   },
 };
