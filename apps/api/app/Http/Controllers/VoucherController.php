@@ -10,9 +10,11 @@ use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class VoucherController extends Controller
 {
+    use LogsActivity;
     /**
      * GET /api/customer/points
      * Get customer's current points balance
@@ -270,6 +272,9 @@ class VoucherController extends Controller
 
         $voucher = Voucher::create($data);
 
+        // Log activity
+        $this->logActivity('CREATE', "Membuat voucher baru: {$voucher->name} ({$voucher->code})");
+
         return ApiResponse::created(
             new VoucherResource($voucher),
             'Voucher created successfully'
@@ -307,6 +312,9 @@ class VoucherController extends Controller
 
         $voucher->update($validator->validated());
 
+        // Log activity
+        $this->logActivity('UPDATE', "Memperbarui voucher: {$voucher->name} ({$voucher->code})");
+
         return ApiResponse::success(
             new VoucherResource($voucher),
             'Voucher updated successfully'
@@ -337,7 +345,13 @@ class VoucherController extends Controller
             );
         }
 
+        $voucherName = $voucher->name;
+        $voucherCode = $voucher->code;
+
         $voucher->delete();
+
+        // Log activity
+        $this->logActivity('DELETE', "Menghapus voucher: {$voucherName} ({$voucherCode})");
 
         return ApiResponse::success(null, 'Voucher deleted successfully');
     }

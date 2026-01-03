@@ -67,21 +67,28 @@ export default function BranchManagementPage() {
         console.log("API Response:", responseData);
 
         // Get branches from the nested data.branches
-        let branchesData: ApiBranch[] = (responseData.data?.branches as ApiBranch[]) || [];
-        
+        let branchesData: ApiBranch[] =
+          (responseData.data?.branches as ApiBranch[]) || [];
+
         // Sort branches by created_at (newest first) or by ID if created_at is not available
         branchesData = [...branchesData].sort((a, b) => {
           // Try to sort by created_at if available
           if (a.created_at && b.created_at) {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
           }
           // Fallback to ID if created_at is not available
           return parseInt(String(b.id || "0")) - parseInt(String(a.id || "0"));
         });
-        
+
         // Transform the API response to match our Branch interface
         const formattedBranches: Branch[] = branchesData.map((branch) => ({
-          id: (branch.id !== undefined && branch.id !== null) ? String(branch.id) : "",
+          id:
+            branch.id !== undefined && branch.id !== null
+              ? String(branch.id)
+              : "",
           name: branch.name || "Nama tidak tersedia",
           address: branch.address || "Alamat tidak tersedia",
           income: branch.penghasilan ?? "Rp 0",
@@ -96,7 +103,9 @@ export default function BranchManagementPage() {
         setTotalPages(Math.ceil(formattedBranches.length / itemsPerPage));
       } catch (err: unknown) {
         const axiosErr = err as AxiosError<{ message?: string }>;
-        const message = axiosErr?.response?.data?.message || (err instanceof Error ? err.message : "An error occurred");
+        const message =
+          axiosErr?.response?.data?.message ||
+          (err instanceof Error ? err.message : "An error occurred");
         setError(message);
         console.error("Error fetching branches:", err);
       } finally {
@@ -162,13 +171,27 @@ export default function BranchManagementPage() {
               {currentBranches.length > 0 ? (
                 currentBranches.map((branch) => (
                   <TableRow key={branch.id} className="h-16">
-                    <TableCell className="pl-8 font-medium text-left">{branch.name}</TableCell>
-                    <TableCell className="text-left">{branch.address}</TableCell>
-                    <TableCell className="text-center">{branch.income}</TableCell>
-                    <TableCell className="text-center">{branch.contact}</TableCell>
+                    <TableCell className="pl-8 text-left font-medium">
+                      {branch.name}
+                    </TableCell>
+                    <TableCell className="text-left">
+                      {branch.address}
+                    </TableCell>
                     <TableCell className="text-center">
-                      <span className={branch.status === 'active' ? 'text-green-600' : 'text-red-600'}>
-                        {branch.status === 'active' ? 'Aktif' : 'Nonaktif'}
+                      {branch.income}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {branch.contact}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={
+                          branch.status === "active"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }
+                      >
+                        {branch.status === "active" ? "Aktif" : "Nonaktif"}
                       </span>
                     </TableCell>
                     <TableCell className="pr-8">
@@ -191,7 +214,10 @@ export default function BranchManagementPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell
+                    colSpan={7}
+                    className="py-8 text-center text-gray-500"
+                  >
                     Tidak ada data cabang yang tersedia.
                   </TableCell>
                 </TableRow>
