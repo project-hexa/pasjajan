@@ -35,7 +35,7 @@ function VoucherItem({ voucher, isUsed }: { voucher: Voucher; isUsed: boolean })
   return (
     <div className="flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <Image src="/promo/Keranjang.png" alt="Voucher" width={50} height={50} />
+        <Image src={`${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`} alt="Voucher" width={50} height={50} />
         <div>
           <p className="text-sm font-semibold">{voucher.name}</p>
           <p className="text-xs text-gray-500">Diskon: Rp {Number(voucher.discount_value).toLocaleString("id-ID")}</p>
@@ -70,7 +70,7 @@ function RedeemItem({
   return (
     <div className="flex items-center justify-between rounded-xl border bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <Image src="/promo/Keranjang.png" alt="Reward" width={50} height={50} />
+        <Image src={`${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`} alt="Reward" width={50} height={50} />
         <div>
           <p className="text-sm font-semibold">{voucher.name}</p>
           <p className="text-xs text-gray-500">Diskon: Rp {Number(voucher.discount_value).toLocaleString("id-ID")}</p>

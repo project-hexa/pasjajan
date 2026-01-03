@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@turbo/gen": "^2.6.0",
+    "@vercel/analytics": "^1.6.1",
     "inquirer": "^12.10.0",
     "nextjs-toploader": "",
     "recharts": "^3.5.1"

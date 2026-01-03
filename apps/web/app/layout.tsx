@@ -5,6 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/react";
 
 const fontSans = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -24,8 +25,8 @@ export const metadata: Metadata = {
   description:
     "PasJajan hadir sebagai aplikasi digital commerce revolusioner, menjembatani kenyamanan toko kelontong modern favorit pelanggan dengan kecepatan dan kepraktisan teknologi digital.",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
+    icon: "/img/favicon/favicon.ico",
+    apple: "/img/favicon/apple-icon.png",
   },
   openGraph: {
     title: "PasJajan - SmartMart",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
     siteName: "PasJajan",
     images: [
       {
-        url: "/og-image.png",
+        url: "/img/og-image.png",
         width: 1200,
         height: 630,
         alt: "PasJajan - SmartMart",
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PasJajan - SmartMart",
     description: "Solusi Belanja Kelontong dalam Genggaman.",
-    images: ["/og-image.png"],
+    images: ["/img/og-image.png"],
   },
 };
 
@@ -83,6 +84,7 @@ export default function RootLayout({
           id="global"
           offset={100}
         />
+        <Analytics />
       </body>
     </html>
   );

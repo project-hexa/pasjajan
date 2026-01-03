@@ -143,7 +143,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
     addAddressForm,
     user,
     setQueryFromOutside,
-    shouldAutoLocate
+    shouldAutoLocate,
   ]);
 
   useEffect(() => {
@@ -230,7 +230,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
                   Dimana Lokasi tujuan pengirimanmu?
                 </h2>
 
-                <div className="flex w-full flex-col items-center gap-5 h-80 justify-between">
+                <div className="flex h-80 w-full flex-col items-center justify-between gap-5">
                   <div className="relative w-full">
                     <InputGroup>
                       <InputGroupAddon>
@@ -306,7 +306,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
                 <div className="relative size-80 overflow-hidden rounded-md border">
                   {initialMapLocation && (
                     <MapsPicker
-                      initialPosition={initialMapLocation}
+                      position={initialMapLocation}
                       onLocationChange={async (coords: LocationCoords) => {
                         const address = await reverseGeocode(
                           coords.lat,
@@ -330,7 +330,7 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
 
               <StepperContent
                 value={3}
-                className="flex flex-col items-center gap-4 overflow-y-auto max-h-80"
+                className="flex max-h-80 flex-col items-center gap-4 overflow-y-auto"
               >
                 <form
                   id="address-detail-form"
@@ -496,7 +496,11 @@ export const AddAddress = ({ onSuccess }: { onSuccess: () => void }) => {
                     )}
                   />
 
-                  <Button type="submit" form="address-detail-form" className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                  <Button
+                    type="submit"
+                    form="address-detail-form"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2"
+                  >
                     {addAddressForm.formState.isSubmitting ? (
                       <Icon
                         icon={"lucide:loader-circle"}

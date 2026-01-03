@@ -1,5 +1,16 @@
 "use client";
 
+import { editAddressFormSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
+import { MapsPicker } from "@/components/maps-picker";
+import { useLocationSearch } from "@/hooks/useLocationSearch";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import {
+  AddressSchema,
+  EditAddressFormSchema,
+  EditAddressSchema,
+} from "@/types/user";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@workspace/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@workspace/ui/components/dialog";
-import { Controller, useForm } from "react-hook-form";
 import {
   Field,
   FieldContent,
@@ -30,20 +40,11 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@workspace/ui/components/radio-group";
-import {
-  AddressSchema,
-  EditAddressFormSchema,
-  EditAddressSchema,
-} from "@/types/user";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { editAddressFormSchema } from "@/app/(modul 1 - user management)/_schema/user.schema";
-import { useUserStore } from "../_stores/useUserStore";
-import { useEffect, useState } from "react";
-import { Button } from "@workspace/ui/components/button";
 import { toast } from "@workspace/ui/components/sonner";
-import { MapsPicker } from "@/components/maps-picker";
-import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { useCallback, useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { userService } from "../_services/user.service";
+import { useUserStore } from "../_stores/useUserStore";
 
 interface LocationCoords {
   lat: number;
@@ -52,7 +53,6 @@ interface LocationCoords {
 
 export const EditAddressDialog = ({
   id,
-  pinpoint,
   onSuccess,
 }: {
   id: number;
@@ -64,6 +64,17 @@ export const EditAddressDialog = ({
     useState<LocationCoords | null>(null);
   const { customer, user } = useUserStore();
   const { reverseGeocode } = useReverseGeocode();
+
+  const {
+    query,
+    results,
+    isSearching,
+    startSession,
+    search,
+    selectPlace,
+    setQueryFromOutside,
+    resetSearch,
+  } = useLocationSearch();
 
   const editAddressForm = useForm<EditAddressFormSchema>({
     resolver: zodResolver(editAddressFormSchema),
@@ -81,40 +92,133 @@ export const EditAddressDialog = ({
     },
   });
 
+  const addressInDB = customer?.addresses.find(
+    (a: AddressSchema) => a.id === id,
+  );
+
+  const [initialState, setInitialState] = useState<{
+    map: LocationCoords | null;
+    form: EditAddressFormSchema;
+    query: string;
+  } | null>(null);
+
+  const resetAll = useCallback(() => {
+    if (initialState) {
+      setInitialMapLocation(initialState.map);
+      editAddressForm.reset(initialState.form);
+      setQueryFromOutside(initialState.query);
+      resetSearch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
-    if (!customer) return;
+    if (!openDialog || !addressInDB) return;
 
-    const address = customer.addresses.find((a: AddressSchema) => a.id === id);
+    const lat = Number(addressInDB.latitude);
+    const lng = Number(addressInDB.longitude);
 
-    if (address) {
-      const lat = Number(address.latitude);
-      const lng = Number(address.longitude);
-
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setInitialMapLocation({ lat, lng });
-      } else {
-        setInitialMapLocation(null);
-      }
-
+    const setAllInitial = (coords: LocationCoords | null, place: string) => {
+      setInitialMapLocation(coords);
       editAddressForm.reset({
-        detail_address: address.detail_address,
-        is_default: address.is_default,
-        label: address.label,
-        notes_address: address.notes_address,
-        phone_number: address.phone_number,
-        pinpoint: address.detail_address,
-        recipient_name: address.recipient_name,
-        latitude: address.latitude,
-        longitude: address.longitude,
+        detail_address: addressInDB.detail_address,
+        is_default: addressInDB.is_default,
+        label: addressInDB.label,
+        pinpoint: addressInDB.detail_address,
+        notes_address: addressInDB.notes_address,
+        phone_number: addressInDB.phone_number,
+        recipient_name: addressInDB.recipient_name,
+        latitude: coords ? String(coords.lat) : "",
+        longitude: coords ? String(coords.lng) : "",
+      });
+      setQueryFromOutside(place);
+      setInitialState({
+        map: coords,
+        form: {
+          detail_address: addressInDB.detail_address,
+          is_default: addressInDB.is_default,
+          label: addressInDB.label,
+          pinpoint: addressInDB.detail_address,
+          notes_address: addressInDB.notes_address,
+          phone_number: addressInDB.phone_number,
+          recipient_name: addressInDB.recipient_name,
+          latitude: coords ? String(coords.lat) : "",
+          longitude: coords ? String(coords.lng) : "",
+        },
+        query: place,
+      });
+    };
+
+    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+      reverseGeocode(lat, lng).then((address) => {
+        setAllInitial(
+          { lat, lng },
+          address?.place || addressInDB.detail_address,
+        );
       });
     } else {
-      setInitialMapLocation(null);
+      search(addressInDB.detail_address).then(async (searchResults) => {
+        if (Array.isArray(searchResults) && searchResults.length > 0) {
+          const coords = {
+            lat: searchResults[0].lat,
+            lng: searchResults[0].lng,
+          };
+          setAllInitial(coords, addressInDB.detail_address);
+        } else {
+          setAllInitial(null, addressInDB.detail_address);
+        }
+      });
     }
-  }, [customer, editAddressForm, id, pinpoint]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openDialog, addressInDB]);
 
-  const handleOnSubmit = async (
-    data: Omit<EditAddressFormSchema, "pinpoint">,
-  ) => {
+  const handleSelectSearchResult = async (result: {
+    name: string;
+    mapbox_id: string;
+  }) => {
+    const coords = await selectPlace(result);
+
+    if (!coords) return;
+
+    setInitialMapLocation(coords);
+
+    editAddressForm.setValue("pinpoint", result.name, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+
+    editAddressForm.setValue("latitude", String(coords.lat), {
+      shouldDirty: true,
+    });
+
+    editAddressForm.setValue("longitude", String(coords.lng), {
+      shouldDirty: true,
+    });
+  };
+
+  const handleMapChange = async (coords: LocationCoords) => {
+    setInitialMapLocation(coords);
+    editAddressForm.setValue("latitude", String(coords.lat), {
+      shouldDirty: true,
+    });
+    editAddressForm.setValue("longitude", String(coords.lng), {
+      shouldDirty: true,
+    });
+    const address = await reverseGeocode(coords.lat, coords.lng);
+    if (address) {
+      editAddressForm.setValue("pinpoint", address.place, {
+        shouldDirty: true,
+      });
+      setQueryFromOutside(address.place);
+    }
+  };
+
+  const handleClose = () => {
+    resetAll();
+    setOpenDialog(false);
+  };
+
+  const handleOnSubmit = async (data: EditAddressFormSchema) => {
     const dirtyFields = editAddressForm.formState.dirtyFields;
     const payload: EditAddressSchema = {};
 
@@ -128,6 +232,8 @@ export const EditAddressDialog = ({
     Object.keys(dirtyFields).forEach((key) => {
       if (key === "is_default" && data.is_default) {
         payload.is_default = data.is_default || false;
+      } else if (key === "pinpoint" && data.pinpoint) {
+        payload.detail_address = data.pinpoint;
       } else {
         payload[key as keyof Omit<EditAddressSchema, "is_default">] = data[
           key as keyof typeof data
@@ -161,7 +267,11 @@ export const EditAddressDialog = ({
           Ubah Alamat
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex max-h-3/4 flex-col">
+      <DialogContent
+        className="flex max-h-3/4 flex-col"
+        onInteractOutside={handleClose}
+        onCloseAutoFocus={handleClose}
+      >
         <DialogHeader>
           <DialogTitle>Ubah Alamat</DialogTitle>
           <DialogDescription className="sr-only">
@@ -183,42 +293,69 @@ export const EditAddressDialog = ({
                   <div className="relative size-80 overflow-hidden rounded-md border">
                     {initialMapLocation && (
                       <MapsPicker
-                        initialPosition={initialMapLocation}
-                        onLocationChange={async (coords: LocationCoords) => {
-                          const address = await reverseGeocode(
-                            coords.lat,
-                            coords.lng,
-                          );
-                          if (!address) return;
-
-                          editAddressForm.setValue("pinpoint", address.place, {
-                            shouldDirty: true,
-                          });
-                          editAddressForm.setValue(
-                            "latitude",
-                            String(coords.lat),
-                            { shouldDirty: true },
-                          );
-                          editAddressForm.setValue(
-                            "longitude",
-                            String(coords.lng),
-                            { shouldDirty: true },
-                          );
-                        }}
+                        position={initialMapLocation}
+                        onLocationChange={handleMapChange}
                       />
                     )}
                   </div>
-                  <InputGroup>
-                    <InputGroupAddon>
-                      <Icon icon="lucide:map-pin" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      readOnly
-                      className="read-only:opacity-70"
-                      aria-invalid={fieldState.invalid}
-                      {...field}
-                    />
-                  </InputGroup>
+
+                  <div className="relative w-full">
+                    <InputGroup>
+                      <InputGroupAddon>
+                        <Icon icon="lucide:map-pin" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        placeholder="Tulis Nama jalan"
+                        value={field.value}
+                        onFocus={startSession}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                          search(e.target.value);
+                        }}
+                      />
+                    </InputGroup>
+
+                    {isSearching &&
+                      results.length === 0 &&
+                      query.length > 2 && (
+                        <div className="bg-card text-muted-foreground absolute top-full left-0 z-50 mt-2 w-full rounded-md border p-4 text-center shadow-lg">
+                          <Icon
+                            icon="lucide:loader-circle"
+                            className="mx-auto mb-2 animate-spin"
+                            width={24}
+                          />
+                          <p>Mencari lokasi...</p>
+                        </div>
+                      )}
+
+                    {!isSearching && results.length > 0 && (
+                      <ul className="bg-card absolute top-full left-0 z-50 mt-2 max-h-60 w-full overflow-y-auto rounded-md border shadow-lg">
+                        {results.map((result, idx) => (
+                          <li
+                            key={idx}
+                            className="cursor-pointer border-b p-3 last:border-b-0 hover:bg-gray-100"
+                            onClick={() => handleSelectSearchResult(result)}
+                          >
+                            {result.name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {!isSearching &&
+                      query.length > 0 &&
+                      results.length === 0 &&
+                      !initialMapLocation && (
+                        <div className="bg-card text-muted-foreground absolute top-full left-0 z-50 mt-2 w-full rounded-md border p-4 text-center shadow-lg">
+                          <Icon
+                            icon="lucide:search-x"
+                            className="mx-auto mb-2"
+                            width={24}
+                          />
+                          <p>Lokasi tidak ditemukan</p>
+                        </div>
+                      )}
+                  </div>
                 </FieldContent>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -365,14 +502,7 @@ export const EditAddressDialog = ({
                 "Simpan"
               )}
             </Button>
-            <Button
-              type="button"
-              variant={"outline"}
-              onClick={() => {
-                editAddressForm.reset();
-                setOpenDialog(false);
-              }}
-            >
+            <Button type="button" variant={"outline"} onClick={handleClose}>
               Batal
             </Button>
           </DialogFooter>

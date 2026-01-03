@@ -8,22 +8,22 @@ const leftVoucherList = [
   {
     title: "Gratis Ongkir Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Free.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Free.png`,
   },
   {
     title: "Gratis Ongkir Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Free.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Free.png`,
   },
   {
     title: "Gratis Ongkir Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Free.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Free.png`,
   },
   {
     title: "Gratis Ongkir Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Free.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Free.png`,
   },
 ];
 
@@ -31,22 +31,22 @@ const rightVoucherList = [
   {
     title: "Diskon 10% Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Keranjang.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`,
   },
   {
     title: "Diskon 10% Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Keranjang.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`,
   },
   {
     title: "Diskon 10% Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Keranjang.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`,
   },
   {
     title: "Diskon 10% Min. 100RB",
     expiry: "30-12-2025",
-    image: "/promo/Keranjang.png",
+    image: `${process.env.NEXT_PUBLIC_CLOUDFLARE_IMAGE_URL}/promo/Keranjang.png`,
   },
 ];
 

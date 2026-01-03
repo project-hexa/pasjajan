@@ -63,7 +63,7 @@ export const CategoryDropdown = () => {
             icon="lucide:layout-grid"
             width="24"
             height="24"
-            className="relative top-[1px] mr-2 shrink-0 stroke-[2.5px]"
+            className="relative top-px mr-2 shrink-0 stroke-[2.5px]"
           />
           <span className="pt-1 font-medium">Kategori</span>
         </Button>
@@ -85,6 +85,7 @@ export const CategoryDropdown = () => {
               Tidak ada kategori tersedia
             </div>
           ) : (
+            categories.length > 0 &&
             categories.map((category) => (
               <DropdownMenuItem
                 key={category.id}

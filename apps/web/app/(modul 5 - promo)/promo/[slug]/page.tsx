@@ -69,7 +69,7 @@ export default function PromoDetailPage({
   // Skeleton for banner
   const BannerSkeleton = () => (
     <div className="mb-8 w-full overflow-hidden rounded-xl shadow-md">
-      <Skeleton className="aspect-[3/1] w-full" />
+      <Skeleton className="aspect-3/1 w-full" />
     </div>
   );
 
@@ -77,8 +77,8 @@ export default function PromoDetailPage({
   const ProductSkeleton = () => (
     <Card className="relative rounded-xl border p-4 shadow-sm">
       <Skeleton className="absolute top-3 right-3 h-6 w-12 rounded-md" />
-      <div className="flex h-[160px] w-full items-center justify-center">
-        <Skeleton className="h-[120px] w-[120px] rounded-lg" />
+      <div className="flex h-40 w-full items-center justify-center">
+        <Skeleton className="h-30 w-30 rounded-lg" />
       </div>
       <div className="mt-2 space-y-2">
         <Skeleton className="h-4 w-3/4" />
@@ -124,7 +124,7 @@ export default function PromoDetailPage({
       <Navbar />
       <main className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-8 w-full overflow-hidden rounded-xl shadow-lg">
-          <div className="relative aspect-[3/1] w-full">
+          <div className="relative aspect-3/1 w-full">
             {promo.banner_url ? (
               <Image
                 src={promo.banner_url}
@@ -133,7 +133,7 @@ export default function PromoDetailPage({
                 className="object-cover"
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-green-600 to-green-800">
+              <div className="flex flex-col items-center justify-center h-full bg-linear-to-br from-green-600 to-green-800">
                 <Icon icon="lucide:percent" className="h-20 w-20 text-white/80 mb-2" />
                 <h2 className="text-2xl font-bold text-white">{promo.name}</h2>
                 <p className="text-white/70 mt-1">Diskon {Math.round(Number(promo.discount_percentage))}%</p>
@@ -150,7 +150,7 @@ export default function PromoDetailPage({
                   {Math.round(Number(promo.discount_percentage))}%
                 </span>
 
-                <div className="flex h-[160px] w-full items-center justify-center overflow-hidden rounded-lg bg-gray-50">
+                <div className="flex h-40 w-full items-center justify-center overflow-hidden rounded-lg bg-gray-50">
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
