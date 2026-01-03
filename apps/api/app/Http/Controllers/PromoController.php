@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\ApiResponse;
+use App\Traits\LogsActivity;
 
 class PromoController extends Controller
 {
+    use LogsActivity;
     /**
      * GET /api/promos/active
      *
@@ -142,6 +144,9 @@ class PromoController extends Controller
 
         $promo->load(['stores', 'products']);
 
+        // Log activity
+        $this->logActivity('CREATE', "Membuat promo baru: {$promo->name}");
+
         return ApiResponse::created(
             new PromoResource($promo),
             'Promo created successfully'
@@ -212,6 +217,9 @@ class PromoController extends Controller
 
         $promo->load(['stores', 'products']);
 
+        // Log activity
+        $this->logActivity('UPDATE', "Memperbarui promo: {$promo->name}");
+
         return ApiResponse::success(
             new PromoResource($promo),
             'Promo updated successfully'
@@ -232,10 +240,15 @@ class PromoController extends Controller
             return ApiResponse::notFound('Promo not found');
         }
 
+        $promoName = $promo->name;
+
         $promo->stores()->detach();
         $promo->products()->detach();
 
         $promo->delete();
+
+        // Log activity
+        $this->logActivity('DELETE', "Menghapus promo: {$promoName}");
 
         return ApiResponse::success(null, 'Promo deleted successfully');
     }
