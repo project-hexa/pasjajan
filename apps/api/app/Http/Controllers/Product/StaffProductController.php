@@ -48,7 +48,7 @@ class StaffProductController extends Controller
             'store_id' => $storeId,
             'product_id' => $request->product_id,
             'quantity_change' => $request->initial_stock,
-            'description' => 'Initial stock by staff',
+            'notes' => 'Initial stock by staff',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -105,7 +105,7 @@ class StaffProductController extends Controller
     {
         $request->validate([
             'quantity_change' => 'required|integer',
-            'description' => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         $store = Store::find($storeId);
@@ -129,7 +129,7 @@ class StaffProductController extends Controller
             'store_id' => $storeId,
             'product_id' => $productId,
             'quantity_change' => $request->quantity_change,
-            'description' => $request->description ?? 'Stock adjustment by staff',
+            'notes' => $request->notes ?? 'Stock adjustment by staff',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
