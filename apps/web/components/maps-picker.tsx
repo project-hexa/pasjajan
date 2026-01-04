@@ -1,7 +1,7 @@
 "use client";
 
 import Map, { Marker, MapRef, MarkerDragEvent } from "react-map-gl/mapbox";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapLayerMouseEvent } from "mapbox-gl";
 
 interface LocationCoords {
@@ -10,23 +10,34 @@ interface LocationCoords {
 }
 
 export const MapsPicker = ({
-  initialPosition,
+  position,
   onLocationChange,
 }: {
-  initialPosition: LocationCoords;
+  position: LocationCoords;
   onLocationChange: (coords: LocationCoords) => void;
 }) => {
   const mapRef = useRef<MapRef | null>(null);
+  const [marker, setMarker] = useState<LocationCoords>(position);
 
-  const [marker, setMarker] = useState<LocationCoords>(initialPosition);
+  useEffect(() => {
+    setMarker(position);
+
+    if (mapRef.current) {
+      mapRef.current.flyTo({
+        center: [position.lng, position.lat],
+        zoom: 15,
+        essential: true,
+      });
+    }
+  }, [position]);
 
   return (
     <Map
       ref={mapRef}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
       initialViewState={{
-        latitude: initialPosition.lat,
-        longitude: initialPosition.lng,
+        latitude: position.lat,
+        longitude: position.lng,
         zoom: 15,
       }}
       mapStyle="mapbox://styles/mapbox/streets-v12"

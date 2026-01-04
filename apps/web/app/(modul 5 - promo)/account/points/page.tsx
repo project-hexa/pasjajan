@@ -7,55 +7,76 @@ import RewardItem from "./RewardItem";
 
 const pointBalance = 4000;
 
-const rewardList = [
+const freeOngkir = [
   {
+    id: 1,
     title: "Gratis Ongkir Minimal Belanja 100RB",
     points: 500,
-    image: "/promo/freeongkir.png",
+    image: `/img/promo/freeongkir.png`,
+    category: "free-ongkir",
   },
   {
+    id: 2,
     title: "Gratis Ongkir Minimal Belanja 100RB",
     points: 500,
-    image: "/promo/freeongkir.png",
+    image: `/img/promo/freeongkir.png`,
+    category: "free-ongkir",
   },
   {
+    id: 3,
     title: "Gratis Ongkir Minimal Belanja 100RB",
     points: 500,
-    image: "/promo/freeongkir.png",
-  },
-
-  {
-    title: "Diskon 10% Min. Belanja 100RB",
-    points: 1000,
-    image: "/promo/Keranjang2.png",
+    image: `/img/promo/freeongkir.png`,
+    category: "free-ongkir",
   },
   {
-    title: "Diskon 10% Min. Belanja 100RB",
-    points: 1000,
-    image: "/promo/Keranjang2.png",
-  },
-  {
-    title: "Diskon 10% Min. Belanja 100RB",
-    points: 1000,
-    image: "/promo/Keranjang2.png",
-  },
-
-  {
+    id: 7,
     title: "Gratis Ongkir Minimal Belanja 100RB",
     points: 500,
-    image: "/promo/freeongkir.png",
+    image: `/img/promo/freeongkir.png`,
+    category: "free-ongkir",
   },
   {
-    title: "Diskon 10% Min. Belanja 100RB",
-    points: 1000,
-    image: "/promo/Keranjang2.png",
-  },
-  {
+    id: 9,
     title: "Gratis Ongkir Minimal Belanja 100RB",
     points: 500,
-    image: "/promo/freeongkir.png",
+    image: `/img/promo/freeongkir.png`,
+    category: "free-ongkir",
   },
 ];
+
+const diskonVoucher = [
+  {
+    id: 4,
+    title: "Diskon 10% Min. Belanja 100RB",
+    points: 1000,
+    image: `/img/promo/Keranjang2.png`,
+    category: "diskon",
+  },
+  {
+    id: 5,
+    title: "Diskon 10% Min. Belanja 100RB",
+    points: 1000,
+    image: `/img/promo/Keranjang2.png`,
+    category: "diskon",
+  },
+  {
+    id: 6,
+    title: "Diskon 10% Min. Belanja 100RB",
+    points: 1000,
+    image: `/img/promo/Keranjang2.png`,
+    category: "diskon",
+  },
+  {
+    id: 8,
+    title: "Diskon 10% Min. Belanja 100RB",
+    points: 1000,
+    image: `/img/promo/Keranjang2.png`,
+    category: "diskon",
+  },
+];
+
+const rewardList = [...freeOngkir, ...diskonVoucher];
 
 export default function PointsPage() {
   const path = usePathname();
@@ -90,7 +111,12 @@ export default function PointsPage() {
       {/* ===== POINT BALANCE BOX ===== */}
       <div className="relative px-6">
         <div className="mt-4 inline-flex items-center gap-3 rounded-xl border border-gray-300 bg-white px-4 py-2 shadow">
-          <Image src="/promo/points.png" alt="Coin" width={35} height={35} />
+          <Image
+            src={`/img/promo/points.png`}
+            alt="Coin"
+            width={35}
+            height={35}
+          />
           <span className="text-xl font-bold text-green-900">
             {pointBalance.toLocaleString("id-ID")}
           </span>
@@ -102,14 +128,17 @@ export default function PointsPage() {
 
       {/* ===== GRID LIST ===== */}
       <div className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
-        {rewardList.map((item, index) => (
-          <RewardItem
-            key={index}
-            title={item.title}
-            points={item.points}
-            image={item.image}
-          />
-        ))}
+        {rewardList
+          .sort((a, b) => a.id - b.id)
+          .map((item) => (
+            <RewardItem
+              key={item.id}
+              title={item.title}
+              points={item.points}
+              image={item.image}
+              imageClassName={item.category === "diskon" ? "bg-secondary" : "bg-destructive"}
+            />
+          ))}
       </div>
     </div>
   );

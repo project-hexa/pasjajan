@@ -94,6 +94,7 @@ class ProductSeeder extends Seeder
         'stock' => $productData['stock'],
         'product_category_id' => $productData['category_id'],
         'description' => 'Deskripsi untuk ' . $productData['name'],
+        'image_url' => $productData['image_url'],
       ]);
     }
   }
