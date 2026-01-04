@@ -8,9 +8,11 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Traits\LogsActivity;
 
 class StaffProductController extends Controller
 {
+    use LogsActivity;
     /**
      * Tambah produk ke toko (dengan stok awal)
      */
@@ -51,6 +53,12 @@ class StaffProductController extends Controller
             'updated_at' => now(),
         ]);
 
+
+        $product = Product::find($request->product_id);
+
+        // Log activity
+        $this->logActivity('CREATE', "Menambahkan produk {$product->name} ke toko {$store->name} dengan stok awal {$request->initial_stock}");
+
         return response()->json([
             'success' => true,
             'message' => 'Product added to store with initial stock',
@@ -70,11 +78,19 @@ class StaffProductController extends Controller
             ], 404);
         }
 
+        // Get product info for logging before deletion
+        $product = Product::find($productId);
+
         // Hapus semua stock movement produk ini di toko ini
         DB::table('stock_movements')
             ->where('store_id', $storeId)
             ->where('product_id', $productId)
             ->delete();
+
+        // Log activity
+        if ($product) {
+            $this->logActivity('DELETE', "Menghapus produk {$product->name} dari toko {$store->name}");
+        }
 
         return response()->json([
             'success' => true,
@@ -118,6 +134,11 @@ class StaffProductController extends Controller
             'updated_at' => now(),
         ]);
 
+        // Log activity
+        $changeType = $request->quantity_change > 0 ? 'menambah' : 'mengurangi';
+        $absChange = abs($request->quantity_change);
+        $this->logActivity('UPDATE', "Menyesuaikan stok produk {$product->name} di toko {$store->name}: {$changeType} {$absChange} unit");
+
         return response()->json([
             'success' => true,
             'message' => 'Stock adjusted successfully',
@@ -133,7 +154,7 @@ class StaffProductController extends Controller
     {
         // Validasi store exists
         $store = Store::find($storeId);
-        
+
         if (!$store) {
             return response()->json([
                 'success' => false,
@@ -193,7 +214,7 @@ class StaffProductController extends Controller
                 ->where('product_id', $product->id)
                 ->where('store_id', $storeId)
                 ->sum('quantity_change');
-            
+
             $product->stock_in_store = $stockInStore;
             return $product;
         });
@@ -215,7 +236,7 @@ class StaffProductController extends Controller
     {
         // Validasi store exists
         $store = Store::find($storeId);
-        
+
         if (!$store) {
             return response()->json([
                 'success' => false,
