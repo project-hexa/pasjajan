@@ -126,7 +126,7 @@ Route::controller(UserController::class)->group(function () {
 		Route::put('/user/change-password', 'changePassword')->name('user.change.password');
 		Route::get('/user/total-point', 'getPoint')->name('user.point');
 		Route::get('/user/order-history', 'getOrderHistory')->name('user.orderhistory');
-        Route::post('/user/upload-avatar', 'uploadAvatar')->name('user.upload.avatar');
+		Route::post('/user/upload-avatar', 'uploadAvatar')->name('user.upload.avatar');
 		Route::get('/admin/users/{role}', 'index')->name('admin.users');
 		Route::get('/admin/user/{id}', 'show')->name('admin.user');
 		Route::post('/admin/add-user', 'store')->name('admin.create.user');
@@ -212,7 +212,10 @@ Route::middleware('auth:sanctum')->group(function () {
 		// Activity Logs
 		Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
-
+		// Staff Product Management
+		Route::post('/stores/{storeId}/products', [StaffProductController::class, 'addProductToStore']);
+		Route::delete('/stores/{storeId}/products/{productId}', [StaffProductController::class, 'removeProductFromStore']);
+		Route::post('/stores/{storeId}/products/{productId}/adjust-stock', [StaffProductController::class, 'adjustStock']);
 	});
 });
 
@@ -261,11 +264,6 @@ Route::get('/stores/{id}', [StoreController::class, 'show']);
 Route::get('/stores/{storeId}/products', [StoreController::class, 'products']);
 Route::get('/stores/{storeId}/products/{productId}', [StoreController::class, 'productDetail']);
 
-// Staff actions for product & stock management
-Route::post('/stores/{storeId}/products', [StaffProductController::class, 'addProductToStore']);
-Route::delete('/stores/{storeId}/products/{productId}', [StaffProductController::class, 'removeProductFromStore']);
-Route::post('/stores/{storeId}/products/{productId}/adjust-stock', [StaffProductController::class, 'adjustStock']);
-
 //Products
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
@@ -282,4 +280,3 @@ Route::prefix('cart')->group(function () {
 	Route::delete('/{cartId}', [CartController::class, 'remove']);
 	Route::post('/clear', [CartController::class, 'clear']);
 });
-
